@@ -10,7 +10,7 @@ check() {
   local url="$2"
   local expected_status="${3:-200}"
 
-  status=$(curl -s -o /dev/null -w "%{http_code}" "$url")
+  status=$(curl -s -o /dev/null -w "%{http_code}" "$url" || echo "000")
   if [ "$status" -eq "$expected_status" ]; then
     echo "  PASS  $name ($status)"
     PASS=$((PASS + 1))
