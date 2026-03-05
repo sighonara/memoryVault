@@ -1,3 +1,4 @@
+# Local development only. Do not use in production.
 services:
   postgres:
     image: postgres:16-alpine
@@ -5,8 +6,9 @@ services:
       POSTGRES_DB: memoryvault
       POSTGRES_USER: memoryvault
       POSTGRES_PASSWORD: memoryvault
+    restart: unless-stopped
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
