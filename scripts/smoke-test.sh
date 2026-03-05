@@ -13,10 +13,10 @@ check() {
   status=$(curl -s -o /dev/null -w "%{http_code}" "$url")
   if [ "$status" -eq "$expected_status" ]; then
     echo "  PASS  $name ($status)"
-    ((PASS++))
+    PASS=$((PASS + 1))
   else
     echo "  FAIL  $name (expected $expected_status, got $status)"
-    ((FAIL++))
+    FAIL=$((FAIL + 1))
   fi
 }
 
