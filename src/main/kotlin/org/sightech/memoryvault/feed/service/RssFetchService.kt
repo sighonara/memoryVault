@@ -30,12 +30,14 @@ class RssFetchService(
     }
 
     private fun processChannel(feed: Feed, channel: com.prof18.rssparser.model.RssChannel): Int {
-        feed.title = channel.title
-        feed.description = channel.description
-        feed.siteUrl = channel.link
-        feed.lastFetchedAt = Instant.now()
-        feed.updatedAt = Instant.now()
-        feedRepository.save(feed)
+        // Re-fetch to avoid optimistic locking conflicts on repeated calls with a stale entity
+        val currentFeed = feedRepository.findById(feed.id).orElse(feed)
+        currentFeed.title = channel.title
+        currentFeed.description = channel.description
+        currentFeed.siteUrl = channel.link
+        currentFeed.lastFetchedAt = Instant.now()
+        currentFeed.updatedAt = Instant.now()
+        feedRepository.save(currentFeed)
 
         var newCount = 0
         for (item in channel.items) {

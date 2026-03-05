@@ -3,10 +3,12 @@ package org.sightech.memoryvault.feed.service
 import com.prof18.rssparser.RssParser
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.sightech.memoryvault.feed.entity.Feed
 import org.sightech.memoryvault.feed.repository.FeedItemRepository
 import org.sightech.memoryvault.feed.repository.FeedRepository
+import java.util.Optional
 import java.util.UUID
 import kotlin.test.assertEquals
 
@@ -17,12 +19,17 @@ class RssFetchServiceTest {
     private val rssParser = RssParser()
     private val service = RssFetchService(feedRepository, feedItemRepository, rssParser)
     private val userId = UUID.fromString("00000000-0000-0000-0000-000000000001")
+    private val feed = Feed(userId = userId, url = "https://example.com/rss")
 
     private val sampleXml = this::class.java.classLoader.getResource("fixtures/sample-rss.xml")!!.readText()
 
+    @BeforeEach
+    fun setUp() {
+        every { feedRepository.findById(feed.id) } returns Optional.of(feed)
+    }
+
     @Test
     fun `fetchAndStore parses items and saves new ones`() {
-        val feed = Feed(userId = userId, url = "https://example.com/rss")
         every { feedItemRepository.existsByFeedIdAndGuid(feed.id, any()) } returns false
         every { feedItemRepository.save(any()) } answers { firstArg() }
         every { feedRepository.save(any()) } answers { firstArg() }
@@ -36,7 +43,6 @@ class RssFetchServiceTest {
 
     @Test
     fun `fetchAndStore skips existing items by guid`() {
-        val feed = Feed(userId = userId, url = "https://example.com/rss")
         every { feedItemRepository.existsByFeedIdAndGuid(feed.id, "post-1") } returns true
         every { feedItemRepository.existsByFeedIdAndGuid(feed.id, "post-2") } returns true
         every { feedItemRepository.existsByFeedIdAndGuid(feed.id, "https://example.com/post-3") } returns false
@@ -51,7 +57,6 @@ class RssFetchServiceTest {
 
     @Test
     fun `fetchAndStore uses link as guid fallback when guid is null`() {
-        val feed = Feed(userId = userId, url = "https://example.com/rss")
         every { feedItemRepository.existsByFeedIdAndGuid(feed.id, "post-1") } returns true
         every { feedItemRepository.existsByFeedIdAndGuid(feed.id, "post-2") } returns true
         every { feedItemRepository.existsByFeedIdAndGuid(feed.id, "https://example.com/post-3") } returns true
@@ -64,7 +69,6 @@ class RssFetchServiceTest {
 
     @Test
     fun `fetchAndStore updates feed metadata from channel`() {
-        val feed = Feed(userId = userId, url = "https://example.com/rss")
         every { feedItemRepository.existsByFeedIdAndGuid(feed.id, any()) } returns false
         every { feedItemRepository.save(any()) } answers { firstArg() }
         every { feedRepository.save(any()) } answers { firstArg() }
