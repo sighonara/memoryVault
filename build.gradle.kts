@@ -22,14 +22,34 @@ repositories {
 extra["springAiVersion"] = "2.0.0-M2"
 
 dependencies {
+    // Web
+    implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+
+    // Database
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.flywaydb:flyway-core")
+    implementation("org.flywaydb:flyway-database-postgresql")
+    runtimeOnly("org.postgresql:postgresql")
+
+    // AI / MCP
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.springframework.ai:spring-ai-starter-mcp-server")
+
+    // Dev
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     developmentOnly("org.springframework.boot:spring-boot-docker-compose")
     developmentOnly("org.springframework.ai:spring-ai-spring-boot-docker-compose")
+
+    // Test
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-starter-security-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+    testImplementation("org.springframework.boot:spring-boot-testcontainers")
+    testImplementation("org.testcontainers:testcontainers-junit-jupiter")
+    testImplementation("org.testcontainers:testcontainers-postgresql")
+    testImplementation("io.mockk:mockk:1.13.10")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

@@ -26,7 +26,7 @@ services:
       POSTGRES_USER: memoryvault
       POSTGRES_PASSWORD: memoryvault
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -129,8 +129,8 @@ git commit -m "feat: add web, JPA, Flyway, PostgreSQL, TestContainers dependenci
 ```properties
 spring.application.name=memoryVault
 
-# Database — matches compose.yaml credentials
-spring.datasource.url=jdbc:postgresql://localhost:5432/memoryvault
+# Database — matches compose.yaml credentials (port 5433)
+spring.datasource.url=jdbc:postgresql://localhost:5433/memoryvault
 spring.datasource.username=memoryvault
 spring.datasource.password=memoryvault
 spring.datasource.driver-class-name=org.postgresql.Driver
