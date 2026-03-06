@@ -38,6 +38,9 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.springframework.ai:spring-ai-starter-mcp-server")
 
+    // Structured JSON logging
+    implementation("net.logstash.logback:logstash-logback-encoder:8.0")
+
     // RSS
     implementation("com.prof18.rssparser:rssparser:6.1.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")

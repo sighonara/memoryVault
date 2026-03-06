@@ -9,4 +9,6 @@ interface TagRepository : JpaRepository<Tag, UUID> {
     fun findByUserIdAndNameIn(userId: UUID, names: List<String>): List<Tag>
 
     fun findByUserIdAndName(userId: UUID, name: String): Tag?
+
+    fun countByUserId(userId: UUID): Long
 }

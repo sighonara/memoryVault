@@ -12,4 +12,8 @@ interface YoutubeListRepository : JpaRepository<YoutubeList, UUID> {
 
     @Query("SELECT yl FROM YoutubeList yl WHERE yl.id = :id AND yl.deletedAt IS NULL")
     fun findActiveById(id: UUID): YoutubeList?
+
+    fun countByUserIdAndDeletedAtIsNull(userId: UUID): Long
+
+    fun countByUserIdAndDeletedAtIsNullAndFailureCountGreaterThan(userId: UUID, failureCount: Int): Long
 }

@@ -12,4 +12,6 @@ interface BookmarkRepository : JpaRepository<Bookmark, UUID> {
 
     @Query("SELECT b FROM Bookmark b LEFT JOIN FETCH b.tags WHERE b.id = :id AND b.deletedAt IS NULL")
     fun findActiveById(id: UUID): Bookmark?
+
+    fun countByUserIdAndDeletedAtIsNull(userId: UUID): Long
 }

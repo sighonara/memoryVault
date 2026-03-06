@@ -7,4 +7,5 @@ interface StorageService {
     fun retrieve(key: String): InputStream
     fun delete(key: String)
     fun exists(key: String): Boolean
+    fun usedBytes(): Long
 }

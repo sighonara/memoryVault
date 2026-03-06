@@ -23,4 +23,8 @@ interface FeedItemRepository : JpaRepository<FeedItem, UUID> {
     @Modifying
     @Query("UPDATE FeedItem fi SET fi.readAt = :readAt WHERE fi.feed.id = :feedId AND fi.readAt IS NULL")
     fun markAllReadByFeedId(feedId: UUID, readAt: Instant): Int
+
+    fun countByFeedUserIdAndFeedDeletedAtIsNull(userId: UUID): Long
+
+    fun countByFeedUserIdAndFeedDeletedAtIsNullAndReadAtIsNull(userId: UUID): Long
 }
