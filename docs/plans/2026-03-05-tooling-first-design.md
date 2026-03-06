@@ -226,7 +226,10 @@ PostgreSQL full-text search, system stats, job history tracking with SyncJob ent
 Angular frontend, authentication, GraphQL API. The website you'd use daily.
 
 ### Phase 6 — Infrastructure
-Terraform, CI/CD pipeline, production AWS deployment.
+Terraform, CI/CD pipeline, production AWS deployment. AWS Cognito auth, CloudWatch log retrieval, AWS cost tracking.
+
+### Phase 7 — Real-Time Updates
+WebSocket support for live UI updates — new feed items, sync job progress, download status changes pushed to the Angular client without polling.
 
 ---
 
