@@ -43,11 +43,11 @@ Rather than designing the backend first and wiring AI on top, the MCP tool suite
 - `delete_youtube_list(listId)` — soft-delete a tracked playlist
 
 ### Cross-cutting
-- `search(query, types?)` — full-text search across all content types
-- `get_stats()` — storage used, item counts, last sync times
-- `get_aws_cost(billingCycle?)` — compute, storage, transfer costs per billing cycle
-- `list_jobs()` — view scheduled sync job status and history
-- `get_logs(level?, service?, limit?)` — pull logs from CloudWatch without needing the AWS console
+- `search(query, types?)` — PostgreSQL full-text search across bookmarks, feed items, and videos with ranked results
+- `getStats()` — content counts, storage used, last sync times, failure counts
+- `listJobs(type?, limit?)` — view sync job execution history with status and metadata
+- `getLogs(level?, service?, limit?)` — retrieve structured JSON logs from local file or CloudWatch (Phase 6)
+- `get_aws_cost(billingCycle?)` — compute, storage, transfer costs per billing cycle (Phase 6)
 
 ---
 
@@ -220,7 +220,7 @@ The theoldreader replacement. Introduces the Lambda pattern for scheduled fetchi
 Most complex: yt-dlp, S3 storage, long-running downloads. Built on Lambda patterns proven in Phase 2.
 
 ### Phase 4 — Cross-cutting
-Full-text search, `get_stats`, `get_aws_cost`, `get_logs`, tag-based filtering across all content types.
+PostgreSQL full-text search, system stats, job history tracking with SyncJob entity, structured logging with local file reader and CloudWatch stub. AWS cost tracking deferred to Phase 6.
 
 ### Phase 5 — Web UI + Auth
 Angular frontend, authentication, GraphQL API. The website you'd use daily.
