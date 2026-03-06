@@ -1,6 +1,8 @@
 package org.sightech.memoryvault.scheduling.entity
 
 import jakarta.persistence.*
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import java.time.Instant
 import java.util.UUID
 
@@ -31,6 +33,7 @@ class SyncJob(
     @Column(name = "triggered_by", nullable = false, length = 20)
     val triggeredBy: String,
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     var metadata: String? = null
 )
