@@ -3,6 +3,7 @@ package org.sightech.memoryvault.stats
 import org.sightech.memoryvault.bookmark.repository.BookmarkRepository
 import org.sightech.memoryvault.feed.repository.FeedItemRepository
 import org.sightech.memoryvault.feed.repository.FeedRepository
+import org.sightech.memoryvault.scheduling.entity.JobType
 import org.sightech.memoryvault.scheduling.service.SyncJobService
 import org.sightech.memoryvault.storage.StorageService
 import org.sightech.memoryvault.tag.repository.TagRepository
@@ -46,8 +47,8 @@ class StatsService(
     //  RDS connection/query metrics.
 
     fun getStats(userId: UUID): SystemStats {
-        val lastFeedSync = syncJobService.findLastSuccessful(userId, "RSS_FETCH")?.completedAt
-        val lastYoutubeSync = syncJobService.findLastSuccessful(userId, "YT_SYNC")?.completedAt
+        val lastFeedSync = syncJobService.findLastSuccessful(userId, JobType.RSS_FETCH)?.completedAt
+        val lastYoutubeSync = syncJobService.findLastSuccessful(userId, JobType.YT_SYNC)?.completedAt
 
         return SystemStats(
             bookmarkCount = bookmarkRepository.countByUserIdAndDeletedAtIsNull(userId),

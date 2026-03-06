@@ -6,6 +6,9 @@ import org.sightech.memoryvault.feed.entity.Feed
 import org.sightech.memoryvault.feed.entity.FeedItem
 import org.sightech.memoryvault.feed.repository.FeedItemRepository
 import org.sightech.memoryvault.feed.repository.FeedRepository
+import org.sightech.memoryvault.scheduling.entity.JobStatus
+import org.sightech.memoryvault.scheduling.entity.JobType
+import org.sightech.memoryvault.scheduling.entity.TriggerSource
 import org.sightech.memoryvault.scheduling.service.SyncJobService
 import org.sightech.memoryvault.search.ContentType
 import org.sightech.memoryvault.search.SearchService
@@ -107,25 +110,25 @@ class CrossCuttingIntegrationTest {
 
     @Test
     fun `syncJobService records and retrieves job history`() {
-        val job = syncJobService.recordStart("RSS_FETCH", "MANUAL", userId)
+        val job = syncJobService.recordStart(JobType.RSS_FETCH, TriggerSource.MANUAL, userId)
         assertNotNull(job.id)
-        assertEquals("RUNNING", job.status)
+        assertEquals(JobStatus.RUNNING, job.status)
 
         syncJobService.recordSuccess(job.id, mapOf("newItems" to 5))
 
-        val jobs = syncJobService.listJobs(userId, "RSS_FETCH", 10)
-        assertTrue(jobs.any { it.id == job.id && it.status == "SUCCESS" })
+        val jobs = syncJobService.listJobs(userId, JobType.RSS_FETCH, 10)
+        assertTrue(jobs.any { it.id == job.id && it.status == JobStatus.SUCCESS })
     }
 
     @Test
     fun `syncJobService records failure`() {
-        val job = syncJobService.recordStart("YT_SYNC", "SCHEDULED", userId)
+        val job = syncJobService.recordStart(JobType.YT_SYNC, TriggerSource.SCHEDULED, userId)
         syncJobService.recordFailure(job.id, "Connection refused")
 
-        val jobs = syncJobService.listJobs(userId, "YT_SYNC", 10)
+        val jobs = syncJobService.listJobs(userId, JobType.YT_SYNC, 10)
         val found = jobs.find { it.id == job.id }
         assertNotNull(found)
-        assertEquals("FAILED", found.status)
+        assertEquals(JobStatus.FAILED, found.status)
         assertEquals("Connection refused", found.errorMessage)
     }
 }

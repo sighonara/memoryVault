@@ -1,5 +1,7 @@
 package org.sightech.memoryvault.scheduling
 
+import org.sightech.memoryvault.scheduling.entity.JobType
+import org.sightech.memoryvault.scheduling.entity.TriggerSource
 import org.sightech.memoryvault.scheduling.service.SyncJobService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.TaskScheduler
@@ -23,12 +25,12 @@ class SpringJobScheduler(
     private val jobs = ConcurrentHashMap<String, JobRegistration>()
     private val futures = ConcurrentHashMap<String, ScheduledFuture<*>>()
 
-    private data class JobRegistration(val jobType: String, val task: () -> Map<String, Any>?)
+    private data class JobRegistration(val jobType: JobType, val task: () -> Map<String, Any>?)
 
-    override fun schedule(jobName: String, cron: String, jobType: String, task: () -> Map<String, Any>?) {
+    override fun schedule(jobName: String, cron: String, jobType: JobType, task: () -> Map<String, Any>?) {
         jobs[jobName] = JobRegistration(jobType, task)
         if (cron != "-") {
-            val wrappedTask = Runnable { executeWithTracking(jobName, "SCHEDULED") }
+            val wrappedTask = Runnable { executeWithTracking(jobName, TriggerSource.SCHEDULED) }
             val future = taskScheduler.schedule(wrappedTask, CronTrigger(cron))
             if (future != null) {
                 futures[jobName] = future
@@ -42,13 +44,13 @@ class SpringJobScheduler(
     override fun triggerNow(jobName: String) {
         if (jobs.containsKey(jobName)) {
             logger.info("Triggering job '{}' immediately", jobName)
-            executeWithTracking(jobName, "MANUAL")
+            executeWithTracking(jobName, TriggerSource.MANUAL)
         } else {
             logger.warn("Job '{}' not found", jobName)
         }
     }
 
-    private fun executeWithTracking(jobName: String, triggeredBy: String) {
+    private fun executeWithTracking(jobName: String, triggeredBy: TriggerSource) {
         val registration = jobs[jobName] ?: return
         val syncJob = syncJobService.recordStart(registration.jobType, triggeredBy, SYSTEM_USER_ID)
 

@@ -5,7 +5,10 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import org.junit.jupiter.api.Test
+import org.sightech.memoryvault.scheduling.entity.JobStatus
+import org.sightech.memoryvault.scheduling.entity.JobType
 import org.sightech.memoryvault.scheduling.entity.SyncJob
+import org.sightech.memoryvault.scheduling.entity.TriggerSource
 import org.sightech.memoryvault.scheduling.repository.SyncJobRepository
 import java.time.Instant
 import java.util.UUID
@@ -23,38 +26,38 @@ class SyncJobServiceTest {
         val slot = slot<SyncJob>()
         every { repository.save(capture(slot)) } answers { slot.captured }
 
-        val job = service.recordStart("RSS_FETCH", "SCHEDULED", userId)
+        val job = service.recordStart(JobType.RSS_FETCH, TriggerSource.SCHEDULED, userId)
 
-        assertEquals("RSS_FETCH", job.type)
-        assertEquals("RUNNING", job.status)
-        assertEquals("SCHEDULED", job.triggeredBy)
+        assertEquals(JobType.RSS_FETCH, job.type)
+        assertEquals(JobStatus.RUNNING, job.status)
+        assertEquals(TriggerSource.SCHEDULED, job.triggeredBy)
         assertEquals(userId, job.userId)
     }
 
     @Test
     fun `recordSuccess updates status and metadata`() {
-        val job = SyncJob(userId = userId, type = "YT_SYNC", triggeredBy = "MANUAL")
-        job.status = "RUNNING"
+        val job = SyncJob(userId = userId, type = JobType.YT_SYNC, triggeredBy = TriggerSource.MANUAL)
+        job.status = JobStatus.RUNNING
         every { repository.findById(job.id) } returns java.util.Optional.of(job)
         every { repository.save(any()) } answers { firstArg() }
 
         service.recordSuccess(job.id, mapOf("newVideos" to 3))
 
-        assertEquals("SUCCESS", job.status)
+        assertEquals(JobStatus.SUCCESS, job.status)
         assertNotNull(job.completedAt)
         assertNotNull(job.metadata)
     }
 
     @Test
     fun `recordFailure sets error message`() {
-        val job = SyncJob(userId = userId, type = "RSS_FETCH", triggeredBy = "SCHEDULED")
-        job.status = "RUNNING"
+        val job = SyncJob(userId = userId, type = JobType.RSS_FETCH, triggeredBy = TriggerSource.SCHEDULED)
+        job.status = JobStatus.RUNNING
         every { repository.findById(job.id) } returns java.util.Optional.of(job)
         every { repository.save(any()) } answers { firstArg() }
 
         service.recordFailure(job.id, "Connection refused")
 
-        assertEquals("FAILED", job.status)
+        assertEquals(JobStatus.FAILED, job.status)
         assertEquals("Connection refused", job.errorMessage)
         assertNotNull(job.completedAt)
     }
@@ -62,7 +65,7 @@ class SyncJobServiceTest {
     @Test
     fun `listJobs delegates to repository`() {
         every { repository.findRecentByUserId(userId, 20) } returns listOf(
-            SyncJob(userId = userId, type = "RSS_FETCH", triggeredBy = "SCHEDULED")
+            SyncJob(userId = userId, type = JobType.RSS_FETCH, triggeredBy = TriggerSource.SCHEDULED)
         )
 
         val result = service.listJobs(userId, null, 20)
@@ -71,9 +74,9 @@ class SyncJobServiceTest {
 
     @Test
     fun `listJobs with type filter`() {
-        every { repository.findRecentByUserIdAndType(userId, "YT_SYNC", 10) } returns emptyList()
+        every { repository.findRecentByUserIdAndType(userId, JobType.YT_SYNC, 10) } returns emptyList()
 
-        val result = service.listJobs(userId, "YT_SYNC", 10)
+        val result = service.listJobs(userId, JobType.YT_SYNC, 10)
         assertEquals(0, result.size)
     }
 }

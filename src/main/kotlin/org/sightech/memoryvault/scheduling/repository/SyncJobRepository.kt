@@ -1,5 +1,7 @@
 package org.sightech.memoryvault.scheduling.repository
 
+import org.sightech.memoryvault.scheduling.entity.JobStatus
+import org.sightech.memoryvault.scheduling.entity.JobType
 import org.sightech.memoryvault.scheduling.entity.SyncJob
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
@@ -11,8 +13,8 @@ interface SyncJobRepository : JpaRepository<SyncJob, UUID> {
     fun findRecentByUserId(userId: UUID, limit: Int): List<SyncJob>
 
     @Query("SELECT j FROM SyncJob j WHERE j.userId = :userId AND j.type = :type ORDER BY j.startedAt DESC LIMIT :limit")
-    fun findRecentByUserIdAndType(userId: UUID, type: String, limit: Int): List<SyncJob>
+    fun findRecentByUserIdAndType(userId: UUID, type: JobType, limit: Int): List<SyncJob>
 
-    @Query("SELECT j FROM SyncJob j WHERE j.userId = :userId AND j.type = :type AND j.status = 'SUCCESS' ORDER BY j.completedAt DESC LIMIT 1")
-    fun findLastSuccessful(userId: UUID, type: String): SyncJob?
+    @Query("SELECT j FROM SyncJob j WHERE j.userId = :userId AND j.type = :type AND j.status = :status ORDER BY j.completedAt DESC LIMIT 1")
+    fun findLastSuccessful(userId: UUID, type: JobType, status: JobStatus = JobStatus.SUCCESS): SyncJob?
 }

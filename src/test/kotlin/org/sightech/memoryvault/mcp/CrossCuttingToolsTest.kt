@@ -5,7 +5,10 @@ import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.sightech.memoryvault.logging.LogEntry
 import org.sightech.memoryvault.logging.LogService
+import org.sightech.memoryvault.scheduling.entity.JobStatus
+import org.sightech.memoryvault.scheduling.entity.JobType
 import org.sightech.memoryvault.scheduling.entity.SyncJob
+import org.sightech.memoryvault.scheduling.entity.TriggerSource
 import org.sightech.memoryvault.scheduling.service.SyncJobService
 import org.sightech.memoryvault.search.ContentType
 import org.sightech.memoryvault.search.SearchResult
@@ -87,13 +90,13 @@ class CrossCuttingToolsTest {
     @Test
     fun `listJobs returns formatted history`() {
         every { syncJobService.listJobs(any(), null, 10) } returns listOf(
-            SyncJob(userId = UUID.randomUUID(), type = "RSS_FETCH", triggeredBy = "SCHEDULED").apply {
-                status = "SUCCESS"
+            SyncJob(userId = UUID.randomUUID(), type = JobType.RSS_FETCH, triggeredBy = TriggerSource.SCHEDULED).apply {
+                status = JobStatus.SUCCESS
                 completedAt = Instant.parse("2026-03-05T10:00:00Z")
                 metadata = """{"newItems": 12}"""
             },
-            SyncJob(userId = UUID.randomUUID(), type = "YT_SYNC", triggeredBy = "MANUAL").apply {
-                status = "FAILED"
+            SyncJob(userId = UUID.randomUUID(), type = JobType.YT_SYNC, triggeredBy = TriggerSource.MANUAL).apply {
+                status = JobStatus.FAILED
                 completedAt = Instant.parse("2026-03-05T09:00:00Z")
                 errorMessage = "Connection timeout"
             }

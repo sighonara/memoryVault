@@ -6,7 +6,9 @@ import org.junit.jupiter.api.Test
 import org.sightech.memoryvault.bookmark.repository.BookmarkRepository
 import org.sightech.memoryvault.feed.repository.FeedItemRepository
 import org.sightech.memoryvault.feed.repository.FeedRepository
+import org.sightech.memoryvault.scheduling.entity.JobType
 import org.sightech.memoryvault.scheduling.entity.SyncJob
+import org.sightech.memoryvault.scheduling.entity.TriggerSource
 import org.sightech.memoryvault.scheduling.service.SyncJobService
 import org.sightech.memoryvault.storage.StorageService
 import org.sightech.memoryvault.tag.repository.TagRepository
@@ -47,10 +49,10 @@ class StatsServiceTest {
         every { videoRepository.countByYoutubeListUserIdAndYoutubeListDeletedAtIsNullAndRemovedFromYoutubeTrue(userId) } returns 5
         every { tagRepository.countByUserId(userId) } returns 12
         every { storageService.usedBytes() } returns 1_073_741_824L
-        every { syncJobService.findLastSuccessful(userId, "RSS_FETCH") } returns SyncJob(
-            userId = userId, type = "RSS_FETCH", triggeredBy = "SCHEDULED"
+        every { syncJobService.findLastSuccessful(userId, JobType.RSS_FETCH) } returns SyncJob(
+            userId = userId, type = JobType.RSS_FETCH, triggeredBy = TriggerSource.SCHEDULED
         ).apply { completedAt = Instant.parse("2026-03-05T10:00:00Z") }
-        every { syncJobService.findLastSuccessful(userId, "YT_SYNC") } returns null
+        every { syncJobService.findLastSuccessful(userId, JobType.YT_SYNC) } returns null
         every { feedRepository.countByUserIdAndDeletedAtIsNullAndFailureCountGreaterThan(userId, 0) } returns 1
         every { youtubeListRepository.countByUserIdAndDeletedAtIsNullAndFailureCountGreaterThan(userId, 0) } returns 0
 

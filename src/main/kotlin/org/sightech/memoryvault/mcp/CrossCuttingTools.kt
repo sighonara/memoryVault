@@ -1,6 +1,7 @@
 package org.sightech.memoryvault.mcp
 
 import org.sightech.memoryvault.logging.LogService
+import org.sightech.memoryvault.scheduling.entity.JobType
 import org.sightech.memoryvault.scheduling.service.SyncJobService
 import org.sightech.memoryvault.search.ContentType
 import org.sightech.memoryvault.search.SearchService
@@ -61,7 +62,8 @@ class CrossCuttingTools(
     @Tool(description = "View job execution history. Shows recent sync job runs with status, timing, and metadata. Optionally filter by type (RSS_FETCH, YT_SYNC, BOOKMARK_ARCHIVE) and limit results.")
     fun listJobs(type: String?, limit: Int?): String {
         val effectiveLimit = limit ?: 10
-        val jobs = syncJobService.listJobs(SYSTEM_USER_ID, type, effectiveLimit)
+        val jobType = type?.let { JobType.valueOf(it.trim().uppercase()) }
+        val jobs = syncJobService.listJobs(SYSTEM_USER_ID, jobType, effectiveLimit)
         if (jobs.isEmpty()) return "No job history found."
 
         val lines = jobs.map { job ->
