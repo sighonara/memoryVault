@@ -5,11 +5,12 @@
 **MemoryVault** — a self-hosted content archival and aggregation platform. RSS reader, bookmark manager, and YouTube archiver with AI interaction via MCP, a web UI, and automated AWS sync jobs.
 
 Design docs: `docs/plans/2026-03-05-tooling-first-design.md`
-Phase 0 plan: `docs/plans/2026-03-05-phase-0-tooling.md`
 
 ---
 
 ## Backend (Spring Boot / Kotlin)
+
+Located in `src/`.
 
 - **Language**: Kotlin 2.x
 - **Framework**: Spring Boot 4.x
@@ -90,7 +91,7 @@ Located in `content-processor/` (created in Phase 3).
 
 ## AWS Lambda Functions
 
-Located in `lambdas/` (created in Phase 2+).
+Located in `lambdas/` (created in Phase 6+).
 
 - **Runtime**: Python 3.11
 - **Trigger**: EventBridge scheduled rules
