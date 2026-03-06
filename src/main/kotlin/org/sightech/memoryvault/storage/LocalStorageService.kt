@@ -42,4 +42,13 @@ class LocalStorageService(
     override fun exists(key: String): Boolean {
         return Files.exists(resolve(key))
     }
+
+    override fun usedBytes(): Long {
+        val base = Path.of(basePath)
+        if (!Files.exists(base)) return 0
+        return Files.walk(base)
+            .filter { Files.isRegularFile(it) }
+            .mapToLong { Files.size(it) }
+            .sum()
+    }
 }

@@ -47,4 +47,11 @@ class S3StorageService : StorageService {
     override fun exists(key: String): Boolean {
         throw UnsupportedOperationException("S3 storage not yet implemented. Use 'local' profile for development.")
     }
+
+    // TODO: Phase 6 — use CloudWatch GetMetricData for BucketSizeBytes,
+    //  or S3 inventory reports for bucket-level size tracking.
+    override fun usedBytes(): Long {
+        logger.warn("S3StorageService.usedBytes() is a stub — AWS implementation pending (Phase 6)")
+        return 0
+    }
 }

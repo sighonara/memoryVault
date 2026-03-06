@@ -12,4 +12,8 @@ interface FeedRepository : JpaRepository<Feed, UUID> {
 
     @Query("SELECT f FROM Feed f WHERE f.id = :id AND f.deletedAt IS NULL")
     fun findActiveById(id: UUID): Feed?
+
+    fun countByUserIdAndDeletedAtIsNull(userId: UUID): Long
+
+    fun countByUserIdAndDeletedAtIsNullAndFailureCountGreaterThan(userId: UUID, failureCount: Int): Long
 }

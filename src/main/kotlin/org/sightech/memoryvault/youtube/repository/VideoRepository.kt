@@ -28,4 +28,10 @@ interface VideoRepository : JpaRepository<Video, UUID> {
 
     @Query("SELECT v FROM Video v LEFT JOIN FETCH v.tags WHERE v.youtubeList.id IN :listIds AND v.youtubeVideoId IN :videoIds")
     fun findByYoutubeListIdInAndYoutubeVideoIdIn(listIds: List<UUID>, videoIds: List<String>): List<Video>
+
+    fun countByYoutubeListUserIdAndYoutubeListDeletedAtIsNull(userId: UUID): Long
+
+    fun countByYoutubeListUserIdAndYoutubeListDeletedAtIsNullAndDownloadedAtIsNotNull(userId: UUID): Long
+
+    fun countByYoutubeListUserIdAndYoutubeListDeletedAtIsNullAndRemovedFromYoutubeTrue(userId: UUID): Long
 }
