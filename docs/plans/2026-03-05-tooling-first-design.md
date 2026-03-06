@@ -35,9 +35,12 @@ Rather than designing the backend first and wiring AI on top, the MCP tool suite
 - `export_bookmarks(format?)` — export as Netscape HTML format for browser import
 
 ### YouTube Archival
-- `add_youtube_list(url)` — subscribe a YouTube playlist or saved list for archival
-- `list_archived_videos(listId?, query?, removedFromYoutube?)` — browse the video archive; `removedFromYoutube` filter surfaces videos no longer on YouTube
-- `get_video_status(videoId)` — check download and processing status
+- `add_youtube_list(url)` — subscribe a YouTube playlist for archival; immediately fetches metadata and queues all videos for download
+- `list_youtube_lists()` — list tracked playlists with video counts, download progress, and removed count
+- `list_archived_videos(listId?, query?, removedOnly?)` — browse the video archive; `removedOnly` filter surfaces videos no longer on YouTube
+- `get_video_status(videoId)` — check download status, file path, and removal status for a single video
+- `refresh_youtube_list(listId?)` — re-sync metadata, detect removals, queue new videos for download; all lists if listId omitted
+- `delete_youtube_list(listId)` — soft-delete a tracked playlist
 
 ### Cross-cutting
 - `search(query, types?)` — full-text search across all content types
