@@ -12,5 +12,5 @@ class UserService(private val userRepository: UserRepository) {
         userRepository.findByEmailAndDeletedAtIsNull(email)
 
     fun findById(id: UUID): User? =
-        userRepository.findById(id).orElse(null)
+        userRepository.findByIdAndDeletedAtIsNull(id)
 }

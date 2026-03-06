@@ -37,7 +37,7 @@ class UserServiceTest {
     fun `findById returns user`() {
         val id = UUID.randomUUID()
         val user = User(id = id, email = "test@example.com", displayName = "Test")
-        every { userRepository.findById(id) } returns java.util.Optional.of(user)
+        every { userRepository.findByIdAndDeletedAtIsNull(id) } returns user
 
         val result = service.findById(id)
         assertNotNull(result)
