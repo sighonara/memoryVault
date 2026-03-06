@@ -29,6 +29,11 @@ class VideoSyncService(
     fun syncList(list: YoutubeList, metadata: List<VideoMetadata>): SyncResult {
         val currentList = youtubeListRepository.findById(list.id).orElse(list)
 
+        // TODO: This queries findByYoutubeListId twice (once for dedup, once for removal detection).
+        //  Collapse into a single query when playlists grow large. Also, the repository query
+        //  eagerly fetches tags (LEFT JOIN FETCH) which sync doesn't need — consider adding a
+        //  lightweight findVideoIdsByYoutubeListId query.
+
         // Find new videos (not already in DB)
         val existingVideoIds = videoRepository.findByYoutubeListId(list.id)
             .map { it.youtubeVideoId }

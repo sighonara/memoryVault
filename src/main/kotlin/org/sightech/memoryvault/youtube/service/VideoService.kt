@@ -21,6 +21,8 @@ class VideoService(private val videoRepository: VideoRepository) {
             emptyList()
         }
 
+        // TODO: Replace in-memory filtering with a JPQL LIKE query or full-text search
+        //  when video counts grow large enough to matter.
         return if (query != null) {
             val q = query.lowercase()
             videos.filter { v ->

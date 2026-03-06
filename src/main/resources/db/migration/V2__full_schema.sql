@@ -148,3 +148,6 @@ CREATE INDEX idx_tags_user_id ON tags(user_id);
 CREATE INDEX idx_feeds_user_id ON feeds(user_id) WHERE deleted_at IS NULL;
 CREATE INDEX idx_feed_items_feed_id ON feed_items(feed_id);
 CREATE INDEX idx_videos_youtube_list_id ON videos(youtube_list_id);
+-- TODO: Add UNIQUE constraint on (youtube_list_id, youtube_video_id) to enforce dedup at DB level.
+--  Currently dedup is app-level only (existsByYoutubeListIdAndYoutubeVideoId), which is
+--  vulnerable to race conditions if multiple syncs run concurrently.

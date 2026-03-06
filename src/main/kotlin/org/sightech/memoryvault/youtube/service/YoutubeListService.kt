@@ -33,7 +33,9 @@ class YoutubeListService(
 
         val metadata = ytDlpService.fetchPlaylistMetadata(url)
 
-        // Update list name from playlist ID (yt-dlp doesn't always include playlist title in flat mode)
+        // TODO: yt-dlp --flat-playlist doesn't include playlist-level metadata. To get the real
+        //  playlist title, use a separate `yt-dlp --dump-single-json <url>` call and read
+        //  the top-level "title" field. For now we fall back to the playlist ID.
         if (list.name == null && metadata.isNotEmpty()) {
             list.name = "Playlist $playlistId"
             list.updatedAt = Instant.now()

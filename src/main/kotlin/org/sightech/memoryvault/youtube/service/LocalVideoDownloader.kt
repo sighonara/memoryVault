@@ -25,6 +25,8 @@ class LocalVideoDownloader(
             if (!dlResult.success) return dlResult
 
             // yt-dlp replaces %(id)s and %(ext)s — find the actual output file
+            // TODO: Filter out .part files in case of interrupted downloads (yt-dlp can leave
+            //  partial files alongside completed ones).
             val downloadedFile = Files.list(tempDir).findFirst().orElse(null)
                 ?: return DownloadResult(success = false, error = "No output file found after download")
 
