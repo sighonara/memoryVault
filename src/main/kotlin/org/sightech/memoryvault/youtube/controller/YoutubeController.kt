@@ -1,5 +1,6 @@
 package org.sightech.memoryvault.youtube.controller
 
+import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.youtube.service.YoutubeListService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -10,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController
 class YoutubeController(private val youtubeListService: YoutubeListService) {
 
     @GetMapping("/lists")
-    fun listLists() = youtubeListService.listLists().map { (list, stats) ->
+    fun listLists() = youtubeListService.listLists(CurrentUser.userId()).map { (list, stats) ->
         mapOf(
             "id" to list.id,
             "name" to list.name,

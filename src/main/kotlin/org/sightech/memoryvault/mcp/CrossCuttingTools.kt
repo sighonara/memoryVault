@@ -1,5 +1,6 @@
 package org.sightech.memoryvault.mcp
 
+import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.logging.LogService
 import org.sightech.memoryvault.scheduling.entity.JobType
 import org.sightech.memoryvault.scheduling.service.SyncJobService
@@ -18,15 +19,11 @@ class CrossCuttingTools(
     private val logService: LogService
 ) {
 
-    companion object {
-        val SYSTEM_USER_ID: UUID = UUID.fromString("00000000-0000-0000-0000-000000000001")
-    }
-
     @Tool(description = "Search across all content — bookmarks, feed items, and videos. Returns ranked results. Optionally filter by type: BOOKMARK, FEED_ITEM, VIDEO (comma-separated for multiple).")
     fun search(query: String, types: String?): String {
         val typeList = types?.split(",")?.map { it.trim().uppercase() }?.map { ContentType.valueOf(it) }
 
-        val results = searchService.search(query, typeList, SYSTEM_USER_ID, 20)
+        val results = searchService.search(query, typeList, CurrentUser.userId(), 20)
         if (results.isEmpty()) return "No results found."
 
         val lines = results.map { r ->
@@ -37,7 +34,7 @@ class CrossCuttingTools(
 
     @Tool(description = "Get system statistics — content counts, storage usage, sync health, and failure counts. Use when the user wants an overview of their MemoryVault.")
     fun getStats(): String {
-        val stats = statsService.getStats(SYSTEM_USER_ID)
+        val stats = statsService.getStats(CurrentUser.userId())
 
         val storageStr = formatBytes(stats.storageUsedBytes)
 
@@ -63,7 +60,7 @@ class CrossCuttingTools(
     fun listJobs(type: String?, limit: Int?): String {
         val effectiveLimit = limit ?: 10
         val jobType = type?.let { JobType.valueOf(it.trim().uppercase()) }
-        val jobs = syncJobService.listJobs(SYSTEM_USER_ID, jobType, effectiveLimit)
+        val jobs = syncJobService.listJobs(CurrentUser.userId(), jobType, effectiveLimit)
         if (jobs.isEmpty()) return "No job history found."
 
         val lines = jobs.map { job ->

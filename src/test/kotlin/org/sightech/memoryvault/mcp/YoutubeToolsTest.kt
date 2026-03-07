@@ -21,7 +21,7 @@ class YoutubeToolsTest {
 
     @Test
     fun `addYoutubeList returns summary`() {
-        every { youtubeListService.addList(any()) } returns (list to SyncResult(
+        every { youtubeListService.addList(any(), any()) } returns (list to SyncResult(
             list = list, newVideos = 5, removedVideos = 0, downloadSuccesses = 4, downloadFailures = 1
         ))
 
@@ -33,7 +33,7 @@ class YoutubeToolsTest {
 
     @Test
     fun `listYoutubeLists returns list with stats`() {
-        every { youtubeListService.listLists() } returns listOf(
+        every { youtubeListService.listLists(any()) } returns listOf(
             list to ListStats(totalVideos = 10, downloadedVideos = 7, removedVideos = 2)
         )
 
@@ -45,7 +45,7 @@ class YoutubeToolsTest {
 
     @Test
     fun `listYoutubeLists returns message when empty`() {
-        every { youtubeListService.listLists() } returns emptyList()
+        every { youtubeListService.listLists(any()) } returns emptyList()
         assertEquals("No playlists tracked.", tools.listYoutubeLists())
     }
 
@@ -110,7 +110,7 @@ class YoutubeToolsTest {
 
     @Test
     fun `refreshYoutubeList returns sync summary`() {
-        every { youtubeListService.refreshList(null) } returns listOf(
+        every { youtubeListService.refreshList(any(), isNull()) } returns listOf(
             SyncResult(list = list, newVideos = 3, removedVideos = 1, downloadSuccesses = 2, downloadFailures = 1)
         )
 

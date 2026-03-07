@@ -13,25 +13,21 @@ class BookmarkService(
     private val tagService: TagService
 ) {
 
-    companion object {
-        val SYSTEM_USER_ID: UUID = UUID.fromString("00000000-0000-0000-0000-000000000001")
-    }
-
-    fun create(url: String, title: String?, tagNames: List<String>?): Bookmark {
+    fun create(userId: UUID, url: String, title: String?, tagNames: List<String>?): Bookmark {
         val bookmark = Bookmark(
-            userId = SYSTEM_USER_ID,
+            userId = userId,
             url = url,
             title = title ?: url
         )
         if (!tagNames.isNullOrEmpty()) {
-            val tags = tagService.findOrCreateByNames(tagNames)
+            val tags = tagService.findOrCreateByNames(userId, tagNames)
             bookmark.tags.addAll(tags)
         }
         return bookmarkRepository.save(bookmark)
     }
 
-    fun findAll(query: String?, tagNames: List<String>?): List<Bookmark> {
-        var bookmarks = bookmarkRepository.findAllActiveByUserId(SYSTEM_USER_ID)
+    fun findAll(userId: UUID, query: String?, tagNames: List<String>?): List<Bookmark> {
+        var bookmarks = bookmarkRepository.findAllActiveByUserId(userId)
 
         if (!query.isNullOrBlank()) {
             val q = query.lowercase()
@@ -50,9 +46,9 @@ class BookmarkService(
         return bookmarks
     }
 
-    fun updateTags(bookmarkId: UUID, tagNames: List<String>): Bookmark? {
+    fun updateTags(userId: UUID, bookmarkId: UUID, tagNames: List<String>): Bookmark? {
         val bookmark = bookmarkRepository.findActiveById(bookmarkId) ?: return null
-        val tags = tagService.findOrCreateByNames(tagNames)
+        val tags = tagService.findOrCreateByNames(userId, tagNames)
         bookmark.tags.clear()
         bookmark.tags.addAll(tags)
         bookmark.updatedAt = Instant.now()
@@ -66,8 +62,8 @@ class BookmarkService(
         return bookmarkRepository.save(bookmark)
     }
 
-    fun exportNetscapeHtml(): String {
-        val bookmarks = bookmarkRepository.findAllActiveByUserId(SYSTEM_USER_ID)
+    fun exportNetscapeHtml(userId: UUID): String {
+        val bookmarks = bookmarkRepository.findAllActiveByUserId(userId)
         val sb = StringBuilder()
         sb.appendLine("<!DOCTYPE NETSCAPE-Bookmark-file-1>")
         sb.appendLine("<!-- This is an automatically generated file. -->")

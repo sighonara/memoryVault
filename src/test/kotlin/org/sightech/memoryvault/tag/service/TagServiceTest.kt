@@ -18,7 +18,7 @@ class TagServiceTest {
         val existing = Tag(userId = userId, name = "kotlin")
         every { repository.findByUserIdAndName(userId, "kotlin") } returns existing
 
-        val result = service.findOrCreateByName("kotlin")
+        val result = service.findOrCreateByName(userId, "kotlin")
 
         assertEquals(existing, result)
         verify(exactly = 0) { repository.save(any()) }
@@ -29,7 +29,7 @@ class TagServiceTest {
         every { repository.findByUserIdAndName(userId, "new-tag") } returns null
         every { repository.save(any()) } answers { firstArg() }
 
-        val result = service.findOrCreateByName("new-tag")
+        val result = service.findOrCreateByName(userId, "new-tag")
 
         assertEquals("new-tag", result.name)
         assertEquals(userId, result.userId)
@@ -42,7 +42,7 @@ class TagServiceTest {
         every { repository.findByUserIdAndNameIn(userId, listOf("kotlin", "spring")) } returns listOf(existing)
         every { repository.save(any()) } answers { firstArg() }
 
-        val result = service.findOrCreateByNames(listOf("kotlin", "spring"))
+        val result = service.findOrCreateByNames(userId, listOf("kotlin", "spring"))
 
         assertEquals(2, result.size)
         verify(exactly = 1) { repository.save(any()) }

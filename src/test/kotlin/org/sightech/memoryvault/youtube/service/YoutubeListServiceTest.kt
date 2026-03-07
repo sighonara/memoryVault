@@ -38,7 +38,7 @@ class YoutubeListServiceTest {
             newVideos = 1, removedVideos = 0, downloadSuccesses = 1, downloadFailures = 0
         )
 
-        val (list, result) = service.addList("https://youtube.com/playlist?list=PLtest")
+        val (list, result) = service.addList(userId, "https://youtube.com/playlist?list=PLtest")
 
         assertEquals("PLtest", list.youtubeListId)
         assertEquals(1, result.newVideos)
@@ -52,7 +52,7 @@ class YoutubeListServiceTest {
         every { videoRepository.countDownloadedByYoutubeListId(list.id) } returns 7
         every { videoRepository.countRemovedByYoutubeListId(list.id) } returns 2
 
-        val result = service.listLists()
+        val result = service.listLists(userId)
 
         assertEquals(1, result.size)
         assertEquals(10, result[0].second.totalVideos)
@@ -83,7 +83,7 @@ class YoutubeListServiceTest {
         every { youtubeListRepository.findById(list.id) } returns Optional.of(list)
         every { ytDlpService.fetchPlaylistMetadata(any()) } throws RuntimeException("network error")
 
-        val results = service.refreshList(list.id)
+        val results = service.refreshList(userId, list.id)
 
         assertEquals(1, results.size)
         assertEquals(0, results[0].newVideos)
@@ -98,7 +98,7 @@ class YoutubeListServiceTest {
             newVideos = 0, removedVideos = 0, downloadSuccesses = 0, downloadFailures = 0
         )
 
-        val (list, _) = service.addList("https://www.youtube.com/playlist?list=PLabc123&other=param")
+        val (list, _) = service.addList(userId, "https://www.youtube.com/playlist?list=PLabc123&other=param")
         assertEquals("PLabc123", list.youtubeListId)
     }
 }

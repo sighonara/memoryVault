@@ -24,7 +24,7 @@ class FeedServiceTest {
         every { feedRepository.save(any()) } answers { firstArg() }
         coEvery { rssFetchService.fetchAndStore(any()) } returns 5
 
-        val result = runBlocking { service.addFeed("https://example.com/rss") }
+        val result = runBlocking { service.addFeed(userId, "https://example.com/rss") }
 
         assertNotNull(result)
         assertEquals("https://example.com/rss", result.url)
@@ -40,7 +40,7 @@ class FeedServiceTest {
         every { feedItemRepository.countUnreadByFeedId(feed1.id) } returns 3
         every { feedItemRepository.countUnreadByFeedId(feed2.id) } returns 0
 
-        val result = service.listFeeds()
+        val result = service.listFeeds(userId)
 
         assertEquals(2, result.size)
         assertEquals(3L, result[0].second)
@@ -75,7 +75,7 @@ class FeedServiceTest {
         every { feedRepository.findActiveById(feed.id) } returns feed
         coEvery { rssFetchService.fetchAndStore(feed) } returns 3
 
-        val result = runBlocking { service.refreshFeed(feed.id) }
+        val result = runBlocking { service.refreshFeed(userId, feed.id) }
 
         assertEquals(1, result.size)
         assertEquals(3, result[0].second)
@@ -88,7 +88,7 @@ class FeedServiceTest {
         every { feedRepository.findAllActiveByUserId(userId) } returns listOf(feed1, feed2)
         coEvery { rssFetchService.fetchAndStore(any()) } returns 2
 
-        val result = runBlocking { service.refreshFeed(null) }
+        val result = runBlocking { service.refreshFeed(userId, null) }
 
         assertEquals(2, result.size)
     }

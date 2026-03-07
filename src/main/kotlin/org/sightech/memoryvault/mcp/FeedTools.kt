@@ -1,6 +1,7 @@
 package org.sightech.memoryvault.mcp
 
 import kotlinx.coroutines.runBlocking
+import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.feed.service.FeedItemService
 import org.sightech.memoryvault.feed.service.FeedService
 import org.springframework.ai.tool.annotation.Tool
@@ -15,13 +16,13 @@ class FeedTools(
 
     @Tool(description = "Subscribe to an RSS feed. Use when the user wants to add, follow, or subscribe to an RSS or Atom feed by URL.")
     fun addFeed(url: String): String {
-        val feed = runBlocking { feedService.addFeed(url) }
+        val feed = runBlocking { feedService.addFeed(CurrentUser.userId(), url) }
         return "Subscribed to feed: \"${feed.title ?: feed.url}\" (${feed.url}) — id: ${feed.id}"
     }
 
     @Tool(description = "List all subscribed RSS feeds with unread item counts. Use when the user wants to see their feeds or check for unread items.")
     fun listFeeds(): String {
-        val feeds = feedService.listFeeds()
+        val feeds = feedService.listFeeds(CurrentUser.userId())
         if (feeds.isEmpty()) return "No feeds subscribed."
 
         val lines = feeds.map { (feed, unread) ->
@@ -66,7 +67,7 @@ class FeedTools(
     @Tool(description = "Refresh one or all RSS feeds to fetch new items. Use when the user wants to check for new articles. Pass a feedId to refresh one feed, or omit it to refresh all.")
     fun refreshFeed(feedId: String?): String {
         val results = runBlocking {
-            feedService.refreshFeed(feedId?.let { UUID.fromString(it) })
+            feedService.refreshFeed(CurrentUser.userId(), feedId?.let { UUID.fromString(it) })
         }
         if (results.isEmpty()) return "No feeds to refresh."
 

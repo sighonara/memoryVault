@@ -1,5 +1,6 @@
 package org.sightech.memoryvault.mcp
 
+import org.sightech.memoryvault.auth.CurrentUser
 import org.springframework.ai.tool.annotation.Tool
 import org.springframework.stereotype.Component
 import org.sightech.memoryvault.bookmark.service.BookmarkService
@@ -10,14 +11,14 @@ class BookmarkTools(private val bookmarkService: BookmarkService) {
 
     @Tool(description = "Save a URL as a bookmark. Use when the user wants to save, bookmark, or remember a web page. Optionally provide a title and tags.")
     fun addBookmark(url: String, title: String?, tags: List<String>?): String {
-        val bookmark = bookmarkService.create(url, title, tags)
+        val bookmark = bookmarkService.create(CurrentUser.userId(), url, title, tags)
         val tagStr = if (bookmark.tags.isNotEmpty()) " [${bookmark.tags.joinToString(", ") { it.name }}]" else ""
         return "Saved bookmark: \"${bookmark.title}\" (${bookmark.url})$tagStr — id: ${bookmark.id}"
     }
 
     @Tool(description = "List and search bookmarks. Use when the user wants to see their bookmarks, search by text, or filter by tags. Both query and tags are optional filters.")
     fun listBookmarks(query: String?, tags: List<String>?): String {
-        val bookmarks = bookmarkService.findAll(query, tags)
+        val bookmarks = bookmarkService.findAll(CurrentUser.userId(), query, tags)
         if (bookmarks.isEmpty()) return "No bookmarks found."
 
         val lines = bookmarks.map { b ->
@@ -29,7 +30,7 @@ class BookmarkTools(private val bookmarkService: BookmarkService) {
 
     @Tool(description = "Update the tags on a bookmark. Use when the user wants to tag, retag, categorize, or label a bookmark. Replaces all existing tags.")
     fun tagBookmark(bookmarkId: String, tags: List<String>): String {
-        val bookmark = bookmarkService.updateTags(UUID.fromString(bookmarkId), tags)
+        val bookmark = bookmarkService.updateTags(CurrentUser.userId(), UUID.fromString(bookmarkId), tags)
             ?: return "Bookmark not found."
         val tagStr = bookmark.tags.joinToString(", ") { it.name }
         return "Updated tags on \"${bookmark.title}\": [$tagStr]"
@@ -44,6 +45,6 @@ class BookmarkTools(private val bookmarkService: BookmarkService) {
 
     @Tool(description = "Export all bookmarks as a Netscape HTML file. Use when the user wants to export their bookmarks for import into a web browser.")
     fun exportBookmarks(format: String?): String {
-        return bookmarkService.exportNetscapeHtml()
+        return bookmarkService.exportNetscapeHtml(CurrentUser.userId())
     }
 }

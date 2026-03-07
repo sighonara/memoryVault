@@ -21,14 +21,10 @@ class YoutubeListService(
     private val videoSyncService: VideoSyncService
 ) {
 
-    companion object {
-        val SYSTEM_USER_ID: UUID = UUID.fromString("00000000-0000-0000-0000-000000000001")
-    }
-
-    fun addList(url: String): Pair<YoutubeList, SyncResult> {
+    fun addList(userId: UUID, url: String): Pair<YoutubeList, SyncResult> {
         val playlistId = extractPlaylistId(url)
         val list = youtubeListRepository.save(
-            YoutubeList(userId = SYSTEM_USER_ID, youtubeListId = playlistId, url = url)
+            YoutubeList(userId = userId, youtubeListId = playlistId, url = url)
         )
 
         val metadata = ytDlpService.fetchPlaylistMetadata(url)
@@ -46,8 +42,8 @@ class YoutubeListService(
         return list to syncResult
     }
 
-    fun listLists(): List<Pair<YoutubeList, ListStats>> {
-        val lists = youtubeListRepository.findAllActiveByUserId(SYSTEM_USER_ID)
+    fun listLists(userId: UUID): List<Pair<YoutubeList, ListStats>> {
+        val lists = youtubeListRepository.findAllActiveByUserId(userId)
         return lists.map { list ->
             val stats = ListStats(
                 totalVideos = videoRepository.countByYoutubeListId(list.id),
@@ -65,12 +61,12 @@ class YoutubeListService(
         return youtubeListRepository.save(list)
     }
 
-    fun refreshList(listId: UUID?): List<SyncResult> {
+    fun refreshList(userId: UUID, listId: UUID?): List<SyncResult> {
         val lists = if (listId != null) {
             val list = youtubeListRepository.findActiveById(listId) ?: return emptyList()
             listOf(list)
         } else {
-            youtubeListRepository.findAllActiveByUserId(SYSTEM_USER_ID)
+            youtubeListRepository.findAllActiveByUserId(userId)
         }
 
         return lists.map { list ->

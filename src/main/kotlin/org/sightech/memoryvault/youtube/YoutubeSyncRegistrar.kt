@@ -1,5 +1,6 @@
 package org.sightech.memoryvault.youtube
 
+import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.scheduling.JobScheduler
 import org.sightech.memoryvault.scheduling.entity.JobType
 import org.sightech.memoryvault.youtube.service.YoutubeListService
@@ -22,7 +23,7 @@ class YoutubeSyncRegistrar(
     fun registerYoutubeSyncJob() {
         jobScheduler.schedule("youtube-sync", syncCron, JobType.YT_SYNC) {
             logger.info("YouTube sync job starting")
-            val results = youtubeListService.refreshList(null)
+            val results = youtubeListService.refreshList(CurrentUser.SYSTEM_USER_ID, null)
             val totalNew = results.sumOf { it.newVideos }
             val totalRemoved = results.sumOf { it.removedVideos }
             logger.info("YouTube sync complete: {} lists synced, {} new videos, {} removals detected",

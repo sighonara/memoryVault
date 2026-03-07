@@ -20,7 +20,7 @@ class FeedToolsTest {
     @Test
     fun `addFeed returns confirmation`() {
         val feed = Feed(userId = userId, url = "https://example.com/rss").apply { title = "Example Feed" }
-        coEvery { feedService.addFeed("https://example.com/rss") } returns feed
+        coEvery { feedService.addFeed(any(), eq("https://example.com/rss")) } returns feed
 
         val result = runBlocking { tools.addFeed("https://example.com/rss") }
 
@@ -31,7 +31,7 @@ class FeedToolsTest {
     @Test
     fun `listFeeds returns formatted list with unread counts`() {
         val feed = Feed(userId = userId, url = "https://example.com/rss").apply { title = "Example" }
-        every { feedService.listFeeds() } returns listOf(feed to 5L)
+        every { feedService.listFeeds(any()) } returns listOf(feed to 5L)
 
         val result = tools.listFeeds()
 
@@ -41,7 +41,7 @@ class FeedToolsTest {
 
     @Test
     fun `listFeeds returns message when empty`() {
-        every { feedService.listFeeds() } returns emptyList()
+        every { feedService.listFeeds(any()) } returns emptyList()
 
         val result = tools.listFeeds()
 
@@ -106,7 +106,7 @@ class FeedToolsTest {
     @Test
     fun `refreshFeed returns summary`() {
         val feed = Feed(userId = userId, url = "https://a.com/rss").apply { title = "Feed A" }
-        coEvery { feedService.refreshFeed(feed.id) } returns listOf(feed to 3)
+        coEvery { feedService.refreshFeed(any(), eq(feed.id)) } returns listOf(feed to 3)
 
         val result = runBlocking { tools.refreshFeed(feed.id.toString()) }
 
@@ -117,7 +117,7 @@ class FeedToolsTest {
     @Test
     fun `refreshFeed with null refreshes all`() {
         val feed = Feed(userId = userId, url = "https://a.com/rss").apply { title = "A" }
-        coEvery { feedService.refreshFeed(null) } returns listOf(feed to 2)
+        coEvery { feedService.refreshFeed(any(), isNull()) } returns listOf(feed to 2)
 
         val result = runBlocking { tools.refreshFeed(null) }
 
