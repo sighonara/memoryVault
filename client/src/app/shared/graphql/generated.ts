@@ -376,6 +376,41 @@ export type MarkItemReadMutationVariables = Exact<{
 
 export type MarkItemReadMutation = { __typename?: 'Mutation', markItemRead?: { __typename?: 'FeedItem', id: any, readAt?: any | null } | null };
 
+export type GetYoutubeListsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetYoutubeListsQuery = { __typename?: 'Query', youtubeLists: Array<{ __typename?: 'YoutubeListWithStats', totalVideos: number, downloadedVideos: number, removedVideos: number, list: { __typename?: 'YoutubeList', id: any, url: string, name?: string | null } }> };
+
+export type GetVideosQueryVariables = Exact<{
+  listId?: InputMaybe<Scalars['UUID']['input']>;
+  query?: InputMaybe<Scalars['String']['input']>;
+  removedOnly?: InputMaybe<Scalars['Boolean']['input']>;
+}>;
+
+
+export type GetVideosQuery = { __typename?: 'Query', videos: Array<{ __typename?: 'Video', id: any, title?: string | null, youtubeUrl: string, thumbnailPath?: string | null, removedFromYoutube: boolean, downloadedAt?: any | null }> };
+
+export type AddYoutubeListMutationVariables = Exact<{
+  url: Scalars['String']['input'];
+}>;
+
+
+export type AddYoutubeListMutation = { __typename?: 'Mutation', addYoutubeList: { __typename?: 'YoutubeListAddResult', newVideos: number, list: { __typename?: 'YoutubeList', id: any, name?: string | null } } };
+
+export type DeleteYoutubeListMutationVariables = Exact<{
+  listId: Scalars['UUID']['input'];
+}>;
+
+
+export type DeleteYoutubeListMutation = { __typename?: 'Mutation', deleteYoutubeList?: { __typename?: 'YoutubeList', id: any } | null };
+
+export type RefreshYoutubeListMutationVariables = Exact<{
+  listId?: InputMaybe<Scalars['UUID']['input']>;
+}>;
+
+
+export type RefreshYoutubeListMutation = { __typename?: 'Mutation', refreshYoutubeList: Array<{ __typename?: 'SyncResult', listId: any, newVideos: number, downloadSuccesses: number, downloadFailures: number, removedVideos: number }> };
+
 export const GetBookmarksDocument = gql`
     query GetBookmarks($query: String, $tags: [String]) {
   bookmarks(query: $query, tags: $tags) {
@@ -520,6 +555,116 @@ export const MarkItemReadDocument = gql`
   })
   export class MarkItemReadGQL extends Apollo.Mutation<MarkItemReadMutation, MarkItemReadMutationVariables> {
     document = MarkItemReadDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const GetYoutubeListsDocument = gql`
+    query GetYoutubeLists {
+  youtubeLists {
+    list {
+      id
+      url
+      name
+    }
+    totalVideos
+    downloadedVideos
+    removedVideos
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class GetYoutubeListsGQL extends Apollo.Query<GetYoutubeListsQuery, GetYoutubeListsQueryVariables> {
+    document = GetYoutubeListsDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const GetVideosDocument = gql`
+    query GetVideos($listId: UUID, $query: String, $removedOnly: Boolean) {
+  videos(listId: $listId, query: $query, removedOnly: $removedOnly) {
+    id
+    title
+    youtubeUrl
+    thumbnailPath
+    removedFromYoutube
+    downloadedAt
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class GetVideosGQL extends Apollo.Query<GetVideosQuery, GetVideosQueryVariables> {
+    document = GetVideosDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const AddYoutubeListDocument = gql`
+    mutation AddYoutubeList($url: String!) {
+  addYoutubeList(url: $url) {
+    list {
+      id
+      name
+    }
+    newVideos
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class AddYoutubeListGQL extends Apollo.Mutation<AddYoutubeListMutation, AddYoutubeListMutationVariables> {
+    document = AddYoutubeListDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const DeleteYoutubeListDocument = gql`
+    mutation DeleteYoutubeList($listId: UUID!) {
+  deleteYoutubeList(listId: $listId) {
+    id
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class DeleteYoutubeListGQL extends Apollo.Mutation<DeleteYoutubeListMutation, DeleteYoutubeListMutationVariables> {
+    document = DeleteYoutubeListDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const RefreshYoutubeListDocument = gql`
+    mutation RefreshYoutubeList($listId: UUID) {
+  refreshYoutubeList(listId: $listId) {
+    listId
+    newVideos
+    downloadSuccesses
+    downloadFailures
+    removedVideos
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class RefreshYoutubeListGQL extends Apollo.Mutation<RefreshYoutubeListMutation, RefreshYoutubeListMutationVariables> {
+    document = RefreshYoutubeListDocument;
     
     constructor(apollo: Apollo.Apollo) {
       super(apollo);

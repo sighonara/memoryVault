@@ -3,23 +3,22 @@ query GetYoutubeLists {
     list {
       id
       url
-      title
+      name
     }
-    videoCount
-    downloadedCount
+    totalVideos
+    downloadedVideos
+    removedVideos
   }
 }
 
 query GetVideos($listId: UUID, $query: String, $removedOnly: Boolean) {
   videos(listId: $listId, query: $query, removedOnly: $removedOnly) {
     id
-    listId
     title
-    url
-    thumbnailUrl
-    isRemovedFromYoutube
+    youtubeUrl
+    thumbnailPath
+    removedFromYoutube
     downloadedAt
-    publishedAt
   }
 }
 
@@ -27,9 +26,9 @@ mutation AddYoutubeList($url: String!) {
   addYoutubeList(url: $url) {
     list {
       id
-      title
+      name
     }
-    message
+    newVideos
   }
 }
 
@@ -41,7 +40,10 @@ mutation DeleteYoutubeList($listId: UUID!) {
 
 mutation RefreshYoutubeList($listId: UUID) {
   refreshYoutubeList(listId: $listId) {
-    success
-    message
+    listId
+    newVideos
+    downloadSuccesses
+    downloadFailures
+    removedVideos
   }
 }

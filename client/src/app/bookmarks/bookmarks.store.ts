@@ -47,14 +47,14 @@ export const BookmarksStore = signalStore(
 
     setSearchQuery: (query: string) => {
       patchState(store, { searchQuery: query });
-      store.bookmarks;
+      (store as any).loadBookmarks();
     },
 
     toggleTag: (tag: string) => {
       const current = store.selectedTags();
       const next = current.includes(tag) ? current.filter((t) => t !== tag) : [...current, tag];
       patchState(store, { selectedTags: next });
-      store.bookmarks;
+      (store as any).loadBookmarks();
     },
 
     addBookmark: rxMethod<{ url: string; title?: string; tags?: string[] }>(
@@ -65,7 +65,7 @@ export const BookmarksStore = signalStore(
             variables,
           })
         ),
-        tap(() => store.bookmarks)
+        tap(() => (store as any).loadBookmarks())
       )
     ),
 
@@ -77,7 +77,7 @@ export const BookmarksStore = signalStore(
             variables: { id },
           })
         ),
-        tap(() => store.bookmarks)
+        tap(() => (store as any).loadBookmarks())
       )
     ),
   }))
