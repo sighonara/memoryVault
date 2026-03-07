@@ -1,8 +1,64 @@
-/* You can add global styles to this file, and also import other style files */
-@import '@angular/material/prebuilt-themes/azure-blue.css';
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
 
 html, body {
   height: 100%;
   margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: #f5f5f5;
+  color: #202124;
 }
+
+/* Slim scrollbars */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.18); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.32); }
+
+/* ── Fix: expansion panel header clips long titles ── */
+.mat-expansion-panel-header {
+  height: auto !important;
+  min-height: 48px !important;
+  padding: 10px 24px !important;
+  align-items: flex-start !important;
+}
+.mat-expansion-panel-header-title,
+.mat-expansion-panel-header-description {
+  white-space: normal !important;
+  line-height: 1.4 !important;
+  overflow: visible !important;
+}
+.mat-expansion-panel {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  border-bottom: 1px solid #e8eaed !important;
+}
+.mat-expansion-panel:last-of-type {
+  border-bottom: none !important;
+}
+
+/* ── Cards ── */
+.mat-mdc-card {
+  border-radius: 8px !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08) !important;
+}
+.mat-mdc-card:hover {
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15) !important;
+}
+
+/* ── Buttons: tighter padding, consistent size ── */
+.mat-mdc-button, .mat-mdc-outlined-button {
+  min-width: auto !important;
+  padding: 0 12px !important;
+  font-size: 0.875rem !important;
+}
+.mat-mdc-raised-button {
+  font-size: 0.875rem !important;
+}
+.mat-mdc-icon-button {
+  width: 36px !important;
+  height: 36px !important;
+  padding: 6px !important;
+}
+
+/* ── Form fields: compact in toolbars ── */
+.mat-mdc-form-field-subscript-wrapper { display: none !important; }

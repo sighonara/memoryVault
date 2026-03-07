@@ -1,60 +1,92 @@
 .app-toolbar {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
   position: sticky;
   top: 0;
   z-index: 1000;
+  padding: 0 12px !important;
+  min-height: 56px !important;
 }
 
 .app-title {
   cursor: pointer;
-  font-weight: bold;
-  font-size: 1.5rem;
-  margin-right: 16px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+  margin-right: 8px;
+  flex-shrink: 0;
 }
 
 .search-container {
-  flex-grow: 1;
-  max-width: 600px;
+  flex: 1 1 auto;
+  max-width: 520px;
   display: flex;
   align-items: center;
 }
 
 .search-field {
   width: 100%;
+  /* compact the field vertically */
+  --mdc-outlined-text-field-container-height: 36px;
 }
 
-.search-field :deep(.mat-mdc-form-field-subscript-wrapper) {
-  display: none;
-}
+.search-field :deep(.mat-mdc-form-field-subscript-wrapper) { display: none; }
 
 .search-field :deep(.mat-mdc-text-field-wrapper) {
-  background-color: rgba(255, 255, 255, 0.15);
-  border-radius: 4px;
+  background-color: rgba(255,255,255,0.15);
+  border-radius: 20px;
+  padding: 0 12px;
 }
 
-.search-field :deep(.mat-mdc-form-field-focus-indicator) {
-  display: none;
+.search-field :deep(.mdc-notched-outline__leading),
+.search-field :deep(.mdc-notched-outline__trailing),
+.search-field :deep(.mdc-notched-outline__notch) {
+  border-color: rgba(255,255,255,0.3) !important;
+  border-radius: 20px !important;
 }
 
-.search-field input {
+.search-field :deep(input),
+.search-field :deep(.mat-mdc-form-field-infix) {
   color: white;
+  caret-color: white;
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
 }
 
-.search-field mat-icon {
-  color: white;
-}
+.search-field :deep(::placeholder) { color: rgba(255,255,255,0.6); }
+.search-field :deep(mat-icon) { color: rgba(255,255,255,0.7); }
+.search-field :deep(.mat-mdc-floating-label) { color: rgba(255,255,255,0.6) !important; }
 
 .nav-links {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.nav-links a {
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.4px;
+  color: rgba(255,255,255,0.88) !important;
+  border-radius: 4px;
+  padding: 0 10px !important;
+  height: 34px;
+  line-height: 34px;
+  min-width: auto !important;
+  transition: background 0.15s;
+}
+
+.nav-links a:hover {
+  background: rgba(255,255,255,0.12);
+  color: #fff !important;
 }
 
 .active-link {
-  background-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255,255,255,0.2) !important;
+  color: #fff !important;
 }
 
-.spacer {
-  flex: 1 1 auto;
-}
+.spacer { flex: 1 1 auto; }

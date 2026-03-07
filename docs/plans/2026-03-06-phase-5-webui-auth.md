@@ -2573,25 +2573,26 @@ git commit -m "feat: proxy config for local dev, Phase 5 complete"
 
 ## Summary
 
-| Task | Description | Key Files |
-|------|-------------|-----------|
-| 1 | User entity + auth service | auth/entity/, auth/service/, V4 migration |
-| 2 | JWT token service | auth/service/JwtService.kt, jjwt deps |
-| 3 | Login endpoint + SecurityConfig | auth/controller/, config/SecurityConfig, JwtAuthFilter |
-| 4 | CurrentUser helper + wire services | auth/CurrentUser.kt, all services |
-| 5 | GraphQL setup + schema | graphql/*.graphqls, ScalarConfig, deps |
-| 6 | GraphQL resolvers: bookmarks + feeds | graphql/BookmarkResolver, FeedResolver |
-| 7 | GraphQL resolvers: YouTube + admin | graphql/YoutubeResolver, AdminResolver |
-| 8 | GraphQL integration test | GraphQlIntegrationTest |
-| 9 | Angular infra: Material, Vitest, Apollo | client deps, config, providers |
-| 10 | Angular auth: login + guard | client/src/app/auth/ |
-| 11 | Angular app shell: top bar + layout | client/src/app/shared/layout/ |
-| 12 | Angular reader page | client/src/app/reader/ |
-| 13 | Angular bookmarks page | client/src/app/bookmarks/ |
-| 14 | Angular YouTube page | client/src/app/youtube/ |
-| 15 | Angular admin page | client/src/app/admin/ |
-| 16 | Angular global search | client/src/app/search/ |
-| 17 | Frontend unit tests | *.spec.ts files |
-| 18 | Playwright E2E | client/e2e/ |
-| 19 | Test scripts | scripts/test-frontend.sh, test-graphql.sh |
-| 20 | Final verification + proxy config | proxy.conf.json, end-to-end check |
+| Task | Description                             | Key Files                                              |
+|------|-----------------------------------------|--------------------------------------------------------|
+| 1    | User entity + auth service              | auth/entity/, auth/service/, V4 migration              |
+| 2    | JWT token service                       | auth/service/JwtService.kt, jjwt deps                  |
+| 3    | Login endpoint + SecurityConfig         | auth/controller/, config/SecurityConfig, JwtAuthFilter |
+| 4    | CurrentUser helper + wire services      | auth/CurrentUser.kt, all services                      |
+| 5    | GraphQL setup + schema                  | graphql/*.graphqls, ScalarConfig, deps                 |
+| 6    | GraphQL resolvers: bookmarks + feeds    | graphql/BookmarkResolver, FeedResolver                 |
+| 7    | GraphQL resolvers: YouTube + admin      | graphql/YoutubeResolver, AdminResolver                 |
+| 8    | GraphQL integration test                | GraphQlIntegrationTest                                 |
+| 9    | Angular infra: Material, Vitest, Apollo | client deps, config, providers                         |
+| 10   | Angular auth: login + guard             | client/src/app/auth/                                   |
+| 11   | Angular app shell: top bar + layout     | client/src/app/shared/layout/                          |
+| 12   | Angular reader page                     | client/src/app/reader/                                 |
+| 13   | Angular bookmarks page                  | client/src/app/bookmarks/                              |
+| 14   | Angular YouTube page                    | client/src/app/youtube/                                |
+| 15   | Angular admin page                      | client/src/app/admin/                                  |
+| 16   | Angular global search                   | client/src/app/search/                                 |
+| 17   | Frontend design                         | *.css files                                            |
+| 18   | Frontend unit tests                     | *.spec.ts files                                        |
+| 19   | Playwright E2E                          | client/e2e/                                            |
+| 20   | Test scripts                            | scripts/test-frontend.sh, test-graphql.sh              |
+| 21   | Final verification + proxy config       | proxy.conf.json, end-to-end check                      |
