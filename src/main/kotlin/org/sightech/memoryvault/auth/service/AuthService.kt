@@ -17,7 +17,7 @@ class AuthService(
         val user = userService.findByEmail(email)
             ?: throw IllegalArgumentException("Invalid credentials")
 
-        if (!passwordEncoder.matches(password, user.passwordHash)) {
+        if (user.passwordHash == null || !passwordEncoder.matches(password, user.passwordHash)) {
             throw IllegalArgumentException("Invalid credentials")
         }
 

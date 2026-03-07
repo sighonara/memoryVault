@@ -24,17 +24,13 @@ class JwtAuthenticationFilter(
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             val token = authHeader.substring(7)
-            try {
-                val claims = jwtService.validateToken(token)
-                if (claims != null) {
-                    val userId = claims["userId"]!!
-                    val role = claims["role"]!!
-                    val authorities = listOf(SimpleGrantedAuthority("ROLE_$role"))
-                    val authentication = UsernamePasswordAuthenticationToken(userId, null, authorities)
-                    SecurityContextHolder.getContext().authentication = authentication
-                }
-            } catch (e: io.jsonwebtoken.JwtException) {
-                // Invalid token — continue without authentication
+            val claims = jwtService.validateToken(token)
+            if (claims != null) {
+                val userId = claims["userId"]!!
+                val role = claims["role"]!!
+                val authorities = listOf(SimpleGrantedAuthority("ROLE_$role"))
+                val authentication = UsernamePasswordAuthenticationToken(userId, null, authorities)
+                SecurityContextHolder.getContext().authentication = authentication
             }
         }
 
