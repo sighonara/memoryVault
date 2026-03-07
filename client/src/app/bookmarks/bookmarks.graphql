@@ -1,0 +1,32 @@
+query GetBookmarks($query: String, $tags: [String]) {
+  bookmarks(query: $query, tags: $tags) {
+    id
+    url
+    title
+    tags {
+      name
+    }
+    createdAt
+  }
+}
+
+mutation CreateBookmark($url: String!, $title: String, $tags: [String]) {
+  addBookmark(url: $url, title: $title, tags: $tags) {
+    id
+    url
+    title
+  }
+}
+
+mutation DeleteBookmark($id: UUID!) {
+  deleteBookmark(id: $id) {
+    id
+  }
+}
+
+query GetSystemStats {
+  stats {
+    bookmarkCount
+    tagCount
+  }
+}

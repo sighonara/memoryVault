@@ -1,0 +1,31 @@
+query GetFeeds {
+  feeds {
+    feed {
+      id
+      url
+      title
+      siteUrl
+    }
+    unreadCount
+  }
+}
+
+query GetFeedItems($feedId: UUID!, $limit: Int, $unreadOnly: Boolean) {
+  feedItems(feedId: $feedId, limit: $limit, unreadOnly: $unreadOnly) {
+    id
+    feedId
+    title
+    url
+    content
+    author
+    publishedAt
+    readAt
+  }
+}
+
+mutation MarkItemRead($itemId: UUID!) {
+  markItemRead(itemId: $itemId) {
+    id
+    readAt
+  }
+}
