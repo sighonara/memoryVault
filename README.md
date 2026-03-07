@@ -19,6 +19,9 @@ PersonalArchive is an enterprise-grade personal content management system that h
 - 🤖 **Interact via AI** using Claude through the Model Context Protocol
 - 🏗️ **Self-host** on AWS or run locally with Docker
 
+### AI Assistant Integration
+If you are an AI assistant (like Claude or Junie) working on this project, please refer to [CLAUDE.md](CLAUDE.md) for project-specific instructions, coding standards, and available tools.
+
 Built with modern enterprise technologies as a showcase of full-stack development capabilities, infrastructure-as-code practices, and AI integration patterns.
 
 ## Key Features
@@ -569,38 +572,45 @@ docker-compose -f docker-compose.test.yml up --abort-on-container-exit
 
 ## Roadmap
 
-### Phase 1: MVP ✅
+### Phase 1: Bookmarks ✅
 - [x] Basic bookmark management
 - [x] Import/export functionality
 - [x] URL deduplication
 - [x] GraphQL API
 
-### Phase 2: Content Processing (Current)
-- [ ] Web page archival with screenshots
-- [ ] Full-text search (PostgreSQL)
-- [ ] Python processing service
-- [ ] Basic YouTube video archival
+### Phase 2: RSS ✅
+- [x] Scheduled fetching
+- [x] Implement RSS fetcher
 
-### Phase 3: Infrastructure
-- [ ] Terraform AWS deployment
-- [ ] Docker containerization
-- [ ] CI/CD pipeline
-- [ ] Airflow job scheduling
+### Phase 3: YT-DLP ✅
+- [x] yt-dlp
+- [x] Stub for S3 storage
+- [x] Scheduled fetching
 
-### Phase 4: MCP Integration
-- [ ] MCP server implementation
-- [ ] Tool definitions (search, add, analyze)
-- [ ] Resource endpoints
-- [ ] Claude Desktop integration
+### Phase 4: Cross-Cutting ✅
+- [x] Implement logging
+- [x] Stub AWS usage
+- [x] PostgreSQL full-text search
+- [x] Job history tracking
+- [x] Structured logging
 
-### Phase 5: Advanced Features
-- [ ] Elasticsearch for advanced search
-- [ ] Browser extension (Chrome/Firefox)
-- [ ] Mobile app (React Native or Swift)
-- [ ] ML-based recommendations
-- [ ] Collaborative bookmark sharing
-- [ ] RSS feed aggregation
-- [ ] Content categorization with ML
+### Phase 5: Web UI & Auth (Current)
+- [x] User authentication & JWT
+- [x] Multi-user support (CurrentUser wiring)
+- [ ] GraphQL API for Web UI
+- [ ] Angular Frontend implementation
+- [ ] Playwright E2E tests
+
+### Phase 6: Infrastructure
+- [ ] Terraform
+- [ ] Deploy to AWS
+- [ ] CI/CD pipeline and Github actions
+- [ ] AWS Cognito auth
+- [ ] AWS Cloudwatch log retrieval
+- [ ] AWS cost tracking
+
+### Phase 7: Real-Time Updates
+- [ ] Websocket support for live UI updates
 
 ## Contributing
 
