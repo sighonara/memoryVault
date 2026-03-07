@@ -10,8 +10,8 @@ interface YoutubeListRepository : JpaRepository<YoutubeList, UUID> {
     @Query("SELECT yl FROM YoutubeList yl WHERE yl.deletedAt IS NULL AND yl.userId = :userId ORDER BY yl.name")
     fun findAllActiveByUserId(userId: UUID): List<YoutubeList>
 
-    @Query("SELECT yl FROM YoutubeList yl WHERE yl.id = :id AND yl.deletedAt IS NULL")
-    fun findActiveById(id: UUID): YoutubeList?
+    @Query("SELECT yl FROM YoutubeList yl WHERE yl.id = :id AND yl.userId = :userId AND yl.deletedAt IS NULL")
+    fun findActiveByIdAndUserId(id: UUID, userId: UUID): YoutubeList?
 
     fun countByUserIdAndDeletedAtIsNull(userId: UUID): Long
 

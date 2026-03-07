@@ -49,24 +49,26 @@ class YoutubeListService(
         val lists = youtubeListRepository.findAllActiveByUserId(userId)
         return lists.map { list ->
             val stats = ListStats(
-                totalVideos = videoRepository.countByYoutubeListId(list.id),
-                downloadedVideos = videoRepository.countDownloadedByYoutubeListId(list.id),
-                removedVideos = videoRepository.countRemovedByYoutubeListId(list.id)
+                totalVideos = videoRepository.countByYoutubeListIdAndUserId(list.id, userId),
+                downloadedVideos = videoRepository.countDownloadedByYoutubeListIdAndUserId(list.id, userId),
+                removedVideos = videoRepository.countRemovedByYoutubeListIdAndUserId(list.id, userId)
             )
             list to stats
         }
     }
 
     fun deleteList(listId: UUID): YoutubeList? {
-        val list = youtubeListRepository.findActiveById(listId) ?: return null
+        val userId = CurrentUser.userId()
+        val list = youtubeListRepository.findActiveByIdAndUserId(listId, userId) ?: return null
         list.deletedAt = Instant.now()
         list.updatedAt = Instant.now()
         return youtubeListRepository.save(list)
     }
 
-    fun refreshList(userId: UUID, listId: UUID?): List<SyncResult> {
+    fun refreshList(listId: UUID?): List<SyncResult> {
+        val userId = CurrentUser.userId()
         val lists = if (listId != null) {
-            val list = youtubeListRepository.findActiveById(listId) ?: return emptyList()
+            val list = youtubeListRepository.findActiveByIdAndUserId(listId, userId) ?: return emptyList()
             listOf(list)
         } else {
             youtubeListRepository.findAllActiveByUserId(userId)

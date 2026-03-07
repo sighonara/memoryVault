@@ -23,7 +23,7 @@ class YoutubeSyncRegistrar(
     fun registerYoutubeSyncJob() {
         jobScheduler.schedule("youtube-sync", syncCron, JobType.YT_SYNC) {
             logger.info("YouTube sync job starting")
-            val results = youtubeListService.refreshList(CurrentUser.SYSTEM_USER_ID, null)
+            val results = youtubeListService.refreshList(null)
             val totalNew = results.sumOf { it.newVideos }
             val totalRemoved = results.sumOf { it.removedVideos }
             logger.info("YouTube sync complete: {} lists synced, {} new videos, {} removals detected",

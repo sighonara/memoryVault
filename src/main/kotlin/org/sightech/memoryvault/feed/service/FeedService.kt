@@ -26,21 +26,23 @@ class FeedService(
         val userId = CurrentUser.userId()
         val feeds = feedRepository.findAllActiveByUserId(userId)
         return feeds.map { feed ->
-            val unreadCount = feedItemRepository.countUnreadByFeedId(feed.id)
+            val unreadCount = feedItemRepository.countUnreadByFeedIdAndUserId(feed.id, userId)
             feed to unreadCount
         }
     }
 
     fun deleteFeed(feedId: UUID): Feed? {
-        val feed = feedRepository.findActiveById(feedId) ?: return null
+        val userId = CurrentUser.userId()
+        val feed = feedRepository.findActiveByIdAndUserId(feedId, userId) ?: return null
         feed.deletedAt = Instant.now()
         feed.updatedAt = Instant.now()
         return feedRepository.save(feed)
     }
 
-    suspend fun refreshFeed(userId: UUID, feedId: UUID?): List<Pair<Feed, Int>> {
+    suspend fun refreshFeed(feedId: UUID?): List<Pair<Feed, Int>> {
+        val userId = CurrentUser.userId()
         val feeds = if (feedId != null) {
-            val feed = feedRepository.findActiveById(feedId) ?: return emptyList()
+            val feed = feedRepository.findActiveByIdAndUserId(feedId, userId) ?: return emptyList()
             listOf(feed)
         } else {
             feedRepository.findAllActiveByUserId(userId)

@@ -24,7 +24,7 @@ class FeedSyncRegistrar(
     fun registerFeedSyncJob() {
         jobScheduler.schedule("feed-sync", syncCron, JobType.RSS_FETCH) {
             logger.info("Feed sync job starting")
-            val results = runBlocking { feedService.refreshFeed(CurrentUser.SYSTEM_USER_ID, null) }
+            val results = runBlocking { feedService.refreshFeed(null) }
             val totalNew = results.sumOf { it.second }
             logger.info("Feed sync complete: {} feeds refreshed, {} new items", results.size, totalNew)
             mapOf("feedsRefreshed" to results.size, "newItems" to totalNew)

@@ -22,7 +22,7 @@ class BookmarkService(
             title = title ?: url
         )
         if (!tagNames.isNullOrEmpty()) {
-            val tags = tagService.findOrCreateByNames(userId, tagNames)
+            val tags = tagService.findOrCreateByNames(tagNames)
             bookmark.tags.addAll(tags)
         }
         return bookmarkRepository.save(bookmark)
@@ -51,8 +51,8 @@ class BookmarkService(
 
     fun updateTags(bookmarkId: UUID, tagNames: List<String>): Bookmark? {
         val userId = CurrentUser.userId()
-        val bookmark = bookmarkRepository.findActiveById(bookmarkId) ?: return null
-        val tags = tagService.findOrCreateByNames(userId, tagNames)
+        val bookmark = bookmarkRepository.findActiveByIdAndUserId(bookmarkId, userId) ?: return null
+        val tags = tagService.findOrCreateByNames(tagNames)
         bookmark.tags.clear()
         bookmark.tags.addAll(tags)
         bookmark.updatedAt = Instant.now()
@@ -60,7 +60,8 @@ class BookmarkService(
     }
 
     fun softDelete(bookmarkId: UUID): Bookmark? {
-        val bookmark = bookmarkRepository.findActiveById(bookmarkId) ?: return null
+        val userId = CurrentUser.userId()
+        val bookmark = bookmarkRepository.findActiveByIdAndUserId(bookmarkId, userId) ?: return null
         bookmark.deletedAt = Instant.now()
         bookmark.updatedAt = Instant.now()
         return bookmarkRepository.save(bookmark)
