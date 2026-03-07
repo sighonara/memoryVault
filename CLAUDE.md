@@ -53,7 +53,7 @@ src/main/kotlin/org/sightech/memoryvault/
 
 Located in `client/`.
 
-- **Framework**: Angular 20, zoneless, standalone components
+- **Framework**: Angular 21, zoneless, standalone components
 - **State**: NgRx Signal Store
 - **UI**: Angular Material with custom theme
 - **API**: REST with HttpClient + `httpResource()`

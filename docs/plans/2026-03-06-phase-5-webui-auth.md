@@ -6,7 +6,7 @@
 
 **Architecture:** Angular SPA communicates with Spring Boot via GraphQL (Apollo Client + schema-first Spring for GraphQL). JWT auth is local now with a clean swap path to AWS Cognito. A `CurrentUser` abstraction extracts the authenticated user from the security context so all services become multi-tenant aware.
 
-**Tech Stack:** Spring Boot 4.x, Spring for GraphQL, spring-boot-starter-oauth2-resource-server, jjwt, Angular 20, Angular Material, Apollo Angular, graphql-codegen, Vitest, Playwright
+**Tech Stack:** Spring Boot 4.x, Spring for GraphQL, spring-boot-starter-oauth2-resource-server, jjwt, Angular 21, Angular Material, Apollo Angular, graphql-codegen, Vitest, Playwright
 
 ---
 

@@ -1,12 +1,14 @@
 import { defineConfig } from 'vitest/config';
-import angular from '@analogjs/vitest-angular';
+import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
-  plugins: [angular()],
   test: {
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./setup-vitest.ts'],
     include: ['src/**/*.spec.ts'],
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
   },
 });
