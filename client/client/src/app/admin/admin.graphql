@@ -1,0 +1,34 @@
+query GetAdminData($limit: Int) {
+  stats {
+    bookmarkCount
+    feedCount
+    feedItemCount
+    unreadFeedItemCount
+    youtubeListCount
+    videoCount
+    downloadedVideoCount
+    removedVideoCount
+    tagCount
+    storageUsedBytes
+    lastFeedSync
+    lastYoutubeSync
+    feedsWithFailures
+    youtubeListsWithFailures
+  }
+  jobs(limit: $limit) {
+    id
+    type
+    status
+    startedAt
+    completedAt
+    errorMessage
+    triggeredBy
+  }
+  logs(limit: $limit) {
+    timestamp
+    level
+    logger
+    message
+    thread
+  }
+}
