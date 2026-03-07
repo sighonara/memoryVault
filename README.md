@@ -597,7 +597,8 @@ docker-compose -f docker-compose.test.yml up --abort-on-container-exit
 ### Phase 5: Web UI & Auth (Current)
 - [x] User authentication & JWT
 - [x] Multi-user support (CurrentUser wiring)
-- [ ] GraphQL API for Web UI
+- [ ] GraphQL setup & Schema
+- [ ] GraphQL resolvers for bookmarks & feeds
 - [ ] Angular Frontend implementation
 - [ ] Playwright E2E tests
 

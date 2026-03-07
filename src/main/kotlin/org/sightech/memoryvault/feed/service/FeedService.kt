@@ -1,5 +1,6 @@
 package org.sightech.memoryvault.feed.service
 
+import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.feed.entity.Feed
 import org.sightech.memoryvault.feed.repository.FeedItemRepository
 import org.sightech.memoryvault.feed.repository.FeedRepository
@@ -14,13 +15,15 @@ class FeedService(
     private val rssFetchService: RssFetchService
 ) {
 
-    suspend fun addFeed(userId: UUID, url: String): Feed {
+    suspend fun addFeed(url: String): Feed {
+        val userId = CurrentUser.userId()
         val feed = feedRepository.save(Feed(userId = userId, url = url))
         rssFetchService.fetchAndStore(feed)
         return feed
     }
 
-    fun listFeeds(userId: UUID): List<Pair<Feed, Long>> {
+    fun listFeeds(): List<Pair<Feed, Long>> {
+        val userId = CurrentUser.userId()
         val feeds = feedRepository.findAllActiveByUserId(userId)
         return feeds.map { feed ->
             val unreadCount = feedItemRepository.countUnreadByFeedId(feed.id)

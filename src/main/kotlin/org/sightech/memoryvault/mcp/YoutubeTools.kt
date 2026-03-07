@@ -15,14 +15,14 @@ class YoutubeTools(
 
     @Tool(description = "Subscribe to a YouTube playlist for archival. Immediately fetches metadata and queues all videos for download. Use when the user wants to archive or track a YouTube playlist.")
     fun addYoutubeList(url: String): String {
-        val (list, syncResult) = youtubeListService.addList(CurrentUser.userId(), url)
+        val (list, syncResult) = youtubeListService.addList(url)
         return "Added playlist: \"${list.name ?: list.url}\" — ${syncResult.newVideos} video(s) found, " +
             "${syncResult.downloadSuccesses} downloaded, ${syncResult.downloadFailures} failed — id: ${list.id}"
     }
 
     @Tool(description = "List all tracked YouTube playlists with video counts and download progress. Use when the user wants to see their archived playlists.")
     fun listYoutubeLists(): String {
-        val lists = youtubeListService.listLists(CurrentUser.userId())
+        val lists = youtubeListService.listLists()
         if (lists.isEmpty()) return "No playlists tracked."
 
         val lines = lists.map { (list, stats) ->
@@ -86,7 +86,7 @@ class YoutubeTools(
 
     @Tool(description = "Re-sync one or all YouTube playlists. Fetches latest metadata, detects removed videos, and downloads new ones. Pass a listId to refresh one playlist, or omit to refresh all.")
     fun refreshYoutubeList(listId: String?): String {
-        val results = youtubeListService.refreshList(CurrentUser.userId(), listId?.let { UUID.fromString(it) })
+        val results = youtubeListService.refreshList(listId?.let { UUID.fromString(it) })
         if (results.isEmpty()) return "No playlists to refresh."
 
         val lines = results.map { r ->

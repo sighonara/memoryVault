@@ -16,13 +16,13 @@ class FeedTools(
 
     @Tool(description = "Subscribe to an RSS feed. Use when the user wants to add, follow, or subscribe to an RSS or Atom feed by URL.")
     fun addFeed(url: String): String {
-        val feed = runBlocking { feedService.addFeed(CurrentUser.userId(), url) }
+        val feed = runBlocking { feedService.addFeed(url) }
         return "Subscribed to feed: \"${feed.title ?: feed.url}\" (${feed.url}) — id: ${feed.id}"
     }
 
     @Tool(description = "List all subscribed RSS feeds with unread item counts. Use when the user wants to see their feeds or check for unread items.")
     fun listFeeds(): String {
-        val feeds = feedService.listFeeds(CurrentUser.userId())
+        val feeds = feedService.listFeeds()
         if (feeds.isEmpty()) return "No feeds subscribed."
 
         val lines = feeds.map { (feed, unread) ->
@@ -35,7 +35,7 @@ class FeedTools(
     fun getFeedItems(feedId: String, limit: Int?, unreadOnly: Boolean?): String {
         val items = feedItemService.getItems(UUID.fromString(feedId), limit, unreadOnly ?: false)
         if (items.isEmpty()) return "No items found."
-
+        
         val lines = items.map { item ->
             val status = if (item.readAt != null) "[read]" else "[unread]"
             val tagStr = if (item.tags.isNotEmpty()) " [${item.tags.joinToString(", ") { it.name }}]" else ""
@@ -67,7 +67,7 @@ class FeedTools(
     @Tool(description = "Refresh one or all RSS feeds to fetch new items. Use when the user wants to check for new articles. Pass a feedId to refresh one feed, or omit it to refresh all.")
     fun refreshFeed(feedId: String?): String {
         val results = runBlocking {
-            feedService.refreshFeed(CurrentUser.userId(), feedId?.let { UUID.fromString(it) })
+            feedService.refreshFeed(feedId?.let { UUID.fromString(it) })
         }
         if (results.isEmpty()) return "No feeds to refresh."
 

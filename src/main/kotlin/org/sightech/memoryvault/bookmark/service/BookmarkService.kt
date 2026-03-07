@@ -1,5 +1,6 @@
 package org.sightech.memoryvault.bookmark.service
 
+import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.bookmark.entity.Bookmark
 import org.sightech.memoryvault.bookmark.repository.BookmarkRepository
 import org.sightech.memoryvault.tag.service.TagService
@@ -13,7 +14,8 @@ class BookmarkService(
     private val tagService: TagService
 ) {
 
-    fun create(userId: UUID, url: String, title: String?, tagNames: List<String>?): Bookmark {
+    fun create(url: String, title: String?, tagNames: List<String>?): Bookmark {
+        val userId = CurrentUser.userId()
         val bookmark = Bookmark(
             userId = userId,
             url = url,
@@ -26,7 +28,8 @@ class BookmarkService(
         return bookmarkRepository.save(bookmark)
     }
 
-    fun findAll(userId: UUID, query: String?, tagNames: List<String>?): List<Bookmark> {
+    fun findAll(query: String?, tagNames: List<String>?): List<Bookmark> {
+        val userId = CurrentUser.userId()
         var bookmarks = bookmarkRepository.findAllActiveByUserId(userId)
 
         if (!query.isNullOrBlank()) {
@@ -46,7 +49,8 @@ class BookmarkService(
         return bookmarks
     }
 
-    fun updateTags(userId: UUID, bookmarkId: UUID, tagNames: List<String>): Bookmark? {
+    fun updateTags(bookmarkId: UUID, tagNames: List<String>): Bookmark? {
+        val userId = CurrentUser.userId()
         val bookmark = bookmarkRepository.findActiveById(bookmarkId) ?: return null
         val tags = tagService.findOrCreateByNames(userId, tagNames)
         bookmark.tags.clear()
@@ -62,7 +66,8 @@ class BookmarkService(
         return bookmarkRepository.save(bookmark)
     }
 
-    fun exportNetscapeHtml(userId: UUID): String {
+    fun exportNetscapeHtml(): String {
+        val userId = CurrentUser.userId()
         val bookmarks = bookmarkRepository.findAllActiveByUserId(userId)
         val sb = StringBuilder()
         sb.appendLine("<!DOCTYPE NETSCAPE-Bookmark-file-1>")
