@@ -1,10 +1,15 @@
 package org.sightech.memoryvault.tag.service
 
 import io.mockk.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.sightech.memoryvault.tag.entity.Tag
 import org.sightech.memoryvault.tag.repository.TagRepository
+import org.springframework.security.core.Authentication
+import org.springframework.security.core.context.SecurityContext
+import org.springframework.security.core.context.SecurityContextHolder
 import java.util.UUID
+import kotlin.test.AfterTest
 import kotlin.test.assertEquals
 
 class TagServiceTest {
@@ -13,12 +18,29 @@ class TagServiceTest {
     private val service = TagService(repository)
     private val userId = UUID.fromString("00000000-0000-0000-0000-000000000001")
 
+    @BeforeEach
+    fun setUp() {
+        MockKAnnotations.init(this)
+        
+        // Mock SecurityContext to return our test userId
+        val securityContext = mockk<SecurityContext>()
+        val authentication = mockk<Authentication>()
+        every { securityContext.authentication } returns authentication
+        every { authentication.principal } returns userId.toString()
+        SecurityContextHolder.setContext(securityContext)
+    }
+
+    @AfterTest
+    fun tearDown() {
+        SecurityContextHolder.clearContext()
+    }
+
     @Test
     fun `findOrCreateByName returns existing tag`() {
         val existing = Tag(userId = userId, name = "kotlin")
         every { repository.findByUserIdAndName(userId, "kotlin") } returns existing
 
-        val result = service.findOrCreateByName(userId, "kotlin")
+        val result = service.findOrCreateByName("kotlin")
 
         assertEquals(existing, result)
         verify(exactly = 0) { repository.save(any()) }
@@ -29,7 +51,7 @@ class TagServiceTest {
         every { repository.findByUserIdAndName(userId, "new-tag") } returns null
         every { repository.save(any()) } answers { firstArg() }
 
-        val result = service.findOrCreateByName(userId, "new-tag")
+        val result = service.findOrCreateByName("new-tag")
 
         assertEquals("new-tag", result.name)
         assertEquals(userId, result.userId)
@@ -42,7 +64,7 @@ class TagServiceTest {
         every { repository.findByUserIdAndNameIn(userId, listOf("kotlin", "spring")) } returns listOf(existing)
         every { repository.save(any()) } answers { firstArg() }
 
-        val result = service.findOrCreateByNames(userId, listOf("kotlin", "spring"))
+        val result = service.findOrCreateByNames(listOf("kotlin", "spring"))
 
         assertEquals(2, result.size)
         verify(exactly = 1) { repository.save(any()) }

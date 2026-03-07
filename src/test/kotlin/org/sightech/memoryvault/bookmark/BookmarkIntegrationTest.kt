@@ -44,27 +44,27 @@ class BookmarkIntegrationTest {
 
     @Test
     fun `create and retrieve bookmark`() {
-        val bookmark = bookmarkService.create(userId, "https://example.com", "Example Site", null)
+        val bookmark = bookmarkService.create("https://example.com", "Example Site", null)
         assertNotNull(bookmark.id)
         assertEquals("Example Site", bookmark.title)
 
-        val found = bookmarkService.findAll(userId, null, null)
+        val found = bookmarkService.findAll(null, null)
         assert(found.any { it.id == bookmark.id })
     }
 
     @Test
     fun `create bookmark with tags`() {
-        val bookmark = bookmarkService.create(userId, "https://kotlin.dev", "Kotlin", listOf("lang", "jvm"))
+        val bookmark = bookmarkService.create("https://kotlin.dev", "Kotlin", listOf("lang", "jvm"))
         assertEquals(2, bookmark.tags.size)
 
-        val found = bookmarkService.findAll(userId, null, listOf("lang"))
+        val found = bookmarkService.findAll(null, listOf("lang"))
         assert(found.any { it.id == bookmark.id })
     }
 
     @Test
     fun `update tags on bookmark`() {
-        val bookmark = bookmarkService.create(userId, "https://spring.io", "Spring", listOf("java"))
-        val updated = bookmarkService.updateTags(userId, bookmark.id, listOf("kotlin", "framework"))
+        val bookmark = bookmarkService.create("https://spring.io", "Spring", listOf("java"))
+        val updated = bookmarkService.updateTags(bookmark.id, listOf("kotlin", "framework"))
 
         assertNotNull(updated)
         assertEquals(2, updated.tags.size)
@@ -74,20 +74,20 @@ class BookmarkIntegrationTest {
 
     @Test
     fun `soft delete bookmark`() {
-        val bookmark = bookmarkService.create(userId, "https://delete-me.com", "Delete Me", null)
+        val bookmark = bookmarkService.create("https://delete-me.com", "Delete Me", null)
         val deleted = bookmarkService.softDelete(bookmark.id)
 
         assertNotNull(deleted)
         assertNotNull(deleted.deletedAt)
 
-        val found = bookmarkService.findAll(userId, null, null)
+        val found = bookmarkService.findAll(null, null)
         assert(found.none { it.id == bookmark.id })
     }
 
     @Test
     fun `export bookmarks as Netscape HTML`() {
-        bookmarkService.create(userId, "https://export-test.com", "Export Test", listOf("test"))
-        val html = bookmarkService.exportNetscapeHtml(userId)
+        bookmarkService.create("https://export-test.com", "Export Test", listOf("test"))
+        val html = bookmarkService.exportNetscapeHtml()
 
         assert(html.contains("<!DOCTYPE NETSCAPE-Bookmark-file-1>"))
         assert(html.contains("https://export-test.com"))
@@ -97,10 +97,10 @@ class BookmarkIntegrationTest {
 
     @Test
     fun `tags are reused across bookmarks`() {
-        bookmarkService.create(userId, "https://a.com", "A", listOf("shared-tag"))
-        bookmarkService.create(userId, "https://b.com", "B", listOf("shared-tag"))
+        bookmarkService.create("https://a.com", "A", listOf("shared-tag"))
+        bookmarkService.create("https://b.com", "B", listOf("shared-tag"))
 
-        val results = bookmarkService.findAll(userId, null, listOf("shared-tag"))
+        val results = bookmarkService.findAll(null, listOf("shared-tag"))
         assert(results.size >= 2)
     }
 }

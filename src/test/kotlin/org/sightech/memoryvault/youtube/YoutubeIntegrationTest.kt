@@ -53,7 +53,7 @@ class YoutubeIntegrationTest {
             YoutubeList(userId = userId, youtubeListId = "PLintegration1", url = "https://youtube.com/playlist?list=PLintegration1", name = "Integration Test")
         )
 
-        val found = youtubeListRepository.findActiveById(list.id)
+        val found = youtubeListRepository.findActiveByIdAndUserId(list.id, userId)
         assertNotNull(found)
         assertEquals("Integration Test", found.name)
     }
@@ -83,7 +83,7 @@ class YoutubeIntegrationTest {
         assertEquals(1, result2.removedVideos)
 
         // Verify v3 is flagged
-        val removed = videoRepository.findRemovedByYoutubeListId(list.id)
+        val removed = videoRepository.findRemovedByYoutubeListIdAndUserId(list.id, userId)
         assertEquals(1, removed.size)
         assertEquals("v3", removed[0].youtubeVideoId)
     }
@@ -104,7 +104,7 @@ class YoutubeIntegrationTest {
         val second = videoSyncService.syncList(list, metadata)
         assertEquals(0, second.newVideos)
 
-        val videos = videoRepository.findByYoutubeListId(list.id)
+        val videos = videoRepository.findByYoutubeListIdAndUserId(list.id, userId)
         assertEquals(1, videos.size)
     }
 
@@ -117,7 +117,7 @@ class YoutubeIntegrationTest {
         list.deletedAt = java.time.Instant.now()
         youtubeListRepository.save(list)
 
-        val found = youtubeListRepository.findActiveById(list.id)
+        val found = youtubeListRepository.findActiveByIdAndUserId(list.id, userId)
         assertTrue(found == null)
     }
 
@@ -134,9 +134,9 @@ class YoutubeIntegrationTest {
         )
         videoSyncService.syncList(list, metadata)
 
-        assertEquals(3, videoRepository.countByYoutubeListId(list.id))
+        assertEquals(3L, videoRepository.countByYoutubeListIdAndUserId(list.id, userId))
         // LocalVideoDownloader calls yt-dlp which won't be available in test — downloads fail gracefully
-        assertEquals(0, videoRepository.countDownloadedByYoutubeListId(list.id))
+        assertEquals(0L, videoRepository.countDownloadedByYoutubeListIdAndUserId(list.id, userId))
     }
 
     @Test
@@ -150,7 +150,7 @@ class YoutubeIntegrationTest {
         )
         videoSyncService.syncList(list, metadata)
 
-        val videos = videoRepository.findByYoutubeListId(list.id)
+        val videos = videoRepository.findByYoutubeListIdAndUserId(list.id, userId)
         val video = videoService.getVideoStatus(videos[0].id)
 
         assertNotNull(video)

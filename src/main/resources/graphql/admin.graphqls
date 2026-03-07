@@ -1,0 +1,35 @@
+type SyncJob {
+    id: UUID!
+    type: String!
+    status: String!
+    startedAt: Instant!
+    completedAt: Instant
+    errorMessage: String
+    triggeredBy: String!
+    metadata: String
+}
+
+type LogEntry {
+    timestamp: Instant!
+    level: String!
+    logger: String!
+    message: String!
+    thread: String!
+}
+
+type SystemStats {
+    bookmarkCount: Int!
+    feedCount: Int!
+    feedItemCount: Int!
+    unreadFeedItemCount: Int!
+    youtubeListCount: Int!
+    videoCount: Int!
+    downloadedVideoCount: Int!
+    removedVideoCount: Int!
+    tagCount: Int!
+    storageUsedBytes: Float!
+    lastFeedSync: Instant
+    lastYoutubeSync: Instant
+    feedsWithFailures: Int!
+    youtubeListsWithFailures: Int!
+}

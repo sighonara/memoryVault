@@ -1,0 +1,7 @@
+type SearchResult {
+    type: String!
+    id: UUID!
+    title: String
+    url: String
+    rank: Float!
+}

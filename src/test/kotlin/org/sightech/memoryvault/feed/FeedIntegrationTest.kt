@@ -121,7 +121,7 @@ class FeedIntegrationTest {
         )
         runBlocking { rssFetchService.fetchAndStoreFromXml(feed, sampleXml) }
 
-        val feeds = feedService.listFeeds(userId)
+        val feeds = feedService.listFeeds()
         val match = feeds.find { it.first.id == feed.id }
         assertNotNull(match)
         assertEquals(3L, match.second)
@@ -136,7 +136,7 @@ class FeedIntegrationTest {
         val deleted = feedService.deleteFeed(feed.id)
         assertNotNull(deleted?.deletedAt)
 
-        val feeds = feedService.listFeeds(userId)
+        val feeds = feedService.listFeeds()
         assertTrue(feeds.none { it.first.id == feed.id })
     }
 
@@ -147,7 +147,7 @@ class FeedIntegrationTest {
         )
         runBlocking { rssFetchService.fetchAndStoreFromXml(feed, sampleXml) }
 
-        val updated = feedRepository.findActiveById(feed.id)
+        val updated = feedRepository.findActiveByIdAndUserId(feed.id, userId)
         assertNotNull(updated)
         assertEquals("Test Feed", updated.title)
         assertEquals("A test RSS feed", updated.description)

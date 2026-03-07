@@ -1,13 +1,18 @@
 package org.sightech.memoryvault.bookmark.service
 
 import io.mockk.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.sightech.memoryvault.bookmark.entity.Bookmark
 import org.sightech.memoryvault.bookmark.repository.BookmarkRepository
 import org.sightech.memoryvault.tag.entity.Tag
 import org.sightech.memoryvault.tag.service.TagService
+import org.springframework.security.core.Authentication
+import org.springframework.security.core.context.SecurityContext
+import org.springframework.security.core.context.SecurityContextHolder
 import java.time.Instant
 import java.util.UUID
+import kotlin.test.AfterTest
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -19,11 +24,28 @@ class BookmarkServiceTest {
     private val service = BookmarkService(bookmarkRepository, tagService)
     private val userId = UUID.fromString("00000000-0000-0000-0000-000000000001")
 
+    @BeforeEach
+    fun setUp() {
+        MockKAnnotations.init(this)
+
+        // Mock SecurityContext to return our test userId
+        val securityContext = mockk<SecurityContext>()
+        val authentication = mockk<Authentication>()
+        every { securityContext.authentication } returns authentication
+        every { authentication.principal } returns userId.toString()
+        SecurityContextHolder.setContext(securityContext)
+    }
+
+    @AfterTest
+    fun tearDown() {
+        SecurityContextHolder.clearContext()
+    }
+
     @Test
     fun `create saves bookmark without tags`() {
         every { bookmarkRepository.save(any()) } answers { firstArg() }
 
-        val result = service.create(userId, "https://example.com", "Example", null)
+        val result = service.create("https://example.com", "Example", null)
 
         assertNotNull(result)
         assertEquals("https://example.com", result.url)
@@ -34,20 +56,20 @@ class BookmarkServiceTest {
     @Test
     fun `create saves bookmark with tags`() {
         val tags = listOf(Tag(userId = userId, name = "kotlin"), Tag(userId = userId, name = "spring"))
-        every { tagService.findOrCreateByNames(userId, listOf("kotlin", "spring")) } returns tags
+        every { tagService.findOrCreateByNames(listOf("kotlin", "spring")) } returns tags
         every { bookmarkRepository.save(any()) } answers { firstArg() }
 
-        val result = service.create(userId, "https://example.com", "Example", listOf("kotlin", "spring"))
+        val result = service.create("https://example.com", "Example", listOf("kotlin", "spring"))
 
         assertEquals(2, result.tags.size)
-        verify { tagService.findOrCreateByNames(userId, listOf("kotlin", "spring")) }
+        verify { tagService.findOrCreateByNames(listOf("kotlin", "spring")) }
     }
 
     @Test
     fun `create uses URL as title when title is null`() {
         every { bookmarkRepository.save(any()) } answers { firstArg() }
 
-        val result = service.create(userId, "https://example.com", null, null)
+        val result = service.create("https://example.com", null, null)
 
         assertEquals("https://example.com", result.title)
     }
@@ -57,7 +79,7 @@ class BookmarkServiceTest {
         val bookmarks = listOf(Bookmark(userId = userId, url = "https://a.com", title = "A"))
         every { bookmarkRepository.findAllActiveByUserId(userId) } returns bookmarks
 
-        val result = service.findAll(userId, null, null)
+        val result = service.findAll(null, null)
 
         assertEquals(1, result.size)
     }
@@ -70,7 +92,7 @@ class BookmarkServiceTest {
         )
         every { bookmarkRepository.findAllActiveByUserId(userId) } returns bookmarks
 
-        val result = service.findAll(userId, "kotlin", null)
+        val result = service.findAll("kotlin", null)
 
         assertEquals(1, result.size)
         assertEquals("Kotlin", result[0].title)
@@ -83,7 +105,7 @@ class BookmarkServiceTest {
         val b2 = Bookmark(userId = userId, url = "https://b.com", title = "B")
         every { bookmarkRepository.findAllActiveByUserId(userId) } returns listOf(b1, b2)
 
-        val result = service.findAll(userId, null, listOf("kotlin"))
+        val result = service.findAll(null, listOf("kotlin"))
 
         assertEquals(1, result.size)
         assertEquals("A", result[0].title)
@@ -93,11 +115,11 @@ class BookmarkServiceTest {
     fun `updateTags replaces tags on bookmark`() {
         val bookmark = Bookmark(userId = userId, url = "https://a.com", title = "A")
         val newTags = listOf(Tag(userId = userId, name = "new-tag"))
-        every { bookmarkRepository.findActiveById(bookmark.id) } returns bookmark
-        every { tagService.findOrCreateByNames(userId, listOf("new-tag")) } returns newTags
+        every { bookmarkRepository.findActiveByIdAndUserId(bookmark.id, userId) } returns bookmark
+        every { tagService.findOrCreateByNames(listOf("new-tag")) } returns newTags
         every { bookmarkRepository.save(any()) } answers { firstArg() }
 
-        val result = service.updateTags(userId, bookmark.id, listOf("new-tag"))
+        val result = service.updateTags(bookmark.id, listOf("new-tag"))
 
         assertNotNull(result)
         assertEquals(1, result.tags.size)
@@ -106,9 +128,9 @@ class BookmarkServiceTest {
     @Test
     fun `updateTags returns null for nonexistent bookmark`() {
         val id = UUID.randomUUID()
-        every { bookmarkRepository.findActiveById(id) } returns null
+        every { bookmarkRepository.findActiveByIdAndUserId(id, userId) } returns null
 
-        val result = service.updateTags(userId, id, listOf("tag"))
+        val result = service.updateTags(id, listOf("tag"))
 
         assertNull(result)
     }
@@ -116,7 +138,7 @@ class BookmarkServiceTest {
     @Test
     fun `softDelete sets deletedAt`() {
         val bookmark = Bookmark(userId = userId, url = "https://a.com", title = "A")
-        every { bookmarkRepository.findActiveById(bookmark.id) } returns bookmark
+        every { bookmarkRepository.findActiveByIdAndUserId(bookmark.id, userId) } returns bookmark
         every { bookmarkRepository.save(any()) } answers { firstArg() }
 
         val result = service.softDelete(bookmark.id)
@@ -128,7 +150,7 @@ class BookmarkServiceTest {
     @Test
     fun `softDelete returns null for nonexistent bookmark`() {
         val id = UUID.randomUUID()
-        every { bookmarkRepository.findActiveById(id) } returns null
+        every { bookmarkRepository.findActiveByIdAndUserId(id, userId) } returns null
 
         val result = service.softDelete(id)
 
@@ -140,7 +162,7 @@ class BookmarkServiceTest {
         val bookmark = Bookmark(userId = userId, url = "https://example.com", title = "Example")
         every { bookmarkRepository.findAllActiveByUserId(userId) } returns listOf(bookmark)
 
-        val result = service.exportNetscapeHtml(userId)
+        val result = service.exportNetscapeHtml()
 
         assert(result.contains("<!DOCTYPE NETSCAPE-Bookmark-file-1>"))
         assert(result.contains("HREF=\"https://example.com\""))

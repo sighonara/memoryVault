@@ -14,5 +14,5 @@ class BookmarkController(private val service: BookmarkService) {
     fun findAll(
         @RequestParam(required = false) query: String?,
         @RequestParam(required = false) tags: List<String>?
-    ): List<Bookmark> = service.findAll(CurrentUser.userId(), query, tags)
+    ): List<Bookmark> = service.findAll(query, tags)
 }

@@ -65,7 +65,7 @@ class CrossCuttingIntegrationTest {
 
     @Test
     fun `full-text search finds bookmarks`() {
-        bookmarkService.create(userId, "https://kotlinlang.org", "Kotlin Programming Language", null)
+        bookmarkService.create("https://kotlinlang.org", "Kotlin Programming Language", null)
 
         val results = searchService.search("kotlin", null, userId, 20)
         assertTrue(results.any { it.type == ContentType.BOOKMARK && it.title?.contains("Kotlin") == true })
@@ -91,7 +91,7 @@ class CrossCuttingIntegrationTest {
 
     @Test
     fun `full-text search filters by type`() {
-        bookmarkService.create(userId, "https://unique-search-test.com", "Unique Searchable Bookmark", null)
+        bookmarkService.create("https://unique-search-test.com", "Unique Searchable Bookmark", null)
 
         val bookmarkOnly = searchService.search("unique searchable", listOf(ContentType.BOOKMARK), userId, 20)
         assertTrue(bookmarkOnly.all { it.type == ContentType.BOOKMARK })

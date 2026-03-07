@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController
 class YoutubeController(private val youtubeListService: YoutubeListService) {
 
     @GetMapping("/lists")
-    fun listLists() = youtubeListService.listLists(CurrentUser.userId()).map { (list, stats) ->
+    fun listLists() = youtubeListService.listLists().map { (list, stats) ->
         mapOf(
             "id" to list.id,
             "name" to list.name,

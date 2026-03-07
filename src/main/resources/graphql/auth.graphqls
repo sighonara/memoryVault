@@ -1,0 +1,6 @@
+type LoginResponse {
+    token: String!
+    email: String!
+    displayName: String!
+    role: String!
+}
