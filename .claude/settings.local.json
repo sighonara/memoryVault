@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout:*)",
+      "Bash(git:*)",
+      "Bash(docker compose:*)",
+      "Bash(./gradlew dependencies:*)",
+      "Bash(./gradlew compileKotlin:*)",
+      "Bash(lsof:*)",
+      "Bash(curl:*)",
+      "Bash(jar tf:*)",
+      "Bash(./gradlew test:*)",
+      "Bash(./scripts/test-all.sh:*)",
+      "Bash(./scripts/smoke-test.sh:*)",
+      "Bash(cat:*)",
+      "Bash(./gradlew dependencyInsight:*)",
+      "Bash(unzip:*)",
+      "WebSearch",
+      "WebFetch(domain:mvnrepository.com)",
+      "Bash(./gradlew compileTestKotlin:*)",
+      "Bash(grep:*)"
+    ]
+  }
+}
