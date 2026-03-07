@@ -17,6 +17,11 @@ bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
 
+### Front-end ###
+node_modules
+client/dist
+.angular
+
 ### IntelliJ IDEA ###
 .idea
 *.iws
