@@ -28,8 +28,12 @@ import { BookmarkDialogComponent } from './bookmark-dialog';
     MatToolbarModule,
   ],
   providers: [BookmarksStore],
-  templateUrl: './bookmarks.html',
-  styleUrl: './bookmarks.css',
+  template: `
+    <div style="padding: 20px;">
+      <h1>Bookmarks</h1>
+      <p>Bookmarks implementation in progress.</p>
+    </div>
+  `
 })
 export class BookmarksComponent implements OnInit {
   readonly store = inject(BookmarksStore);
@@ -40,7 +44,7 @@ export class BookmarksComponent implements OnInit {
   }
 
   onSearch(event: any) {
-    this.store.setSearchQuery(event.target.value);
+    this.store.setSearchQuery((event.target as HTMLInputElement).value);
   }
 
   toggleTag(tag: string) {

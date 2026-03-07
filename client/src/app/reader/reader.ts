@@ -10,7 +10,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatCheckboxModule } from '@angular/forms';
+// import { MatCheckboxModule } from '@angular/material/checkbox'; TODO: add this when we actually need it.
 import { ReaderStore } from './reader.store';
 
 @Component({
@@ -55,7 +55,7 @@ export class ReaderComponent implements OnInit {
   getSelectedFeedTitle(): string {
     const selectedId = this.store.selectedFeedId();
     if (!selectedId) return 'Select a feed';
-    const feedWithStats = this.store.feeds().find(f => f.feed.id === selectedId);
+    const feedWithStats = this.store.feeds().find((f: any) => f.feed.id === selectedId);
     return feedWithStats?.feed.title || 'Select a feed';
   }
 }
