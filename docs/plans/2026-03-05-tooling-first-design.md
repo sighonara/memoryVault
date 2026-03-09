@@ -225,10 +225,13 @@ PostgreSQL full-text search, system stats, job history tracking with SyncJob ent
 ### Phase 5 — Web UI + Auth
 Angular frontend, authentication, GraphQL API. The website you'd use daily.
 
-### Phase 6 — Infrastructure
+### Phase 6 — Bookmark Automation
+Automatically import bookmarks and deal with how the "new" bookmarks integrate with the existing bookmarks.
+
+### Phase 7 — Infrastructure
 Terraform, CI/CD pipeline, production AWS deployment. AWS Cognito auth, CloudWatch log retrieval, AWS cost tracking.
 
-### Phase 7 — Real-Time Updates
+### Phase 8 — Real-Time Updates
 WebSocket support for live UI updates — new feed items, sync job progress, download status changes pushed to the Angular client without polling.
 
 ---

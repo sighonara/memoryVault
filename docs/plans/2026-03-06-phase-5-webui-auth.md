@@ -2592,7 +2592,8 @@ git commit -m "feat: proxy config for local dev, Phase 5 complete"
 | 15   | Angular admin page                      | client/src/app/admin/                                  |
 | 16   | Angular global search                   | client/src/app/search/                                 |
 | 17   | Frontend design                         | *.css files                                            |
-| 18   | Frontend unit tests                     | *.spec.ts files                                        |
-| 19   | Playwright E2E                          | client/e2e/                                            |
-| 20   | Test scripts                            | scripts/test-frontend.sh, test-graphql.sh              |
-| 21   | Final verification + proxy config       | proxy.conf.json, end-to-end check                      |
+| 18   | Frontend deal with 403 or other errors. | client/src/app/*                                       |
+| 19   | Frontend unit tests                     | *.spec.ts files                                        |
+| 20   | Playwright E2E                          | client/e2e/                                            |
+| 21   | Test scripts                            | scripts/test-frontend.sh, test-graphql.sh              |
+| 22   | Final verification + proxy config       | proxy.conf.json, end-to-end check                      |
