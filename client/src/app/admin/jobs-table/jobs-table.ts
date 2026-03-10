@@ -1,7 +1,6 @@
 import { Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -16,7 +15,6 @@ const JOB_TYPES = ['FEED_SYNC', 'YOUTUBE_SYNC'];
   imports: [
     CommonModule,
     MatTableModule,
-    MatChipsModule,
     MatSelectModule,
     MatFormFieldModule,
     MatIconModule,
@@ -25,9 +23,9 @@ const JOB_TYPES = ['FEED_SYNC', 'YOUTUBE_SYNC'];
   template: `
     <div class="jobs-toolbar">
       <mat-form-field appearance="outline" class="filter-field">
-        <mat-label>Filter by type</mat-label>
+        <mat-label>Type</mat-label>
         <mat-select [value]="typeFilter()" (selectionChange)="typeFilterChange.emit($event.value || null)">
-          <mat-option [value]="null">All types</mat-option>
+          <mat-option [value]="null">All</mat-option>
           @for (t of jobTypes; track t) {
             <mat-option [value]="t">{{ t }}</mat-option>
           }
@@ -44,9 +42,7 @@ const JOB_TYPES = ['FEED_SYNC', 'YOUTUBE_SYNC'];
       <ng-container matColumnDef="status">
         <th mat-header-cell *matHeaderCellDef>Status</th>
         <td mat-cell *matCellDef="let job">
-          <mat-chip [class]="'status-chip status-' + job.status.toLowerCase()">
-            {{ job.status }}
-          </mat-chip>
+          <span [class]="'status status-' + job.status.toLowerCase()">{{ job.status }}</span>
         </td>
       </ng-container>
 
@@ -61,15 +57,15 @@ const JOB_TYPES = ['FEED_SYNC', 'YOUTUBE_SYNC'];
       </ng-container>
 
       <ng-container matColumnDef="triggeredBy">
-        <th mat-header-cell *matHeaderCellDef>Triggered By</th>
+        <th mat-header-cell *matHeaderCellDef>Trigger</th>
         <td mat-cell *matCellDef="let job">{{ job.triggeredBy }}</td>
       </ng-container>
 
       <ng-container matColumnDef="error">
-        <th mat-header-cell *matHeaderCellDef>Error</th>
+        <th mat-header-cell *matHeaderCellDef></th>
         <td mat-cell *matCellDef="let job">
           @if (job.errorMessage) {
-            <mat-icon color="warn" [matTooltip]="job.errorMessage">error_outline</mat-icon>
+            <mat-icon class="error-icon" [matTooltip]="job.errorMessage">error_outline</mat-icon>
           }
         </td>
       </ng-container>
@@ -79,18 +75,19 @@ const JOB_TYPES = ['FEED_SYNC', 'YOUTUBE_SYNC'];
     </table>
 
     @if (jobs().length === 0) {
-      <div class="empty-state">No jobs found.</div>
+      <div class="empty">No jobs found.</div>
     }
   `,
   styles: [`
-    .jobs-toolbar { padding: 8px 0; }
-    .filter-field { min-width: 200px; }
+    .jobs-toolbar { padding: 8px 16px; }
+    .filter-field { min-width: 140px; }
     .jobs-table { width: 100%; }
-    .status-chip { font-size: 0.75rem; min-height: 24px; padding: 0 8px; }
-    .status-running { background: #e3f2fd !important; color: #1565c0 !important; }
-    .status-success { background: #e8f5e9 !important; color: #2e7d32 !important; }
-    .status-failure { background: #ffebee !important; color: #c62828 !important; }
-    .empty-state { padding: 40px; text-align: center; color: #999; }
+    .status { font-size: 0.7rem; font-weight: 600; padding: 1px 6px; border-radius: 3px; }
+    .status-running { background: #e3f2fd; color: #1565c0; }
+    .status-success { background: #e8f5e9; color: #2e7d32; }
+    .status-failure { background: #ffebee; color: #c62828; }
+    .error-icon { font-size: 16px; width: 16px; height: 16px; color: #c62828; }
+    .empty { padding: 40px; text-align: center; color: #9aa0a6; font-size: 0.8125rem; }
   `],
 })
 export class JobsTableComponent {

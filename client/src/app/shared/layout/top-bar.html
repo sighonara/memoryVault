@@ -2,10 +2,7 @@
   <span class="app-title" routerLink="/">MemoryVault</span>
 
   <div class="search-container">
-    <mat-form-field appearance="outline" class="search-field">
-      <mat-icon matPrefix>search</mat-icon>
-      <input matInput type="text" placeholder="Global search..." [(ngModel)]="searchQuery" (keyup.enter)="onSearch()" />
-    </mat-form-field>
+    <input type="text" class="search-input" placeholder="Search..." [(ngModel)]="searchQuery" (keyup.enter)="onSearch()" />
   </div>
 
   <nav class="nav-links">

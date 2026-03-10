@@ -6,13 +6,14 @@
   top: 0;
   z-index: 1000;
   padding: 0 12px !important;
-  min-height: 56px !important;
+  min-height: 48px !important;
+  height: 48px !important;
 }
 
 .app-title {
   cursor: pointer;
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   letter-spacing: -0.3px;
   white-space: nowrap;
   margin-right: 8px;
@@ -21,60 +22,44 @@
 
 .search-container {
   flex: 1 1 auto;
-  max-width: 520px;
+  max-width: 420px;
   display: flex;
   align-items: center;
 }
 
-.search-field {
+.search-input {
   width: 100%;
-  /* compact the field vertically */
-  --mdc-outlined-text-field-container-height: 36px;
-}
-
-.search-field :deep(.mat-mdc-form-field-subscript-wrapper) { display: none; }
-
-.search-field :deep(.mat-mdc-text-field-wrapper) {
-  background-color: rgba(255,255,255,0.15);
-  border-radius: 20px;
+  height: 30px;
+  border: none;
+  border-radius: 4px;
   padding: 0 12px;
-}
-
-.search-field :deep(.mdc-notched-outline__leading),
-.search-field :deep(.mdc-notched-outline__trailing),
-.search-field :deep(.mdc-notched-outline__notch) {
-  border-color: rgba(255,255,255,0.3) !important;
-  border-radius: 20px !important;
-}
-
-.search-field :deep(input),
-.search-field :deep(.mat-mdc-form-field-infix) {
+  font-size: 0.8125rem;
+  font-family: inherit;
+  background: rgba(255,255,255,0.15);
   color: white;
   caret-color: white;
-  padding-top: 6px !important;
-  padding-bottom: 6px !important;
+  outline: none;
+  transition: background 0.15s;
 }
-
-.search-field :deep(::placeholder) { color: rgba(255,255,255,0.6); }
-.search-field :deep(mat-icon) { color: rgba(255,255,255,0.7); }
-.search-field :deep(.mat-mdc-floating-label) { color: rgba(255,255,255,0.6) !important; }
+.search-input::placeholder { color: rgba(255,255,255,0.6); }
+.search-input:focus { background: rgba(255,255,255,0.25); }
 
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 0;
   flex-shrink: 0;
 }
 
 .nav-links a {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.4px;
   color: rgba(255,255,255,0.88) !important;
   border-radius: 4px;
   padding: 0 10px !important;
-  height: 34px;
-  line-height: 34px;
+  height: 28px;
+  line-height: 28px;
   min-width: auto !important;
   transition: background 0.15s;
 }

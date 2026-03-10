@@ -1,8 +1,7 @@
 import { Component, inject, OnInit, ChangeDetectionStrategy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Apollo } from 'apollo-angular';
-import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -31,22 +30,21 @@ const TYPE_ROUTES: Record<string, string> = {
   standalone: true,
   imports: [
     CommonModule,
-    RouterLink,
-    MatCardModule,
     MatIconModule,
     MatChipsModule,
     MatProgressSpinnerModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="search-container">
-      <h1 class="search-heading">
+    <div class="search-page">
+      <div class="search-header">
         @if (query()) {
-          Results for "{{ query() }}"
+          <span class="search-label">Results for</span>
+          <span class="search-query">"{{ query() }}"</span>
         } @else {
-          Search
+          <span class="search-label">Search</span>
         }
-      </h1>
+      </div>
 
       <div class="type-filters">
         <mat-chip-listbox multiple>
@@ -62,53 +60,82 @@ const TYPE_ROUTES: Record<string, string> = {
       </div>
 
       @if (loading()) {
-        <div class="loading"><mat-spinner diameter="40"></mat-spinner></div>
+        <div class="loading"><mat-spinner diameter="28"></mat-spinner></div>
       }
 
       @if (!loading() && results().length === 0 && query()) {
         <div class="empty-state">
           <mat-icon>search_off</mat-icon>
-          <p>No results found for "{{ query() }}"</p>
+          <p>No results for "{{ query() }}"</p>
         </div>
       }
 
       @for (group of groupedResults(); track group.type) {
         <section class="result-group">
-          <h2 class="group-heading">
+          <div class="group-header">
             <mat-icon>{{ typeIcon(group.type) }}</mat-icon>
-            {{ typeLabel(group.type) }}
-            <span class="group-count">({{ group.items.length }})</span>
-          </h2>
+            <span>{{ typeLabel(group.type) }}</span>
+            <span class="group-count">{{ group.items.length }}</span>
+          </div>
 
           @for (item of group.items; track item.id) {
-            <mat-card class="result-card" [routerLink]="typeRoute(item.type)">
-              <mat-card-content class="result-content">
-                <div class="result-title">{{ item.title || '(untitled)' }}</div>
-                @if (item.url) {
-                  <div class="result-url">{{ item.url }}</div>
-                }
-              </mat-card-content>
-            </mat-card>
+            <a class="result-row" [href]="item.url" target="_blank">
+              <span class="result-title">{{ item.title || '(untitled)' }}</span>
+              @if (item.url) {
+                <span class="result-url">{{ item.url }}</span>
+              }
+            </a>
           }
         </section>
       }
     </div>
   `,
   styles: [`
-    .search-container { padding: 20px; max-width: 900px; margin: 0 auto; }
-    .search-heading { font-size: 1.5rem; font-weight: 500; margin-bottom: 16px; }
-    .type-filters { margin-bottom: 24px; }
+    .search-page { max-width: 800px; padding: 0; }
+    .search-header {
+      padding: 12px 16px; border-bottom: 1px solid #dadce0;
+      display: flex; align-items: baseline; gap: 6px;
+    }
+    .search-label { font-size: 0.8125rem; color: #5f6368; }
+    .search-query { font-size: 0.9rem; font-weight: 600; color: #202124; }
+    .type-filters { padding: 8px 16px; border-bottom: 1px solid #e8eaed; }
+    .type-filters mat-chip-option { font-size: 0.75rem; height: 24px; }
     .loading { display: flex; justify-content: center; padding: 40px; }
-    .empty-state { display: flex; flex-direction: column; align-items: center; padding: 60px; color: #666; }
-    .empty-state mat-icon { font-size: 64px; width: 64px; height: 64px; margin-bottom: 16px; opacity: 0.5; }
-    .result-group { margin-bottom: 32px; }
-    .group-heading { display: flex; align-items: center; gap: 8px; font-size: 1.1rem; font-weight: 500; margin-bottom: 12px; color: #333; }
-    .group-count { color: #999; font-weight: 400; }
-    .result-card { margin-bottom: 8px; cursor: pointer; transition: transform 0.15s; }
-    .result-card:hover { transform: translateX(4px); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    .result-content { display: flex; flex-direction: column; gap: 2px; }
-    .result-title { font-weight: 500; }
-    .result-url { font-size: 0.8rem; color: #888; word-break: break-all; }
+
+    .empty-state {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 60px; color: #9aa0a6;
+    }
+    .empty-state mat-icon { font-size: 48px; width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.5; }
+    .empty-state p { font-size: 0.8125rem; margin: 0; }
+
+    .result-group { margin-bottom: 0; }
+    .group-header {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 16px; background: #f8f9fa; border-bottom: 1px solid #e8eaed;
+      font-size: 0.75rem; font-weight: 600; color: #5f6368;
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .group-header mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    .group-count {
+      background: #e8eaed; color: #5f6368; padding: 0 6px;
+      border-radius: 10px; font-size: 0.65rem; line-height: 16px;
+    }
+
+    .result-row {
+      display: flex; flex-direction: column; gap: 1px;
+      padding: 6px 16px; border-bottom: 1px solid #f1f3f4;
+      text-decoration: none; cursor: pointer;
+    }
+    .result-row:hover { background: #f8f9fa; }
+    .result-title {
+      font-size: 0.8125rem; font-weight: 500; color: #1a73e8;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .result-url {
+      font-size: 0.7rem; color: #80868b;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
   `],
 })
 export class SearchComponent implements OnInit {
@@ -153,7 +180,6 @@ export class SearchComponent implements OnInit {
 
   typeIcon(type: string): string { return TYPE_ICONS[type] ?? 'search'; }
   typeLabel(type: string): string { return TYPE_LABELS[type] ?? type; }
-  typeRoute(type: string): string { return TYPE_ROUTES[type] ?? '/'; }
 
   private search(query: string) {
     this.loading.set(true);

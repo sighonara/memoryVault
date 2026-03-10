@@ -4,7 +4,6 @@ import { MatTableModule } from '@angular/material/table';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatChipsModule } from '@angular/material/chips';
 import { FormsModule } from '@angular/forms';
 import { LogEntry } from '../../shared/graphql/generated';
 
@@ -19,7 +18,6 @@ const LOG_LEVELS = ['ERROR', 'WARN', 'INFO', 'DEBUG'];
     MatSelectModule,
     MatFormFieldModule,
     MatInputModule,
-    MatChipsModule,
     FormsModule,
   ],
   template: `
@@ -27,7 +25,7 @@ const LOG_LEVELS = ['ERROR', 'WARN', 'INFO', 'DEBUG'];
       <mat-form-field appearance="outline" class="filter-field">
         <mat-label>Level</mat-label>
         <mat-select [value]="levelFilter()" (selectionChange)="levelFilterChange.emit($event.value || null)">
-          <mat-option [value]="null">All levels</mat-option>
+          <mat-option [value]="null">All</mat-option>
           @for (l of logLevels; track l) {
             <mat-option [value]="l">{{ l }}</mat-option>
           }
@@ -54,13 +52,13 @@ const LOG_LEVELS = ['ERROR', 'WARN', 'INFO', 'DEBUG'];
       <ng-container matColumnDef="level">
         <th mat-header-cell *matHeaderCellDef>Level</th>
         <td mat-cell *matCellDef="let log">
-          <span [class]="'level-badge level-' + log.level.toLowerCase()">{{ log.level }}</span>
+          <span [class]="'level level-' + log.level.toLowerCase()">{{ log.level }}</span>
         </td>
       </ng-container>
 
       <ng-container matColumnDef="logger">
         <th mat-header-cell *matHeaderCellDef>Logger</th>
-        <td mat-cell *matCellDef="let log" class="mono logger">{{ shortLogger(log.logger) }}</td>
+        <td mat-cell *matCellDef="let log" class="mono logger-cell">{{ shortLogger(log.logger) }}</td>
       </ng-container>
 
       <ng-container matColumnDef="message">
@@ -69,28 +67,28 @@ const LOG_LEVELS = ['ERROR', 'WARN', 'INFO', 'DEBUG'];
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns;" [class]="'log-row level-row-' + row.level.toLowerCase()"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;" [class]="'log-row-' + row.level.toLowerCase()"></tr>
     </table>
 
     @if (logs().length === 0) {
-      <div class="empty-state">No log entries found.</div>
+      <div class="empty">No log entries found.</div>
     }
   `,
   styles: [`
-    .log-toolbar { display: flex; gap: 16px; padding: 8px 0; flex-wrap: wrap; }
-    .filter-field { min-width: 160px; }
-    .log-table { width: 100%; font-size: 0.85rem; }
-    .mono { font-family: monospace; }
-    .logger { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .message-cell { max-width: 600px; word-break: break-word; }
-    .level-badge { padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+    .log-toolbar { display: flex; gap: 12px; padding: 8px 16px; }
+    .filter-field { min-width: 120px; }
+    .log-table { width: 100%; }
+    .mono { font-family: "SF Mono", "Fira Code", monospace; font-size: 0.75rem; }
+    .logger-cell { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .message-cell { max-width: 500px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .level { font-size: 0.65rem; font-weight: 600; padding: 1px 4px; border-radius: 2px; }
     .level-error { background: #ffebee; color: #c62828; }
     .level-warn { background: #fff8e1; color: #f57f17; }
     .level-info { background: #e8f5e9; color: #2e7d32; }
     .level-debug { background: #f3e5f5; color: #6a1b9a; }
-    .log-row-error { background: #fff8f8; }
+    .log-row-error { background: #fffafa; }
     .log-row-warn { background: #fffde7; }
-    .empty-state { padding: 40px; text-align: center; color: #999; }
+    .empty { padding: 40px; text-align: center; color: #9aa0a6; font-size: 0.8125rem; }
   `],
 })
 export class LogViewerComponent {

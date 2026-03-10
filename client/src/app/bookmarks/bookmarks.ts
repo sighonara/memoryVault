@@ -2,11 +2,8 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { BookmarksStore } from './bookmarks.store';
@@ -19,30 +16,23 @@ import { BookmarkDialogComponent } from './bookmark-dialog';
     CommonModule,
     MatDialogModule,
     MatButtonModule,
-    MatCardModule,
     MatIconModule,
     MatChipsModule,
-    MatFormFieldModule,
-    MatInputModule,
     MatProgressSpinnerModule,
     MatToolbarModule,
   ],
   providers: [BookmarksStore],
   template: `
-    <div class="bookmarks-container">
-      <mat-toolbar color="default" class="search-toolbar">
-        <mat-form-field appearance="outline" class="search-field">
-          <mat-label>Search bookmarks</mat-label>
-          <input matInput (input)="onSearch($event)" [value]="store.searchQuery()" />
-          <mat-icon matPrefix>search</mat-icon>
-        </mat-form-field>
+    <div class="bookmarks-page">
+      <mat-toolbar class="page-toolbar">
+        <input type="text" class="toolbar-search" placeholder="Search bookmarks..." (input)="onSearch($event)" [value]="store.searchQuery()" />
         <span class="spacer"></span>
-        <button mat-raised-button color="primary" (click)="openAddDialog()">
-          <mat-icon>add</mat-icon> Add Bookmark
+        <button mat-stroked-button (click)="openAddDialog()">
+          <mat-icon>add</mat-icon> Add
         </button>
       </mat-toolbar>
 
-      <div class="tags-container" *ngIf="getAllTags().length > 0">
+      <div class="tags-bar" *ngIf="getAllTags().length > 0">
         <mat-chip-listbox multiple>
           <mat-chip-option
             *ngFor="let tag of getAllTags()"
@@ -53,29 +43,23 @@ import { BookmarkDialogComponent } from './bookmark-dialog';
         </mat-chip-listbox>
       </div>
 
-      <div class="loading-overlay" *ngIf="store.loading()">
-        <mat-spinner diameter="40"></mat-spinner>
+      <div class="loading" *ngIf="store.loading()">
+        <mat-spinner diameter="32"></mat-spinner>
       </div>
 
-      <div class="bookmarks-grid" *ngIf="!store.loading()">
-        <mat-card *ngFor="let bookmark of store.bookmarks()" class="bookmark-card">
-          <mat-card-header>
-            <mat-card-title class="bookmark-title">
-              <a [href]="bookmark.url" target="_blank">{{ bookmark.title || bookmark.url }}</a>
-            </mat-card-title>
-            <mat-card-subtitle class="bookmark-url">{{ bookmark.url }}</mat-card-subtitle>
-          </mat-card-header>
-          <mat-card-content>
-            <mat-chip-set class="bookmark-tags">
-              <mat-chip *ngFor="let tag of bookmark.tags">{{ tag.name }}</mat-chip>
-            </mat-chip-set>
-          </mat-card-content>
-          <mat-card-actions align="end">
-            <button mat-icon-button color="warn" (click)="deleteBookmark(bookmark.id)">
-              <mat-icon>delete</mat-icon>
-            </button>
-          </mat-card-actions>
-        </mat-card>
+      <div class="bookmark-list" *ngIf="!store.loading()">
+        <div *ngFor="let bookmark of store.bookmarks()" class="bookmark-row">
+          <div class="bookmark-info">
+            <a class="bookmark-title" [href]="bookmark.url" target="_blank">{{ bookmark.title || bookmark.url }}</a>
+            <span class="bookmark-url">{{ bookmark.url }}</span>
+          </div>
+          <div class="bookmark-tags">
+            <span *ngFor="let tag of bookmark.tags" class="tag-label">{{ tag.name }}</span>
+          </div>
+          <button mat-icon-button (click)="deleteBookmark(bookmark.id)" class="delete-btn">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
 
         <div class="empty-state" *ngIf="store.bookmarks().length === 0">
           <mat-icon>bookmark_border</mat-icon>
@@ -85,22 +69,58 @@ import { BookmarkDialogComponent } from './bookmark-dialog';
     </div>
   `,
   styles: [`
-    .bookmarks-container { padding: 20px; max-width: 1200px; margin: 0 auto; }
-    .search-toolbar { background: transparent; padding: 0; margin-bottom: 16px; gap: 16px; }
-    .search-field { flex: 1; margin-top: 16px; }
+    .bookmarks-page { display: flex; flex-direction: column; height: 100%; }
+    .page-toolbar {
+      background: #fff; border-bottom: 1px solid #dadce0;
+      min-height: 40px; height: 40px; padding: 0 16px;
+      gap: 12px;
+    }
+    .toolbar-search {
+      flex: 1; max-width: 400px; height: 30px;
+      border: 1px solid #dadce0; border-radius: 4px; padding: 0 10px;
+      font-size: 0.8125rem; font-family: inherit; color: #202124;
+      background: #fff; outline: none;
+    }
+    .toolbar-search:focus { border-color: #1a73e8; }
     .spacer { flex: 1 1 auto; }
-    .tags-container { margin-bottom: 24px; }
-    .bookmarks-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; position: relative; min-height: 200px; }
-    .bookmark-card { display: flex; flex-direction: column; transition: transform 0.2s; }
-    .bookmark-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    .bookmark-title { font-size: 1.1rem; word-break: break-word; line-height: 1.3; }
-    .bookmark-title a { text-decoration: none; color: inherit; }
-    .bookmark-title a:hover { color: #3f51b5; }
-    .bookmark-url { font-size: 0.85rem; word-break: break-all; margin-top: 4px; }
-    .bookmark-tags { margin-top: 8px; }
-    .loading-overlay { display: flex; justify-content: center; padding: 40px; }
-    .empty-state { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px; color: #666; }
-    .empty-state mat-icon { font-size: 64px; width: 64px; height: 64px; margin-bottom: 16px; opacity: 0.5; }
+    .tags-bar { padding: 8px 16px; border-bottom: 1px solid #e8eaed; background: #f8f9fa; }
+    .tags-bar mat-chip-option { font-size: 0.75rem; height: 24px; }
+    .loading { display: flex; justify-content: center; padding: 40px; }
+
+    .bookmark-list { max-width: 900px; }
+    .bookmark-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 8px 16px;
+      border-bottom: 1px solid #f1f3f4;
+      min-height: 0;
+    }
+    .bookmark-row:hover { background: #f8f9fa; }
+    .bookmark-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+    .bookmark-title {
+      font-size: 0.875rem; font-weight: 500; color: #1a73e8;
+      text-decoration: none;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .bookmark-title:hover { text-decoration: underline; }
+    .bookmark-url {
+      font-size: 0.7rem; color: #80868b;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .bookmark-tags { display: flex; gap: 4px; flex-shrink: 0; }
+    .tag-label {
+      font-size: 0.65rem; padding: 1px 6px; border-radius: 3px;
+      background: #e8eaed; color: #5f6368;
+    }
+    .delete-btn { opacity: 0; transition: opacity 0.15s; flex-shrink: 0; }
+    .bookmark-row:hover .delete-btn { opacity: 0.6; }
+    .delete-btn:hover { opacity: 1 !important; }
+
+    .empty-state {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 60px; color: #9aa0a6;
+    }
+    .empty-state mat-icon { font-size: 48px; width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.5; }
+    .empty-state p { font-size: 0.8125rem; margin: 0; }
   `]
 })
 export class BookmarksComponent implements OnInit {
@@ -120,7 +140,7 @@ export class BookmarksComponent implements OnInit {
   }
 
   openAddDialog() {
-    const dialogRef = this.dialog.open(BookmarkDialogComponent, { width: '500px' });
+    const dialogRef = this.dialog.open(BookmarkDialogComponent, { width: '420px' });
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.store.addBookmark(result);
@@ -129,7 +149,7 @@ export class BookmarksComponent implements OnInit {
   }
 
   deleteBookmark(id: string) {
-    if (confirm('Are you sure you want to delete this bookmark?')) {
+    if (confirm('Delete this bookmark?')) {
       this.store.deleteBookmark(id);
     }
   }

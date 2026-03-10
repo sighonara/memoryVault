@@ -3,25 +3,26 @@
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background: linear-gradient(135deg, #1a237e 0%, #283593 40%, #3949ab 100%);
+  background: #f8f9fa;
 }
 
 mat-card {
   width: 100%;
-  max-width: 420px;
-  padding: 24px 32px 32px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3) !important;
+  max-width: 360px;
+  padding: 32px;
+  border: 1px solid #dadce0 !important;
+  box-shadow: none !important;
 }
 
 mat-card-title {
-  font-size: 1.8rem !important;
-  font-weight: 700 !important;
-  letter-spacing: -0.5px;
-  color: #1a237e;
+  font-size: 1.4rem !important;
+  font-weight: 600 !important;
+  color: #202124;
 }
 
 mat-card-subtitle {
-  font-size: 0.95rem !important;
+  font-size: 0.8125rem !important;
+  color: #5f6368;
   margin-top: 4px !important;
 }
 
@@ -31,15 +32,14 @@ mat-card-subtitle {
 }
 
 .error-message {
-  color: #e53935;
+  color: #c62828;
   margin-bottom: 12px;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   text-align: center;
 }
 
 button[type="submit"] {
   margin-top: 8px;
-  height: 44px;
-  font-size: 1rem;
-  letter-spacing: 0.5px;
+  height: 36px;
+  font-size: 0.8125rem;
 }
