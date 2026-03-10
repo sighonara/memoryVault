@@ -1,644 +1,209 @@
-# PersonalArchive
+# MemoryVault
 
-> A self-hosted content aggregation, bookmark management, and archival platform with AI integration via Model Context Protocol (MCP).
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2-green.svg)](https://spring.io/projects/spring-boot)
-[![Kotlin](https://img.shields.io/badge/Kotlin-1.9-blue.svg)](https://kotlinlang.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
-[![Python](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/)
+> A self-hosted content archival and aggregation platform — RSS reader, bookmark manager, and YouTube archiver with AI interaction via MCP.
 
 ## Overview
 
-PersonalArchive is an enterprise-grade personal content management system that helps you:
+MemoryVault replaces services like theoldreader.com with a fully self-hosted alternative. All content lives in your PostgreSQL database and local/S3 storage. Claude (via MCP) can query and manage everything through natural language.
 
-- 📚 **Manage bookmarks** across multiple browsers with intelligent deduplication
-- 🎥 **Archive YouTube videos** and channels for offline access
-- 📰 **Aggregate RSS feeds** and web content
-- 🔍 **Search archived content** with full-text search capabilities
-- 🤖 **Interact via AI** using Claude through the Model Context Protocol
-- 🏗️ **Self-host** on AWS or run locally with Docker
-
-### AI Assistant Integration
-If you are an AI assistant (like Claude or Junie) working on this project, please refer to [CLAUDE.md](CLAUDE.md) for project-specific instructions, coding standards, and available tools.
-
-Built with modern enterprise technologies as a showcase of full-stack development capabilities, infrastructure-as-code practices, and AI integration patterns.
-
-## Key Features
-
-### Content Management
-- **Cross-browser bookmark synchronization** - Import/export bookmarks from Chrome, Firefox, Safari, and Edge
-- **Intelligent URL deduplication** - Automatically detects and merges duplicate bookmarks
-- **Content archival** - Saves full HTML, screenshots, and text content of bookmarked pages
-- **YouTube video archival** - Download and store videos from your favorite channels
-- **RSS feed monitoring** - Track blogs, news sites, and content feeds
-- **Hierarchical organization** - Folders, tags, and custom categorization
-
-### Search & Discovery
-- **Full-text search** across all archived content
-- **Tag-based filtering** and organization
-- **Link health monitoring** - Periodic checks for broken links
-- **Content recommendations** - Discover related bookmarks and videos
-
-### AI Integration (MCP)
-- **Natural language queries** - "Find that Kotlin article I saved last month"
-- **Content summarization** - "What were the key points in this video?"
-- **Smart recommendations** - "What should I read about GraphQL?"
-- **Bookmark management** - Add, tag, and organize via conversation with Claude
-
-### Developer Features
-- **GraphQL API** - Flexible, type-safe API for all operations
-- **REST endpoints** - Traditional REST API for compatibility
-- **Event-driven architecture** - Message queues for async processing
-- **Scheduled jobs** - Airflow orchestration for content fetching and maintenance
-- **Infrastructure as Code** - Terraform modules for AWS deployment
-- **CI/CD pipeline** - GitHub Actions for automated testing and deployment
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                         Clients                              │
-├──────────────┬──────────────────┬─────────────┬─────────────┤
-│   Angular    │   React (future) │  Mobile App │   Claude    │
-│   Frontend   │                  │   (future)  │   (via MCP) │
-└──────┬───────┴────────┬─────────┴──────┬──────┴──────┬──────┘
-       │                │                │             │
-       │ GraphQL        │ GraphQL        │ REST        │ MCP Protocol
-       │                │                │             │
-┌──────▼────────────────▼────────────────▼─────────────▼──────┐
-│                      API Gateway                             │
-└──────┬────────────────┬────────────────┬─────────────┬──────┘
-       │                │                │             │
-┌──────▼──────┐  ┌──────▼──────┐  ┌──────▼──────┐ ┌───▼──────┐
-│   Spring    │  │   Python    │  │  Airflow    │ │   MCP    │
-│    Boot     │  │  Content    │  │  Scheduler  │ │  Server  │
-│  (Kotlin)   │  │  Processor  │  │             │ │(TypeScript)│
-│             │  │             │  │             │ │          │
-│ - GraphQL   │  │- yt-dlp     │  │- Fetch jobs │ │- Tools   │
-│ - REST API  │  │- Scraping   │  │- Health chk │ │- Resources│
-│ - Business  │  │- Dedupe     │  │- Cleanup    │ │          │
-│   Logic     │  │- Screenshots│  │             │ │          │
-└──────┬──────┘  └──────┬──────┘  └──────┬──────┘ └───┬──────┘
-       │                │                │             │
-       └────────┬───────┴────────────────┘             │
-                │                                      │
-         ┌──────▼──────────┐                          │
-         │   PostgreSQL    │◄─────────────────────────┘
-         │                 │
-         │ - Bookmarks     │
-         │ - Videos        │
-         │ - Archives      │
-         │ - Tags          │
-         └────────┬────────┘
-                  │
-         ┌────────▼────────┐
-         │   AWS S3        │
-         │                 │
-         │ - Video files   │
-         │ - Screenshots   │
-         │ - Archived HTML │
-         └─────────────────┘
-```
+- **RSS reader** — subscribe to feeds, read items, mark read/unread
+- **Bookmarks** — save URLs with tags, full-text search, export to Netscape HTML
+- **YouTube archival** — track playlists/channels, download videos via yt-dlp, detect removals
+- **AI integration** — Claude Desktop connects via MCP to query and manage all content
+- **Web UI** — Angular frontend with Google Reader-style layout (feed reader, bookmarks, YouTube, admin)
+- **Global search** — PostgreSQL full-text search across bookmarks, feed items, and videos
 
 ## Technology Stack
 
-### Backend
-- **Language**: Kotlin 1.9+
-- **Framework**: Spring Boot 3.2
-- **API**: GraphQL (Spring for GraphQL), REST
-- **Database**: PostgreSQL 15
-- **ORM**: Spring Data JPA
-- **Message Queue**: RabbitMQ / AWS SQS
-- **Testing**: JUnit 5, MockK, TestContainers
+| Layer | Technology |
+|---|---|
+| Backend language | Kotlin 2.x |
+| Backend framework | Spring Boot 4.x |
+| API | GraphQL (Spring for GraphQL) + REST (auth only) |
+| AI/MCP | Spring AI 2.0-M2 (`spring-ai-starter-mcp-server`, STDIO transport) |
+| Database | PostgreSQL 16 (Docker, port **5433**) |
+| ORM | Spring Data JPA + Flyway migrations |
+| Frontend | Angular 21, zoneless, standalone components |
+| UI library | Angular Material |
+| State management | NgRx Signal Store |
+| GraphQL client | Apollo Angular + graphql-codegen |
+| Frontend testing | Vitest (unit), Playwright (E2E) |
+| Backend testing | JUnit 5, MockK, TestContainers |
+| Content processing | Python 3.11+, yt-dlp |
+| Infrastructure | Docker Compose (local), AWS (EC2, RDS, S3, Lambda, EventBridge) |
+| IaC | Terraform |
 
-### Content Processing Service
-- **Language**: Python 3.11+
-- **Key Libraries**:
-    - `yt-dlp` - YouTube video downloading
-    - `BeautifulSoup4` - HTML parsing and web scraping
-    - `Playwright` - Headless browser for screenshots
-    - `Pillow` - Image processing
-- **Testing**: pytest
+## Project Structure
 
-### MCP Server
-- **Language**: TypeScript 5.0+
-- **Runtime**: Node.js 20+
-- **SDK**: `@modelcontextprotocol/sdk`
-- **GraphQL Client**: `graphql-request`
-- **Testing**: Jest
-
-### Frontend
-- **Framework**: Angular 17+
-- **Language**: TypeScript
-- **Styling**: TailwindCSS
-- **State Management**: NgRx (optional)
-- **Testing**: Jasmine, Karma
-
-### Infrastructure & DevOps
-- **Containerization**: Docker, Docker Compose
-- **Orchestration**: Kubernetes (optional), Docker Swarm
-- **Workflow Orchestration**: Apache Airflow
-- **IaC**: Terraform
-- **CI/CD**: GitHub Actions
-- **Cloud**: AWS (EC2, S3, RDS, SQS, CloudWatch)
-- **Monitoring**: Prometheus, Grafana (future)
-
-## Prerequisites
-
-### For Local Development
-- Docker 24.0+ and Docker Compose 2.20+
-- JDK 17+ (for Spring Boot development)
-- Node.js 20+ and npm 10+ (for MCP server and frontend)
-- Python 3.11+ (for content processor)
-- Git
-
-### For AWS Deployment
-- AWS Account with appropriate IAM permissions
-- Terraform 1.5+
-- AWS CLI configured
-
-## Quick Start
-
-### Local Development with Docker Compose
-
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/personalarchive.git
-cd personalarchive
-
-# Start all services
-docker-compose up -d
-
-# Check service status
-docker-compose ps
-
-# View logs
-docker-compose logs -f
+```
+memoryVault/
+├── src/                        # Spring Boot backend (Kotlin)
+│   └── main/kotlin/org/sightech/memoryvault/
+│       ├── auth/               # User entity, JWT service, login endpoint
+│       ├── bookmark/           # Bookmark management
+│       ├── feed/               # RSS feeds and items
+│       ├── youtube/            # YouTube lists and video archival
+│       ├── search/             # PostgreSQL full-text search
+│       ├── stats/              # System stats
+│       ├── sync/               # Job history tracking
+│       ├── log/                # Log retrieval service
+│       ├── graphql/            # GraphQL resolvers
+│       ├── mcp/                # Spring AI @Tool classes
+│       └── config/             # SecurityConfig, etc.
+├── client/                     # Angular frontend
+│   └── src/app/
+│       ├── auth/               # Login, auth service, guard, interceptor
+│       ├── reader/             # Feed reader (home)
+│       ├── bookmarks/          # Bookmark management
+│       ├── youtube/            # YouTube archive
+│       ├── admin/              # Jobs, logs, stats
+│       ├── search/             # Global search results
+│       └── shared/             # Layout, GraphQL provider, generated types
+├── content-processor/          # Python — yt-dlp, RSS fetching, web scraping
+├── terraform/                  # AWS infrastructure (Phase 7)
+├── lambdas/                    # AWS Lambda functions (Phase 7)
+├── scripts/                    # Test and utility scripts
+│   ├── test-all.sh
+│   ├── smoke-test.sh
+│   └── test-frontend.sh
+├── docs/plans/                 # Phase design docs and implementation plans
+├── compose.yaml                # Docker Compose (PostgreSQL)
+└── build.gradle.kts
 ```
 
-Services will be available at:
-- **Frontend**: http://localhost:4200
-- **Backend API**: http://localhost:8080
-- **GraphQL Playground**: http://localhost:8080/graphiql
-- **Airflow UI**: http://localhost:8081
-- **PostgreSQL**: localhost:5432
+## Local Development
 
-### Manual Setup (Development)
+### Prerequisites
 
-#### 1. Backend Service
+- Docker 24+ and Docker Compose 2.20+
+- JDK 21+
+- Node.js 20+ and npm 10+
+- Python 3.11+ (optional, for content-processor)
+
+### Start
 
 ```bash
-cd backend
+# Start PostgreSQL (port 5433)
+docker compose up -d
+
+# Start backend
 ./gradlew bootRun
+
+# Start frontend (in another terminal)
+cd client && npm start
 ```
 
-#### 2. Content Processor
+Open http://localhost:4200
+
+### Local Login
+
+| Field | Value |
+|---|---|
+| Email | `system@memoryvault.local` |
+| Password | `memoryvault` |
+
+This seed user is created by the V2 + V4 Flyway migrations and has the `OWNER` role. JWT tokens expire after 24 hours. If the app starts returning errors after leaving it open, log out and back in.
+
+### Other useful commands
 
 ```bash
-cd content-processor
-pip install -r requirements.txt --break-system-packages
-python -m uvicorn main:app --reload
+# Run backend tests (TestContainers handles the DB)
+./gradlew test
+
+# Run a specific test class
+./gradlew test --tests "*BookmarkServiceTest"
+
+# Run all tests (backend + frontend)
+./scripts/test-all.sh
+
+# Frontend unit tests
+cd client && npm test
+
+# Frontend lint
+cd client && npm run lint
+
+# Regenerate GraphQL types from schema + .graphql files
+cd client && npm run codegen
+
+# Inspect the database
+docker compose exec postgres psql -U memoryvault -c "SELECT * FROM users;"
+
+# Smoke test against a running instance
+./scripts/smoke-test.sh
 ```
 
-#### 3. MCP Server
+### GraphQL Playground
 
-```bash
-cd mcp-server
-npm install
-npm run build
-npm start
-```
+http://localhost:8080/graphiql — available in dev for ad-hoc queries.
 
-#### 4. Frontend
+## MCP Configuration (Claude Desktop)
 
-```bash
-cd frontend
-npm install
-ng serve
-```
-
-#### 5. Airflow
-
-```bash
-cd airflow
-export AIRFLOW_HOME=$(pwd)
-airflow db init
-airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com
-airflow webserver -p 8081 &
-airflow scheduler &
-```
-
-## Configuration
-
-### Environment Variables
-
-Create a `.env` file in the root directory:
-
-```bash
-# Database
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=personalarchive
-DB_USER=postgres
-DB_PASSWORD=your_password
-
-# AWS (for production)
-AWS_REGION=us-west-2
-AWS_ACCESS_KEY_ID=your_key
-AWS_SECRET_ACCESS_KEY=your_secret
-S3_BUCKET_NAME=personalarchive-content
-
-# RabbitMQ / SQS
-RABBITMQ_HOST=localhost
-RABBITMQ_PORT=5672
-RABBITMQ_USER=guest
-RABBITMQ_PASSWORD=guest
-
-# Application
-SPRING_PROFILE=dev
-FRONTEND_URL=http://localhost:4200
-BACKEND_URL=http://localhost:8080
-
-# Content Processing
-YOUTUBE_ARCHIVE_PATH=/data/videos
-SCREENSHOT_PATH=/data/screenshots
-MAX_VIDEO_SIZE_MB=500
-```
-
-### MCP Configuration
-
-To use the MCP server with Claude Desktop, add to your `claude_desktop_config.json`:
+The MCP server runs inside Spring Boot over STDIO transport. To connect Claude Desktop:
 
 ```json
 {
   "mcpServers": {
-    "personalarchive": {
-      "command": "node",
-      "args": ["/path/to/personalarchive/mcp-server/dist/index.js"],
-      "env": {
-        "ARCHIVE_API_URL": "http://localhost:8080/graphql",
-        "API_KEY": "your_api_key_if_needed"
-      }
+    "memoryvault": {
+      "command": "java",
+      "args": ["-jar", "/path/to/memoryvault.jar"],
+      "env": {}
     }
   }
 }
 ```
 
-## Usage
+Or, if running via Gradle:
 
-### Import Bookmarks
-
-#### Via Web UI
-1. Navigate to http://localhost:4200/bookmarks
-2. Click "Import Bookmarks"
-3. Select your browser's exported HTML file
-4. Review detected duplicates
-5. Click "Confirm Import"
-
-#### Via API
-
-```bash
-curl -X POST http://localhost:8080/api/bookmarks/import \
-  -F "file=@bookmarks.html" \
-  -F "browser=chrome"
-```
-
-#### Via GraphQL
-
-```graphql
-mutation ImportBookmarks($file: Upload!, $browser: BrowserType!) {
-  importBookmarks(file: $file, browser: $browser) {
-    totalImported
-    duplicatesSkipped
-    errors
+```json
+{
+  "mcpServers": {
+    "memoryvault": {
+      "command": "/path/to/gradlew",
+      "args": ["bootRun"],
+      "cwd": "/path/to/memoryVault"
+    }
   }
 }
 ```
 
-### Archive YouTube Channel
+Available MCP tools: `addBookmark`, `listBookmarks`, `tagBookmark`, `deleteBookmark`, `exportBookmarks`, `addFeed`, `listFeeds`, `getFeedItems`, `markItemRead`, `markItemUnread`, `markFeedRead`, `refreshFeed`, `addYoutubeList`, `listYoutubeLists`, `listArchivedVideos`, `getVideoStatus`, `refreshYoutubeList`, `deleteYoutubeList`, `search`, `getStats`, `listJobs`, `getLogs`.
 
-```graphql
-mutation AddYoutubeChannel($url: String!) {
-  addYoutubeChannel(url: $url) {
-    id
-    channelName
-    videoCount
-    status
-  }
-}
-```
+## API
 
-### Search Content via MCP (in Claude)
+All data operations go through GraphQL at `/graphql`. The schema is in `src/main/resources/graphql/`. Authentication uses a REST endpoint:
 
-Simply ask Claude:
-- "Search my bookmarks for articles about Kotlin coroutines"
-- "What videos do I have archived from the SpringDeveloper channel?"
-- "Find bookmarks I tagged with 'graphql' from the last month"
-- "Add https://example.com to my bookmarks and tag it 'spring-boot'"
-
-### Export Bookmarks
-
-```bash
-# Export to HTML (compatible with all browsers)
-curl http://localhost:8080/api/bookmarks/export?format=html > bookmarks.html
-
-# Export to JSON
-curl http://localhost:8080/api/bookmarks/export?format=json > bookmarks.json
-```
-
-## API Documentation
-
-### GraphQL Schema
-
-Full schema available at `/graphiql` endpoint when running locally.
-
-**Key Queries:**
-```graphql
-# Search bookmarks
-bookmarks(query: String, tags: [String], limit: Int): [Bookmark]
-
-# Get archived content
-archivedContent(bookmarkId: ID!): ArchivedContent
-
-# Search videos
-videos(query: String, channel: String): [Video]
-
-# Get recommendations
-recommendations(topic: String, limit: Int): [Bookmark]
-```
-
-**Key Mutations:**
-```graphql
-# Add bookmark
-addBookmark(url: String!, title: String, tags: [String]): Bookmark
-
-# Update bookmark tags
-updateBookmarkTags(id: ID!, tags: [String]!): Bookmark
-
-# Archive YouTube channel
-addYoutubeChannel(url: String!): YoutubeChannel
-
-# Delete bookmark
-deleteBookmark(id: ID!): Boolean
-```
-
-### REST Endpoints
-
-- `GET /api/bookmarks` - List bookmarks
-- `POST /api/bookmarks` - Create bookmark
-- `GET /api/bookmarks/{id}` - Get bookmark details
-- `PUT /api/bookmarks/{id}` - Update bookmark
-- `DELETE /api/bookmarks/{id}` - Delete bookmark
-- `POST /api/bookmarks/import` - Import bookmarks file
-- `GET /api/bookmarks/export` - Export bookmarks
-- `GET /api/videos` - List archived videos
-- `POST /api/videos/channel` - Add YouTube channel
-- `GET /health` - Health check endpoint
-
-## Deployment
-
-### AWS Deployment with Terraform
-
-```bash
-cd terraform
-
-# Initialize Terraform
-terraform init
-
-# Review deployment plan
-terraform plan
-
-# Deploy infrastructure
-terraform apply
-
-# Get outputs (API URL, etc.)
-terraform output
-```
-
-This will provision:
-- EC2 instance (t4g.micro) for application services
-- RDS PostgreSQL instance (t4g.micro)
-- S3 bucket for content storage
-- Security groups and networking
-- CloudWatch logs
-
-**Estimated Monthly Cost**: $15-20 USD
-
-### Deploy to Existing EC2 Instance
-
-```bash
-# SSH into your EC2 instance
-ssh -i your-key.pem ec2-user@your-instance-ip
-
-# Clone repository
-git clone https://github.com/yourusername/personalarchive.git
-cd personalarchive
-
-# Set environment variables
-cp .env.example .env
-nano .env  # Edit with your values
-
-# Start services
-docker-compose -f docker-compose.prod.yml up -d
-```
-
-### Migrate from AWS to Local
-
-```bash
-# Export database
-docker-compose exec postgres pg_dump -U postgres personalarchive > backup.sql
-
-# Download S3 content
-aws s3 sync s3://your-bucket/videos ./data/videos
-aws s3 sync s3://your-bucket/screenshots ./data/screenshots
-
-# Run locally with docker-compose
-docker-compose up -d
-
-# Import database
-docker-compose exec -T postgres psql -U postgres personalarchive < backup.sql
-```
-
-## Development
-
-### Project Structure
-
-```
-personalarchive/
-├── backend/                    # Spring Boot (Kotlin) backend
-│   ├── src/
-│   │   ├── main/
-│   │   │   ├── kotlin/
-│   │   │   │   ├── com/yourname/archive/
-│   │   │   │   │   ├── config/        # Spring configuration
-│   │   │   │   │   ├── controller/    # REST controllers
-│   │   │   │   │   ├── resolver/      # GraphQL resolvers
-│   │   │   │   │   ├── service/       # Business logic
-│   │   │   │   │   ├── repository/    # Data access
-│   │   │   │   │   ├── model/         # Domain models
-│   │   │   │   │   └── dto/           # Data transfer objects
-│   │   │   └── resources/
-│   │   │       ├── application.yml
-│   │   │       └── schema.graphqls
-│   │   └── test/
-│   ├── build.gradle.kts
-│   └── Dockerfile
-├── content-processor/          # Python content processing service
-│   ├── src/
-│   │   ├── downloader/        # YouTube downloader
-│   │   ├── scraper/           # Web scraper
-│   │   ├── deduplicator/      # URL deduplication
-│   │   └── archiver/          # Content archival
-│   ├── requirements.txt
-│   └── Dockerfile
-├── mcp-server/                 # TypeScript MCP server
-│   ├── src/
-│   │   ├── index.ts           # Main server
-│   │   ├── tools/             # MCP tool implementations
-│   │   ├── resources/         # MCP resource handlers
-│   │   └── graphql/           # GraphQL client
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── Dockerfile
-├── frontend/                   # Angular frontend
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── bookmarks/     # Bookmark management
-│   │   │   ├── videos/        # Video archive
-│   │   │   ├── search/        # Search interface
-│   │   │   └── shared/        # Shared components
-│   │   ├── assets/
-│   │   └── environments/
-│   ├── package.json
-│   └── Dockerfile
-├── airflow/                    # Airflow DAGs and config
-│   ├── dags/
-│   │   ├── fetch_youtube.py
-│   │   ├── check_links.py
-│   │   └── cleanup_old_content.py
-│   └── airflow.cfg
-├── terraform/                  # Infrastructure as Code
-│   ├── main.tf
-│   ├── variables.tf
-│   ├── outputs.tf
-│   ├── modules/
-│   │   ├── ec2/
-│   │   ├── rds/
-│   │   └── s3/
-│   └── environments/
-│       ├── dev/
-│       └── prod/
-├── .github/
-│   └── workflows/
-│       ├── backend-ci.yml
-│       ├── frontend-ci.yml
-│       └── deploy.yml
-├── docker-compose.yml          # Local development
-├── docker-compose.prod.yml     # Production deployment
-├── .env.example
-└── README.md
-```
-
-### Running Tests
-
-```bash
-# Backend tests
-cd backend
-./gradlew test
-
-# Content processor tests
-cd content-processor
-pytest
-
-# MCP server tests
-cd mcp-server
-npm test
-
-# Frontend tests
-cd frontend
-ng test
-
-# Integration tests
-docker-compose -f docker-compose.test.yml up --abort-on-container-exit
-```
-
-### Code Style
-
-- **Kotlin**: ktlint (run `./gradlew ktlintFormat`)
-- **Python**: black, flake8, mypy
-- **TypeScript**: ESLint, Prettier
-- **Pre-commit hooks**: husky for automated formatting
+- `POST /api/auth/login` — returns a JWT token
+- All other requests require `Authorization: Bearer <token>` header
 
 ## Roadmap
 
-### Phase 1: Bookmarks ✅
-- [x] Basic bookmark management
-- [x] Import/export functionality
-- [x] URL deduplication
-- [x] GraphQL API
+### Phase 0 — Tooling ✅
+Spring Boot skeleton, Docker Compose, Claude Code custom skills.
 
-### Phase 2: RSS ✅
-- [x] Scheduled fetching
-- [x] Implement RSS fetcher
+### Phase 1 — Bookmarks ✅
+Entity, service, 5 MCP tools, Flyway migrations (V1–V2).
 
-### Phase 3: YT-DLP ✅
-- [x] yt-dlp
-- [x] Stub for S3 storage
-- [x] Scheduled fetching
+### Phase 2 — RSS Feeds ✅
+RSS parsing (RSS-Parser), feed/item entities, 7 MCP tools, scheduled sync via `JobScheduler` interface.
 
-### Phase 4: Cross-Cutting ✅
-- [x] Implement logging
-- [x] Stub AWS usage
-- [x] PostgreSQL full-text search
-- [x] Job history tracking
-- [x] Structured logging
+### Phase 3 — YouTube Archival ✅
+yt-dlp integration, YoutubeList/Video entities, local/S3 storage stubs, 6 MCP tools.
 
-### Phase 5: Web UI & Auth (Current)
-- [x] User authentication & JWT
-- [x] Multi-user support (CurrentUser wiring)
-- [ ] GraphQL setup & Schema
-- [ ] GraphQL resolvers for bookmarks & feeds
-- [ ] Angular Frontend implementation
-- [ ] Playwright E2E tests
+### Phase 4 — Cross-Cutting ✅
+PostgreSQL full-text search (GIN indexes, tsvectors), SyncJob history, structured JSON logging (Logback + Logstash encoder), 4 MCP tools.
 
-### Phase 6: Infrastructure
-- [ ] Terraform
-- [ ] Deploy to AWS
-- [ ] CI/CD pipeline and Github actions
-- [ ] AWS Cognito auth
-- [ ] AWS Cloudwatch log retrieval
-- [ ] AWS cost tracking
+### Phase 5 — Web UI + Auth ✅ (current branch)
+JWT authentication, GraphQL API (schema-first, Spring for GraphQL), Angular 21 frontend (reader, bookmarks, YouTube, admin, search), Apollo Angular, graphql-codegen.
 
-### Phase 7: Real-Time Updates
-- [ ] Websocket support for live UI updates
+### Phase 6 — Bookmark Automation
+Automatically import bookmarks from browsers and integrate with existing bookmarks.
 
-## Contributing
+### Phase 7 — Infrastructure
+Terraform, GitHub Actions CI/CD, production AWS deployment (EC2, RDS, S3, Lambda, EventBridge). AWS Cognito auth, CloudWatch log retrieval, AWS cost tracking.
 
-This is a personal learning project, but suggestions and feedback are welcome!
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### Phase 8 — Real-Time Updates
+WebSocket support for live UI updates — new feed items, sync progress, download status pushed to Angular without polling.
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details
-
-## Acknowledgments
-
-- Inspired by the need for cross-browser bookmark management
-- Built with modern enterprise technologies for learning and demonstration
-- MCP integration showcases cutting-edge AI integration patterns
-
-## Contact
-
-Your Name - sighonara@gmail.com
-
-Project Link: [https://github.com/yourusername/personalarchive](https://github.com/yourusername/personalarchive)
-
----
-
-**Note**: This is a portfolio/learning project designed to showcase full-stack development capabilities, modern infrastructure practices, and AI integration. It is not intended for production use without additional security hardening and scale testing.
+MIT

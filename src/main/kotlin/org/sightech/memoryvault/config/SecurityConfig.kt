@@ -8,6 +8,7 @@ import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
+import jakarta.servlet.http.HttpServletResponse
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
@@ -28,6 +29,11 @@ class SecurityConfig(private val jwtAuthenticationFilter: JwtAuthenticationFilte
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/graphiql/**").permitAll()
                     .anyRequest().authenticated()
+            }
+            .exceptionHandling { ex ->
+                ex.authenticationEntryPoint { _, response, _ ->
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication required")
+                }
             }
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
         return http.build()
