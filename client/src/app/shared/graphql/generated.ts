@@ -326,6 +326,28 @@ export type YoutubeListWithStats = {
   totalVideos: Scalars['Int']['output'];
 };
 
+export type GetJobsQueryVariables = Exact<{
+  type?: InputMaybe<Scalars['String']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetJobsQuery = { __typename?: 'Query', jobs: Array<{ __typename?: 'SyncJob', id: any, type: string, status: string, startedAt: any, completedAt?: any | null, errorMessage?: string | null, triggeredBy: string, metadata?: string | null }> };
+
+export type GetLogsQueryVariables = Exact<{
+  level?: InputMaybe<Scalars['String']['input']>;
+  service?: InputMaybe<Scalars['String']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetLogsQuery = { __typename?: 'Query', logs: Array<{ __typename?: 'LogEntry', timestamp: any, level: string, logger: string, message: string, thread: string }> };
+
+export type GetAdminStatsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetAdminStatsQuery = { __typename?: 'Query', stats: { __typename?: 'SystemStats', bookmarkCount: number, feedCount: number, feedItemCount: number, unreadFeedItemCount: number, youtubeListCount: number, videoCount: number, downloadedVideoCount: number, removedVideoCount: number, tagCount: number, storageUsedBytes: number, lastFeedSync?: any | null, lastYoutubeSync?: any | null, feedsWithFailures: number, youtubeListsWithFailures: number } };
+
 export type GetBookmarksQueryVariables = Exact<{
   query?: InputMaybe<Scalars['String']['input']>;
   tags?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>> | InputMaybe<Scalars['String']['input']>>;
@@ -411,6 +433,84 @@ export type RefreshYoutubeListMutationVariables = Exact<{
 
 export type RefreshYoutubeListMutation = { __typename?: 'Mutation', refreshYoutubeList: Array<{ __typename?: 'SyncResult', listId: any, newVideos: number, downloadSuccesses: number, downloadFailures: number, removedVideos: number }> };
 
+export const GetJobsDocument = gql`
+    query GetJobs($type: String, $limit: Int) {
+  jobs(type: $type, limit: $limit) {
+    id
+    type
+    status
+    startedAt
+    completedAt
+    errorMessage
+    triggeredBy
+    metadata
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class GetJobsGQL extends Apollo.Query<GetJobsQuery, GetJobsQueryVariables> {
+    document = GetJobsDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const GetLogsDocument = gql`
+    query GetLogs($level: String, $service: String, $limit: Int) {
+  logs(level: $level, service: $service, limit: $limit) {
+    timestamp
+    level
+    logger
+    message
+    thread
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class GetLogsGQL extends Apollo.Query<GetLogsQuery, GetLogsQueryVariables> {
+    document = GetLogsDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const GetAdminStatsDocument = gql`
+    query GetAdminStats {
+  stats {
+    bookmarkCount
+    feedCount
+    feedItemCount
+    unreadFeedItemCount
+    youtubeListCount
+    videoCount
+    downloadedVideoCount
+    removedVideoCount
+    tagCount
+    storageUsedBytes
+    lastFeedSync
+    lastYoutubeSync
+    feedsWithFailures
+    youtubeListsWithFailures
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class GetAdminStatsGQL extends Apollo.Query<GetAdminStatsQuery, GetAdminStatsQueryVariables> {
+    document = GetAdminStatsDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
 export const GetBookmarksDocument = gql`
     query GetBookmarks($query: String, $tags: [String]) {
   bookmarks(query: $query, tags: $tags) {
