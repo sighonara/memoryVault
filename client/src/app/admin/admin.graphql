@@ -1,0 +1,41 @@
+query GetJobs($type: String, $limit: Int) {
+  jobs(type: $type, limit: $limit) {
+    id
+    type
+    status
+    startedAt
+    completedAt
+    errorMessage
+    triggeredBy
+    metadata
+  }
+}
+
+query GetLogs($level: String, $service: String, $limit: Int) {
+  logs(level: $level, service: $service, limit: $limit) {
+    timestamp
+    level
+    logger
+    message
+    thread
+  }
+}
+
+query GetAdminStats {
+  stats {
+    bookmarkCount
+    feedCount
+    feedItemCount
+    unreadFeedItemCount
+    youtubeListCount
+    videoCount
+    downloadedVideoCount
+    removedVideoCount
+    tagCount
+    storageUsedBytes
+    lastFeedSync
+    lastYoutubeSync
+    feedsWithFailures
+    youtubeListsWithFailures
+  }
+}
