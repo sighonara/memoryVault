@@ -398,6 +398,14 @@ export type MarkItemReadMutationVariables = Exact<{
 
 export type MarkItemReadMutation = { __typename?: 'Mutation', markItemRead?: { __typename?: 'FeedItem', id: any, readAt?: any | null } | null };
 
+export type SearchQueryVariables = Exact<{
+  query: Scalars['String']['input'];
+  types?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>> | InputMaybe<Scalars['String']['input']>>;
+}>;
+
+
+export type SearchQuery = { __typename?: 'Query', search: Array<{ __typename?: 'SearchResult', type: string, id: any, title?: string | null, url?: string | null, rank: number }> };
+
 export type GetYoutubeListsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -655,6 +663,28 @@ export const MarkItemReadDocument = gql`
   })
   export class MarkItemReadGQL extends Apollo.Mutation<MarkItemReadMutation, MarkItemReadMutationVariables> {
     document = MarkItemReadDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const SearchDocument = gql`
+    query Search($query: String!, $types: [String]) {
+  search(query: $query, types: $types) {
+    type
+    id
+    title
+    url
+    rank
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class SearchGQL extends Apollo.Query<SearchQuery, SearchQueryVariables> {
+    document = SearchDocument;
     
     constructor(apollo: Apollo.Apollo) {
       super(apollo);
