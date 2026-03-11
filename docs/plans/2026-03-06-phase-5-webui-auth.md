@@ -2283,7 +2283,48 @@ git commit -m "feat: Angular global search page with cross-entity results"
 
 ---
 
-### Task 17: Frontend Unit Tests
+### Task 17: Frontend Design
+
+**Files:**
+- Modify: `client/src/app/**/*.css` — styling and layout polish
+- Modify: `client/src/app/**/*.html` — template refinements
+
+**Goal:** Polish the frontend CSS and visual design across all pages for a cohesive, production-quality look.
+
+**Step 1: Review and improve styles**
+
+Iterate on CSS across all feature pages (reader, bookmarks, YouTube, admin, search, login) to ensure consistent spacing, typography, colors, and responsive layout.
+
+**Step 2: Commit**
+
+```
+git commit -m "feat and fix: CSS updates and fixes"
+```
+
+---
+
+### Task 18: Frontend Error Handling (403 and Other Errors)
+
+**Files:**
+- Modify: `client/src/app/**/*` — error handling across components and services
+
+**Goal:** Handle HTTP error responses (401, 403, 404, 500) gracefully in the frontend. Show user-friendly messages instead of silent failures.
+
+**Step 1: Implement error handling**
+
+- Intercept 401 responses to redirect to login
+- Display appropriate error messages for 403 (forbidden), 404 (not found), and 500 (server error)
+- Handle token expiry proactively
+
+**Step 2: Commit**
+
+```
+git commit -m "fix: frontend error handling for 403 and other HTTP errors"
+```
+
+---
+
+### Task 19: Frontend Unit Tests
 
 **Files:**
 - Create: `client/src/app/auth/auth.service.spec.ts`
@@ -2356,7 +2397,7 @@ git commit -m "test: Angular unit tests for auth, reader, bookmarks"
 
 ---
 
-### Task 18: Playwright E2E Setup
+### Task 20: Playwright E2E Setup
 
 **Files:**
 - Create: `client/playwright.config.ts`
@@ -2427,7 +2468,7 @@ git commit -m "test: Playwright E2E tests for login and navigation"
 
 ---
 
-### Task 19: Test Scripts
+### Task 21: Test Scripts
 
 **Files:**
 - Create: `scripts/test-frontend.sh`
@@ -2515,7 +2556,7 @@ git commit -m "feat: test scripts for frontend and GraphQL"
 
 ---
 
-### Task 20: Final Verification + Proxy Config
+### Task 22: Final Verification + Proxy Config
 
 **Files:**
 - Create: `client/proxy.conf.json` (for local dev API proxying)
