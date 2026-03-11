@@ -36,7 +36,9 @@ src/main/kotlin/org/sightech/memoryvault/
 - `./gradlew bootRun` — start the app (requires Docker Compose running)
 - `./gradlew test` — run tests (TestContainers handles PostgreSQL)
 - `docker compose up -d` — start PostgreSQL
-- `./scripts/test-all.sh` — run all tests across all services
+- `./scripts/test-all.sh` — run all tests across all services (backend + frontend)
+- `./scripts/test-frontend.sh` — run frontend Vitest unit tests
+- `./scripts/test-graphql.sh` — run GraphQL/integration tests
 - `./scripts/smoke-test.sh` — smoke test against running instance
 
 ### Conventions
@@ -61,9 +63,7 @@ Located in `client/`.
 
 ### Commands
 
-- `npm run test` — run Vitest
-- `npm run e2e` — run Playwright
-- `npm run lint` — ESLint check
+- `npm run test` — run Vitest unit tests
 - `npm run build` — production build
 
 ### Conventions
@@ -116,5 +116,6 @@ Custom project skills live in `.claude/skills/`:
 - `/add-mcp-tool` — new Spring AI `@Tool` method
 - `/add-lambda` — new AWS Lambda function with Terraform
 - `/add-content-processor` — new Python processor module
+- `/write-tests` — write tests with verifiable evidence, positive + negative cases
 
 Installed from skills.sh: `mcp-builder`, `kotlin-springboot`, `python-testing-patterns`, `async-python-patterns`, `pytest-coverage`, `webapp-testing`

@@ -27,4 +27,12 @@ else
 fi
 
 echo ""
+echo "--- GraphQL tests ---"
+"$(dirname "$0")/test-graphql.sh"
+
+echo ""
+echo "--- Frontend tests ---"
+"$(dirname "$0")/test-frontend.sh"
+
+echo ""
 echo "=== All tests passed ==="
