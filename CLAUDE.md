@@ -36,9 +36,10 @@ src/main/kotlin/org/sightech/memoryvault/
 - `./gradlew bootRun` — start the app (requires Docker Compose running)
 - `./gradlew test` — run tests (TestContainers handles PostgreSQL)
 - `docker compose up -d` — start PostgreSQL
-- `./scripts/test-all.sh` — run all tests across all services (backend + frontend)
+- `./scripts/test-all.sh` — run all tests across all services (backend + frontend + E2E)
 - `./scripts/test-frontend.sh` — run frontend Vitest unit tests
 - `./scripts/test-graphql.sh` — run GraphQL/integration tests
+- `./scripts/require-backend.sh` — shared check that backend is running (prompts user if not)
 - `./scripts/smoke-test.sh` — smoke test against running instance
 
 ### Conventions
@@ -64,6 +65,7 @@ Located in `client/`.
 ### Commands
 
 - `npm run test` — run Vitest unit tests
+- `npm run e2e` — run Playwright E2E tests (requires backend running for navigation tests)
 - `npm run build` — production build
 
 ### Conventions
