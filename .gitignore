@@ -7,6 +7,7 @@ build/
 
 ### "AI" Stuff ###
 settings.local.json
+.superpowers/
 
 ### STS ###
 .apt_generated

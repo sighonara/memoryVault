@@ -1,4 +1,4 @@
-# Phase 6: Bookmark Automation — Design
+# Phase 6: Bookmark Management — Design
 
 **Date**: 2026-03-11
 **Status**: Approved

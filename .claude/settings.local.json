@@ -18,7 +18,8 @@
       "WebSearch",
       "WebFetch(domain:mvnrepository.com)",
       "Bash(./gradlew compileTestKotlin:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(find /Users/sonara/repos/personal/memoryVault -name \"*.graphqls\" | xargs ls -la 2>/dev/null)"
     ]
   }
 }
