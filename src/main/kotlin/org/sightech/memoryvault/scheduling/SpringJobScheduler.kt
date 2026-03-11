@@ -1,5 +1,6 @@
 package org.sightech.memoryvault.scheduling
 
+import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.scheduling.entity.JobType
 import org.sightech.memoryvault.scheduling.entity.TriggerSource
 import org.sightech.memoryvault.scheduling.service.SyncJobService
@@ -16,10 +17,6 @@ class SpringJobScheduler(
     private val taskScheduler: TaskScheduler,
     private val syncJobService: SyncJobService
 ) : JobScheduler {
-
-    companion object {
-        val SYSTEM_USER_ID: UUID = UUID.fromString("00000000-0000-0000-0000-000000000001")
-    }
 
     private val logger = LoggerFactory.getLogger(SpringJobScheduler::class.java)
     private val jobs = ConcurrentHashMap<String, JobRegistration>()
@@ -52,7 +49,7 @@ class SpringJobScheduler(
 
     private fun executeWithTracking(jobName: String, triggeredBy: TriggerSource) {
         val registration = jobs[jobName] ?: return
-        val syncJob = syncJobService.recordStart(registration.jobType, triggeredBy, SYSTEM_USER_ID)
+        val syncJob = syncJobService.recordStart(registration.jobType, triggeredBy, CurrentUser.SYSTEM_USER_ID)
 
         try {
             val metadata = registration.task()

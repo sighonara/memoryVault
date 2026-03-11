@@ -35,7 +35,7 @@ class VideoSyncService(
         //  lightweight findVideoIdsByYoutubeListId query.
 
         // Find new videos (not already in DB)
-        val existingVideoIds = videoRepository.findByYoutubeListId(list.id)
+        val existingVideoIds = videoRepository.findByYoutubeListIdInAndYoutubeVideoIdIn(listOf(list.id), metadata.map { it.videoId })
             .map { it.youtubeVideoId }
             .toSet()
 
@@ -43,7 +43,7 @@ class VideoSyncService(
 
         // Detect removals: videos in DB but not in incoming metadata
         val incomingVideoIds = metadata.map { it.videoId }.toSet()
-        val removedVideos = videoRepository.findByYoutubeListId(list.id)
+        val removedVideos = videoRepository.findByYoutubeListIdAndUserId(list.id, list.userId)
             .filter { !it.removedFromYoutube && it.youtubeVideoId !in incomingVideoIds }
 
         for (video in removedVideos) {

@@ -1,0 +1,49 @@
+query GetYoutubeLists {
+  youtubeLists {
+    list {
+      id
+      url
+      name
+    }
+    totalVideos
+    downloadedVideos
+    removedVideos
+  }
+}
+
+query GetVideos($listId: UUID, $query: String, $removedOnly: Boolean) {
+  videos(listId: $listId, query: $query, removedOnly: $removedOnly) {
+    id
+    title
+    youtubeUrl
+    thumbnailPath
+    removedFromYoutube
+    downloadedAt
+  }
+}
+
+mutation AddYoutubeList($url: String!) {
+  addYoutubeList(url: $url) {
+    list {
+      id
+      name
+    }
+    newVideos
+  }
+}
+
+mutation DeleteYoutubeList($listId: UUID!) {
+  deleteYoutubeList(listId: $listId) {
+    id
+  }
+}
+
+mutation RefreshYoutubeList($listId: UUID) {
+  refreshYoutubeList(listId: $listId) {
+    listId
+    newVideos
+    downloadSuccesses
+    downloadFailures
+    removedVideos
+  }
+}

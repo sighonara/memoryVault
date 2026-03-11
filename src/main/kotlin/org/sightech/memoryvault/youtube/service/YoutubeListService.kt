@@ -1,5 +1,6 @@
 package org.sightech.memoryvault.youtube.service
 
+import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.youtube.entity.YoutubeList
 import org.sightech.memoryvault.youtube.repository.VideoRepository
 import org.sightech.memoryvault.youtube.repository.YoutubeListRepository
@@ -21,14 +22,11 @@ class YoutubeListService(
     private val videoSyncService: VideoSyncService
 ) {
 
-    companion object {
-        val SYSTEM_USER_ID: UUID = UUID.fromString("00000000-0000-0000-0000-000000000001")
-    }
-
     fun addList(url: String): Pair<YoutubeList, SyncResult> {
+        val userId = CurrentUser.userId()
         val playlistId = extractPlaylistId(url)
         val list = youtubeListRepository.save(
-            YoutubeList(userId = SYSTEM_USER_ID, youtubeListId = playlistId, url = url)
+            YoutubeList(userId = userId, youtubeListId = playlistId, url = url)
         )
 
         val metadata = ytDlpService.fetchPlaylistMetadata(url)
@@ -47,30 +45,33 @@ class YoutubeListService(
     }
 
     fun listLists(): List<Pair<YoutubeList, ListStats>> {
-        val lists = youtubeListRepository.findAllActiveByUserId(SYSTEM_USER_ID)
+        val userId = CurrentUser.userId()
+        val lists = youtubeListRepository.findAllActiveByUserId(userId)
         return lists.map { list ->
             val stats = ListStats(
-                totalVideos = videoRepository.countByYoutubeListId(list.id),
-                downloadedVideos = videoRepository.countDownloadedByYoutubeListId(list.id),
-                removedVideos = videoRepository.countRemovedByYoutubeListId(list.id)
+                totalVideos = videoRepository.countByYoutubeListIdAndUserId(list.id, userId),
+                downloadedVideos = videoRepository.countDownloadedByYoutubeListIdAndUserId(list.id, userId),
+                removedVideos = videoRepository.countRemovedByYoutubeListIdAndUserId(list.id, userId)
             )
             list to stats
         }
     }
 
     fun deleteList(listId: UUID): YoutubeList? {
-        val list = youtubeListRepository.findActiveById(listId) ?: return null
+        val userId = CurrentUser.userId()
+        val list = youtubeListRepository.findActiveByIdAndUserId(listId, userId) ?: return null
         list.deletedAt = Instant.now()
         list.updatedAt = Instant.now()
         return youtubeListRepository.save(list)
     }
 
     fun refreshList(listId: UUID?): List<SyncResult> {
+        val userId = CurrentUser.userId()
         val lists = if (listId != null) {
-            val list = youtubeListRepository.findActiveById(listId) ?: return emptyList()
+            val list = youtubeListRepository.findActiveByIdAndUserId(listId, userId) ?: return emptyList()
             listOf(list)
         } else {
-            youtubeListRepository.findAllActiveByUserId(SYSTEM_USER_ID)
+            youtubeListRepository.findAllActiveByUserId(userId)
         }
 
         return lists.map { list ->

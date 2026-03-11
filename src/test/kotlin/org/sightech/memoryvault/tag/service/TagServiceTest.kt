@@ -1,10 +1,15 @@
 package org.sightech.memoryvault.tag.service
 
 import io.mockk.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.sightech.memoryvault.tag.entity.Tag
 import org.sightech.memoryvault.tag.repository.TagRepository
+import org.springframework.security.core.Authentication
+import org.springframework.security.core.context.SecurityContext
+import org.springframework.security.core.context.SecurityContextHolder
 import java.util.UUID
+import kotlin.test.AfterTest
 import kotlin.test.assertEquals
 
 class TagServiceTest {
@@ -12,6 +17,23 @@ class TagServiceTest {
     private val repository = mockk<TagRepository>()
     private val service = TagService(repository)
     private val userId = UUID.fromString("00000000-0000-0000-0000-000000000001")
+
+    @BeforeEach
+    fun setUp() {
+        MockKAnnotations.init(this)
+        
+        // Mock SecurityContext to return our test userId
+        val securityContext = mockk<SecurityContext>()
+        val authentication = mockk<Authentication>()
+        every { securityContext.authentication } returns authentication
+        every { authentication.principal } returns userId.toString()
+        SecurityContextHolder.setContext(securityContext)
+    }
+
+    @AfterTest
+    fun tearDown() {
+        SecurityContextHolder.clearContext()
+    }
 
     @Test
     fun `findOrCreateByName returns existing tag`() {

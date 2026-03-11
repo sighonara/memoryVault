@@ -6,8 +6,13 @@ import org.junit.jupiter.api.Test
 import org.sightech.memoryvault.youtube.entity.YoutubeList
 import org.sightech.memoryvault.youtube.repository.VideoRepository
 import org.sightech.memoryvault.youtube.repository.YoutubeListRepository
+import org.sightech.memoryvault.auth.CurrentUser
+import org.springframework.security.core.Authentication
+import org.springframework.security.core.context.SecurityContext
+import org.springframework.security.core.context.SecurityContextHolder
 import java.util.Optional
 import java.util.UUID
+import kotlin.test.AfterTest
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -24,7 +29,20 @@ class YoutubeListServiceTest {
 
     @BeforeEach
     fun setUp() {
+        MockKAnnotations.init(this)
         every { youtubeListRepository.save(any()) } answers { firstArg() }
+        
+        // Mock SecurityContext to return our test userId
+        val securityContext = mockk<SecurityContext>()
+        val authentication = mockk<Authentication>()
+        every { securityContext.authentication } returns authentication
+        every { authentication.principal } returns userId.toString()
+        SecurityContextHolder.setContext(securityContext)
+    }
+
+    @AfterTest
+    fun tearDown() {
+        SecurityContextHolder.clearContext()
     }
 
     @Test
@@ -48,9 +66,9 @@ class YoutubeListServiceTest {
     fun `listLists returns lists with stats`() {
         val list = YoutubeList(userId = userId, youtubeListId = "PLtest", url = "https://youtube.com/playlist?list=PLtest", name = "Test")
         every { youtubeListRepository.findAllActiveByUserId(userId) } returns listOf(list)
-        every { videoRepository.countByYoutubeListId(list.id) } returns 10
-        every { videoRepository.countDownloadedByYoutubeListId(list.id) } returns 7
-        every { videoRepository.countRemovedByYoutubeListId(list.id) } returns 2
+        every { videoRepository.countByYoutubeListIdAndUserId(list.id, userId) } returns 10
+        every { videoRepository.countDownloadedByYoutubeListIdAndUserId(list.id, userId) } returns 7
+        every { videoRepository.countRemovedByYoutubeListIdAndUserId(list.id, userId) } returns 2
 
         val result = service.listLists()
 
@@ -63,7 +81,7 @@ class YoutubeListServiceTest {
     @Test
     fun `deleteList soft deletes`() {
         val list = YoutubeList(userId = userId, youtubeListId = "PLtest", url = "https://youtube.com/playlist?list=PLtest")
-        every { youtubeListRepository.findActiveById(list.id) } returns list
+        every { youtubeListRepository.findActiveByIdAndUserId(list.id, userId) } returns list
 
         val result = service.deleteList(list.id)
 
@@ -72,14 +90,14 @@ class YoutubeListServiceTest {
 
     @Test
     fun `deleteList returns null for missing list`() {
-        every { youtubeListRepository.findActiveById(any()) } returns null
+        every { youtubeListRepository.findActiveByIdAndUserId(any(), userId) } returns null
         assertNull(service.deleteList(UUID.randomUUID()))
     }
 
     @Test
     fun `refreshList handles fetch failure by incrementing failureCount`() {
         val list = YoutubeList(userId = userId, youtubeListId = "PLtest", url = "https://youtube.com/playlist?list=PLtest")
-        every { youtubeListRepository.findActiveById(list.id) } returns list
+        every { youtubeListRepository.findActiveByIdAndUserId(list.id, userId) } returns list
         every { youtubeListRepository.findById(list.id) } returns Optional.of(list)
         every { ytDlpService.fetchPlaylistMetadata(any()) } throws RuntimeException("network error")
 

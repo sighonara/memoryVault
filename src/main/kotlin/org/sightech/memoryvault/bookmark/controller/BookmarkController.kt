@@ -1,5 +1,6 @@
 package org.sightech.memoryvault.bookmark.controller
 
+import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.bookmark.entity.Bookmark
 import org.sightech.memoryvault.bookmark.service.BookmarkService
 import org.springframework.web.bind.annotation.*

@@ -1,0 +1,14 @@
+type Bookmark {
+    id: UUID!
+    url: String!
+    title: String
+    tags: [Tag!]!
+    createdAt: Instant!
+    updatedAt: Instant!
+}
+
+type Tag {
+    id: UUID!
+    name: String!
+    color: String
+}

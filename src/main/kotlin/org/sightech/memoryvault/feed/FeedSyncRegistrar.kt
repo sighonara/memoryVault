@@ -1,6 +1,7 @@
 package org.sightech.memoryvault.feed
 
 import kotlinx.coroutines.runBlocking
+import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.feed.service.FeedService
 import org.sightech.memoryvault.scheduling.JobScheduler
 import org.sightech.memoryvault.scheduling.entity.JobType

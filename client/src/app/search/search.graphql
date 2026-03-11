@@ -1,0 +1,9 @@
+query Search($query: String!, $types: [String]) {
+  search(query: $query, types: $types) {
+    type
+    id
+    title
+    url
+    rank
+  }
+}

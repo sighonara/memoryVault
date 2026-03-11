@@ -1,5 +1,6 @@
 package org.sightech.memoryvault.bookmark.service
 
+import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.bookmark.entity.Bookmark
 import org.sightech.memoryvault.bookmark.repository.BookmarkRepository
 import org.sightech.memoryvault.tag.service.TagService
@@ -13,13 +14,10 @@ class BookmarkService(
     private val tagService: TagService
 ) {
 
-    companion object {
-        val SYSTEM_USER_ID: UUID = UUID.fromString("00000000-0000-0000-0000-000000000001")
-    }
-
     fun create(url: String, title: String?, tagNames: List<String>?): Bookmark {
+        val userId = CurrentUser.userId()
         val bookmark = Bookmark(
-            userId = SYSTEM_USER_ID,
+            userId = userId,
             url = url,
             title = title ?: url
         )
@@ -31,7 +29,8 @@ class BookmarkService(
     }
 
     fun findAll(query: String?, tagNames: List<String>?): List<Bookmark> {
-        var bookmarks = bookmarkRepository.findAllActiveByUserId(SYSTEM_USER_ID)
+        val userId = CurrentUser.userId()
+        var bookmarks = bookmarkRepository.findAllActiveByUserId(userId)
 
         if (!query.isNullOrBlank()) {
             val q = query.lowercase()
@@ -51,7 +50,8 @@ class BookmarkService(
     }
 
     fun updateTags(bookmarkId: UUID, tagNames: List<String>): Bookmark? {
-        val bookmark = bookmarkRepository.findActiveById(bookmarkId) ?: return null
+        val userId = CurrentUser.userId()
+        val bookmark = bookmarkRepository.findActiveByIdAndUserId(bookmarkId, userId) ?: return null
         val tags = tagService.findOrCreateByNames(tagNames)
         bookmark.tags.clear()
         bookmark.tags.addAll(tags)
@@ -60,14 +60,16 @@ class BookmarkService(
     }
 
     fun softDelete(bookmarkId: UUID): Bookmark? {
-        val bookmark = bookmarkRepository.findActiveById(bookmarkId) ?: return null
+        val userId = CurrentUser.userId()
+        val bookmark = bookmarkRepository.findActiveByIdAndUserId(bookmarkId, userId) ?: return null
         bookmark.deletedAt = Instant.now()
         bookmark.updatedAt = Instant.now()
         return bookmarkRepository.save(bookmark)
     }
 
     fun exportNetscapeHtml(): String {
-        val bookmarks = bookmarkRepository.findAllActiveByUserId(SYSTEM_USER_ID)
+        val userId = CurrentUser.userId()
+        val bookmarks = bookmarkRepository.findAllActiveByUserId(userId)
         val sb = StringBuilder()
         sb.appendLine("<!DOCTYPE NETSCAPE-Bookmark-file-1>")
         sb.appendLine("<!-- This is an automatically generated file. -->")

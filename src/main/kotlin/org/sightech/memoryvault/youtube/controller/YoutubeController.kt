@@ -1,5 +1,6 @@
 package org.sightech.memoryvault.youtube.controller
 
+import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.youtube.service.YoutubeListService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping

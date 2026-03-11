@@ -1,6 +1,7 @@
 package org.sightech.memoryvault.bookmark
 
 import org.junit.jupiter.api.Test
+import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.bookmark.service.BookmarkService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -38,6 +39,8 @@ class BookmarkIntegrationTest {
 
     @Autowired
     lateinit var bookmarkService: BookmarkService
+
+    private val userId = CurrentUser.SYSTEM_USER_ID
 
     @Test
     fun `create and retrieve bookmark`() {

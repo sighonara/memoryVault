@@ -1,0 +1,26 @@
+<mat-toolbar color="primary" class="app-toolbar">
+  <span class="app-title" routerLink="/">MemoryVault</span>
+
+  <div class="search-container">
+    <input type="text" class="search-input" placeholder="Search..." [(ngModel)]="searchQuery" (keyup.enter)="onSearch()" />
+  </div>
+
+  <nav class="nav-links">
+    <a mat-button routerLink="/reader" routerLinkActive="active-link">Reader</a>
+    <a mat-button routerLink="/bookmarks" routerLinkActive="active-link">Bookmarks</a>
+    <a mat-button routerLink="/youtube" routerLinkActive="active-link">YouTube</a>
+    <a mat-button routerLink="/admin" routerLinkActive="active-link">Admin</a>
+  </nav>
+
+  <span class="spacer"></span>
+
+  <button mat-icon-button [matMenuTriggerFor]="userMenu">
+    <mat-icon>account_circle</mat-icon>
+  </button>
+  <mat-menu #userMenu="matMenu">
+    <button mat-menu-item (click)="logout()">
+      <mat-icon>logout</mat-icon>
+      <span>Logout</span>
+    </button>
+  </mat-menu>
+</mat-toolbar>

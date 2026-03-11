@@ -156,7 +156,7 @@ tags → Tag[] (many-to-many via VideoTag)
 ### SyncJob
 ```
 id (UUID), userId
-type (RSS_FETCH | YT_SYNC | LINK_CHECK | BOOKMARK_ARCHIVE)
+type (FEED_SYNC | YOUTUBE_SYNC | BOOKMARK_ARCHIVE)
 status (PENDING | RUNNING | SUCCESS | FAILED)
 startedAt, completedAt, errorMessage
 triggeredBy (SCHEDULED | MANUAL)
@@ -223,12 +223,15 @@ Most complex: yt-dlp, S3 storage, long-running downloads. Built on Lambda patter
 PostgreSQL full-text search, system stats, job history tracking with SyncJob entity, structured logging with local file reader and CloudWatch stub. AWS cost tracking deferred to Phase 6.
 
 ### Phase 5 — Web UI + Auth
-Angular frontend, authentication, GraphQL API. The website you'd use daily.
+JWT authentication (jjwt, BCrypt), Spring for GraphQL (schema-first), Angular 21 frontend (zoneless, Angular Material, NgRx Signal Store, Apollo Angular, graphql-codegen). Pages: login, feed reader, bookmarks, YouTube archive, admin (jobs/logs/stats), global search. Auth interceptor handles token injection and redirects to login on 401/403.
 
-### Phase 6 — Infrastructure
-Terraform, CI/CD pipeline, production AWS deployment. AWS Cognito auth, CloudWatch log retrieval, AWS cost tracking.
+### Phase 6 — Bookmark Automation
+Automatically import bookmarks from browsers and integrate with existing ones.
 
-### Phase 7 — Real-Time Updates
+### Phase 7 — Infrastructure
+Terraform, GitHub Actions CI/CD, production AWS deployment (EC2, RDS, S3, Lambda, EventBridge). AWS Cognito auth swap (CurrentUser abstraction is already in place), CloudWatch log retrieval (LocalLogService/CloudWatchLogService interface is stubbed), AWS cost tracking (AwsCostRecord entity defined but not implemented).
+
+### Phase 8 — Real-Time Updates
 WebSocket support for live UI updates — new feed items, sync job progress, download status changes pushed to the Angular client without polling.
 
 ---

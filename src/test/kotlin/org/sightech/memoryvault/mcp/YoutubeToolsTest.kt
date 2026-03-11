@@ -110,7 +110,7 @@ class YoutubeToolsTest {
 
     @Test
     fun `refreshYoutubeList returns sync summary`() {
-        every { youtubeListService.refreshList(null) } returns listOf(
+        every { youtubeListService.refreshList(any()) } returns listOf(
             SyncResult(list = list, newVideos = 3, removedVideos = 1, downloadSuccesses = 2, downloadFailures = 1)
         )
 

@@ -1,5 +1,6 @@
 package org.sightech.memoryvault.mcp
 
+import org.sightech.memoryvault.auth.CurrentUser
 import org.springframework.ai.tool.annotation.Tool
 import org.springframework.stereotype.Component
 import org.sightech.memoryvault.bookmark.service.BookmarkService

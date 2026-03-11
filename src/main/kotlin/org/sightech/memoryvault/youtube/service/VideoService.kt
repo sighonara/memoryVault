@@ -1,5 +1,6 @@
 package org.sightech.memoryvault.youtube.service
 
+import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.youtube.entity.Video
 import org.sightech.memoryvault.youtube.repository.VideoRepository
 import org.springframework.stereotype.Service
@@ -9,16 +10,24 @@ import java.util.UUID
 class VideoService(private val videoRepository: VideoRepository) {
 
     fun getVideos(listId: UUID?, query: String?, removedOnly: Boolean): List<Video> {
+        val userId = CurrentUser.userId()
         if (listId == null && query == null && !removedOnly) return emptyList()
 
         val videos = if (listId != null) {
             if (removedOnly) {
-                videoRepository.findRemovedByYoutubeListId(listId)
+                videoRepository.findRemovedByYoutubeListIdAndUserId(listId, userId)
             } else {
-                videoRepository.findByYoutubeListId(listId)
+                videoRepository.findByYoutubeListIdAndUserId(listId, userId)
             }
         } else {
-            emptyList()
+            // TODO: Global search filtering by userId
+            if (query != null) {
+                // We'd need a repository method like findByTitleContainingAndUserId
+                // For now, let's just return empty or implement that filter if needed.
+                emptyList()
+            } else {
+                emptyList()
+            }
         }
 
         // TODO: Replace in-memory filtering with a JPQL LIKE query or full-text search
@@ -35,6 +44,7 @@ class VideoService(private val videoRepository: VideoRepository) {
     }
 
     fun getVideoStatus(videoId: UUID): Video? {
-        return videoRepository.findById(videoId).orElse(null)
+        val userId = CurrentUser.userId()
+        return videoRepository.findByIdAndUserId(videoId, userId)
     }
 }

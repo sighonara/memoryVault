@@ -6,7 +6,7 @@
 
 **Architecture:** Angular SPA communicates with Spring Boot via GraphQL (Apollo Client + schema-first Spring for GraphQL). JWT auth is local now with a clean swap path to AWS Cognito. A `CurrentUser` abstraction extracts the authenticated user from the security context so all services become multi-tenant aware.
 
-**Tech Stack:** Spring Boot 4.x, Spring for GraphQL, spring-boot-starter-oauth2-resource-server, jjwt, Angular 20, Angular Material, Apollo Angular, graphql-codegen, Vitest, Playwright
+**Tech Stack:** Spring Boot 4.x, Spring for GraphQL, spring-boot-starter-oauth2-resource-server, jjwt, Angular 21, Angular Material, Apollo Angular, graphql-codegen, Vitest, Playwright
 
 ---
 
@@ -2283,7 +2283,48 @@ git commit -m "feat: Angular global search page with cross-entity results"
 
 ---
 
-### Task 17: Frontend Unit Tests
+### Task 17: Frontend Design
+
+**Files:**
+- Modify: `client/src/app/**/*.css` — styling and layout polish
+- Modify: `client/src/app/**/*.html` — template refinements
+
+**Goal:** Polish the frontend CSS and visual design across all pages for a cohesive, production-quality look.
+
+**Step 1: Review and improve styles**
+
+Iterate on CSS across all feature pages (reader, bookmarks, YouTube, admin, search, login) to ensure consistent spacing, typography, colors, and responsive layout.
+
+**Step 2: Commit**
+
+```
+git commit -m "feat and fix: CSS updates and fixes"
+```
+
+---
+
+### Task 18: Frontend Error Handling (403 and Other Errors)
+
+**Files:**
+- Modify: `client/src/app/**/*` — error handling across components and services
+
+**Goal:** Handle HTTP error responses (401, 403, 404, 500) gracefully in the frontend. Show user-friendly messages instead of silent failures.
+
+**Step 1: Implement error handling**
+
+- Intercept 401 responses to redirect to login
+- Display appropriate error messages for 403 (forbidden), 404 (not found), and 500 (server error)
+- Handle token expiry proactively
+
+**Step 2: Commit**
+
+```
+git commit -m "fix: frontend error handling for 403 and other HTTP errors"
+```
+
+---
+
+### Task 19: Frontend Unit Tests
 
 **Files:**
 - Create: `client/src/app/auth/auth.service.spec.ts`
@@ -2356,7 +2397,7 @@ git commit -m "test: Angular unit tests for auth, reader, bookmarks"
 
 ---
 
-### Task 18: Playwright E2E Setup
+### Task 20: Playwright E2E Setup
 
 **Files:**
 - Create: `client/playwright.config.ts`
@@ -2427,7 +2468,7 @@ git commit -m "test: Playwright E2E tests for login and navigation"
 
 ---
 
-### Task 19: Test Scripts
+### Task 21: Test Scripts
 
 **Files:**
 - Create: `scripts/test-frontend.sh`
@@ -2515,7 +2556,7 @@ git commit -m "feat: test scripts for frontend and GraphQL"
 
 ---
 
-### Task 20: Final Verification + Proxy Config
+### Task 22: Final Verification + Proxy Config
 
 **Files:**
 - Create: `client/proxy.conf.json` (for local dev API proxying)
@@ -2573,25 +2614,27 @@ git commit -m "feat: proxy config for local dev, Phase 5 complete"
 
 ## Summary
 
-| Task | Description | Key Files |
-|------|-------------|-----------|
-| 1 | User entity + auth service | auth/entity/, auth/service/, V4 migration |
-| 2 | JWT token service | auth/service/JwtService.kt, jjwt deps |
-| 3 | Login endpoint + SecurityConfig | auth/controller/, config/SecurityConfig, JwtAuthFilter |
-| 4 | CurrentUser helper + wire services | auth/CurrentUser.kt, all services |
-| 5 | GraphQL setup + schema | graphql/*.graphqls, ScalarConfig, deps |
-| 6 | GraphQL resolvers: bookmarks + feeds | graphql/BookmarkResolver, FeedResolver |
-| 7 | GraphQL resolvers: YouTube + admin | graphql/YoutubeResolver, AdminResolver |
-| 8 | GraphQL integration test | GraphQlIntegrationTest |
-| 9 | Angular infra: Material, Vitest, Apollo | client deps, config, providers |
-| 10 | Angular auth: login + guard | client/src/app/auth/ |
-| 11 | Angular app shell: top bar + layout | client/src/app/shared/layout/ |
-| 12 | Angular reader page | client/src/app/reader/ |
-| 13 | Angular bookmarks page | client/src/app/bookmarks/ |
-| 14 | Angular YouTube page | client/src/app/youtube/ |
-| 15 | Angular admin page | client/src/app/admin/ |
-| 16 | Angular global search | client/src/app/search/ |
-| 17 | Frontend unit tests | *.spec.ts files |
-| 18 | Playwright E2E | client/e2e/ |
-| 19 | Test scripts | scripts/test-frontend.sh, test-graphql.sh |
-| 20 | Final verification + proxy config | proxy.conf.json, end-to-end check |
+| Task | Description                             | Key Files                                              |
+|------|-----------------------------------------|--------------------------------------------------------|
+| 1    | User entity + auth service              | auth/entity/, auth/service/, V4 migration              |
+| 2    | JWT token service                       | auth/service/JwtService.kt, jjwt deps                  |
+| 3    | Login endpoint + SecurityConfig         | auth/controller/, config/SecurityConfig, JwtAuthFilter |
+| 4    | CurrentUser helper + wire services      | auth/CurrentUser.kt, all services                      |
+| 5    | GraphQL setup + schema                  | graphql/*.graphqls, ScalarConfig, deps                 |
+| 6    | GraphQL resolvers: bookmarks + feeds    | graphql/BookmarkResolver, FeedResolver                 |
+| 7    | GraphQL resolvers: YouTube + admin      | graphql/YoutubeResolver, AdminResolver                 |
+| 8    | GraphQL integration test                | GraphQlIntegrationTest                                 |
+| 9    | Angular infra: Material, Vitest, Apollo | client deps, config, providers                         |
+| 10   | Angular auth: login + guard             | client/src/app/auth/                                   |
+| 11   | Angular app shell: top bar + layout     | client/src/app/shared/layout/                          |
+| 12   | Angular reader page                     | client/src/app/reader/                                 |
+| 13   | Angular bookmarks page                  | client/src/app/bookmarks/                              |
+| 14   | Angular YouTube page                    | client/src/app/youtube/                                |
+| 15   | Angular admin page                      | client/src/app/admin/                                  |
+| 16   | Angular global search                   | client/src/app/search/                                 |
+| 17   | Frontend design                         | *.css files                                            |
+| 18   | Frontend deal with 403 or other errors. | client/src/app/*                                       |
+| 19   | Frontend unit tests                     | *.spec.ts files                                        |
+| 20   | Playwright E2E                          | client/e2e/                                            |
+| 21   | Test scripts                            | scripts/test-frontend.sh, test-graphql.sh              |
+| 22   | Final verification + proxy config       | proxy.conf.json, end-to-end check                      |

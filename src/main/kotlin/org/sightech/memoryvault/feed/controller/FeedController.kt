@@ -1,5 +1,6 @@
 package org.sightech.memoryvault.feed.controller
 
+import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.feed.service.FeedService
 import org.springframework.web.bind.annotation.*
 

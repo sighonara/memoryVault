@@ -1,5 +1,6 @@
 package org.sightech.memoryvault.mcp
 
+import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.youtube.service.VideoService
 import org.sightech.memoryvault.youtube.service.YoutubeListService
 import org.springframework.ai.tool.annotation.Tool

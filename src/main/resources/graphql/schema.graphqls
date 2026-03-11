@@ -1,0 +1,48 @@
+scalar UUID
+scalar Instant
+
+type Query {
+    # Bookmarks
+    bookmarks(query: String, tags: [String]): [Bookmark!]!
+
+    # Feeds
+    feeds: [FeedWithUnread!]!
+    feedItems(feedId: UUID!, limit: Int, unreadOnly: Boolean): [FeedItem!]!
+
+    # YouTube
+    youtubeLists: [YoutubeListWithStats!]!
+    videos(listId: UUID, query: String, removedOnly: Boolean): [Video!]!
+    videoStatus(videoId: UUID!): Video
+
+    # Admin
+    jobs(type: String, limit: Int): [SyncJob!]!
+    logs(level: String, service: String, limit: Int): [LogEntry!]!
+    stats: SystemStats!
+
+    # Search
+    search(query: String!, types: [String]): [SearchResult!]!
+}
+
+type Mutation {
+    # Auth - local only
+    login(email: String!, password: String!): LoginResponse!
+
+    # Bookmarks
+    addBookmark(url: String!, title: String, tags: [String]): Bookmark!
+    tagBookmark(id: UUID!, tags: [String!]!): Bookmark
+    deleteBookmark(id: UUID!): Bookmark
+    exportBookmarks: String!
+
+    # Feeds
+    addFeed(url: String!): Feed!
+    deleteFeed(feedId: UUID!): Feed
+    markItemRead(itemId: UUID!): FeedItem
+    markItemUnread(itemId: UUID!): FeedItem
+    markFeedRead(feedId: UUID!): Int!
+    refreshFeed(feedId: UUID): [FeedRefreshResult!]!
+
+    # YouTube
+    addYoutubeList(url: String!): YoutubeListAddResult!
+    deleteYoutubeList(listId: UUID!): YoutubeList
+    refreshYoutubeList(listId: UUID): [SyncResult!]!
+}

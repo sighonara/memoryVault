@@ -36,7 +36,10 @@ src/main/kotlin/org/sightech/memoryvault/
 - `./gradlew bootRun` — start the app (requires Docker Compose running)
 - `./gradlew test` — run tests (TestContainers handles PostgreSQL)
 - `docker compose up -d` — start PostgreSQL
-- `./scripts/test-all.sh` — run all tests across all services
+- `./scripts/test-all.sh` — run all tests across all services (backend + frontend + E2E)
+- `./scripts/test-frontend.sh` — run frontend Vitest unit tests
+- `./scripts/test-graphql.sh` — run GraphQL/integration tests
+- `./scripts/require-backend.sh` — shared check that backend is running (prompts user if not)
 - `./scripts/smoke-test.sh` — smoke test against running instance
 
 ### Conventions
@@ -53,7 +56,7 @@ src/main/kotlin/org/sightech/memoryvault/
 
 Located in `client/`.
 
-- **Framework**: Angular 20, zoneless, standalone components
+- **Framework**: Angular 21, zoneless, standalone components
 - **State**: NgRx Signal Store
 - **UI**: Angular Material with custom theme
 - **API**: REST with HttpClient + `httpResource()`
@@ -61,9 +64,8 @@ Located in `client/`.
 
 ### Commands
 
-- `npm run test` — run Vitest
-- `npm run e2e` — run Playwright
-- `npm run lint` — ESLint check
+- `npm run test` — run Vitest unit tests
+- `npm run e2e` — run Playwright E2E tests (requires backend running for navigation tests)
 - `npm run build` — production build
 
 ### Conventions
@@ -116,5 +118,6 @@ Custom project skills live in `.claude/skills/`:
 - `/add-mcp-tool` — new Spring AI `@Tool` method
 - `/add-lambda` — new AWS Lambda function with Terraform
 - `/add-content-processor` — new Python processor module
+- `/write-tests` — write tests with verifiable evidence, positive + negative cases
 
 Installed from skills.sh: `mcp-builder`, `kotlin-springboot`, `python-testing-patterns`, `async-python-patterns`, `pytest-coverage`, `webapp-testing`

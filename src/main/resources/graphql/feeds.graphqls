@@ -1,0 +1,33 @@
+type Feed {
+    id: UUID!
+    url: String!
+    title: String
+    description: String
+    siteUrl: String
+    lastFetchedAt: Instant
+    failureCount: Int!
+}
+
+type FeedWithUnread {
+    feed: Feed!
+    unreadCount: Int!
+}
+
+type FeedItem {
+    id: UUID!
+    feedId: UUID!
+    title: String
+    url: String
+    content: String
+    author: String
+    imageUrl: String
+    publishedAt: Instant
+    readAt: Instant
+    tags: [Tag!]!
+}
+
+type FeedRefreshResult {
+    feedId: UUID!
+    feedTitle: String
+    newItems: Int!
+}

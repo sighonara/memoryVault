@@ -1,0 +1,89 @@
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: #fff;
+  color: #202124;
+  font-size: 14px;
+}
+
+/* ── Slim scrollbars ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.18); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.32); }
+
+/* ── Expansion panels: flat list rows ── */
+.mat-expansion-panel-header {
+  height: auto !important;
+  min-height: 40px !important;
+  padding: 8px 16px !important;
+  align-items: flex-start !important;
+}
+.mat-expansion-panel-header-title,
+.mat-expansion-panel-header-description {
+  white-space: normal !important;
+  line-height: 1.4 !important;
+  overflow: visible !important;
+}
+.mat-expansion-panel {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  border-bottom: 1px solid #e8eaed !important;
+}
+.mat-expansion-panel:last-of-type {
+  border-bottom: none !important;
+}
+
+/* ── Cards: minimal, no heavy shadows ── */
+.mat-mdc-card {
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  border: 1px solid #dadce0 !important;
+}
+.mat-mdc-card:hover {
+  border-color: #bdc1c6 !important;
+}
+
+/* ── Buttons: compact ── */
+.mat-mdc-button, .mat-mdc-outlined-button {
+  min-width: auto !important;
+  padding: 0 12px !important;
+  font-size: 0.8125rem !important;
+}
+.mat-mdc-raised-button {
+  font-size: 0.8125rem !important;
+}
+.mat-mdc-icon-button {
+  width: 32px !important;
+  height: 32px !important;
+  padding: 4px !important;
+}
+
+/* ── Form fields: compact ── */
+.mat-mdc-form-field-subscript-wrapper { display: none !important; }
+
+/* ── Tables: dense rows ── */
+.mat-mdc-header-row { height: 40px !important; }
+.mat-mdc-row { height: 36px !important; }
+.mat-mdc-cell, .mat-mdc-header-cell {
+  font-size: 0.8125rem !important;
+  padding: 0 12px !important;
+}
+
+/* ── Tabs ── */
+.mat-mdc-tab { min-width: 80px !important; }
+
+/* ── Icons: ensure they don't clip ── */
+.mat-icon {
+  overflow: visible !important;
+}
+
+/* ── Shared utility: text truncation ── */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -27,4 +27,18 @@ else
 fi
 
 echo ""
+echo "--- GraphQL tests ---"
+"$(dirname "$0")/test-graphql.sh"
+
+echo ""
+echo "--- Frontend unit tests ---"
+"$(dirname "$0")/test-frontend.sh"
+
+echo ""
+echo "--- E2E tests (Playwright) ---"
+source "$(dirname "$0")/require-backend.sh"
+cd "$(dirname "$0")/../client"
+npm run e2e
+
+echo ""
 echo "=== All tests passed ==="

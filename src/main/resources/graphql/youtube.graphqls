@@ -1,0 +1,45 @@
+type YoutubeList {
+    id: UUID!
+    youtubeListId: String!
+    url: String!
+    name: String
+    description: String
+    lastSyncedAt: Instant
+    failureCount: Int!
+}
+
+type YoutubeListWithStats {
+    list: YoutubeList!
+    totalVideos: Int!
+    downloadedVideos: Int!
+    removedVideos: Int!
+}
+
+type YoutubeListAddResult {
+    list: YoutubeList!
+    newVideos: Int!
+}
+
+type Video {
+    id: UUID!
+    youtubeVideoId: String!
+    youtubeUrl: String!
+    title: String
+    description: String
+    channelName: String
+    thumbnailPath: String
+    filePath: String
+    downloadedAt: Instant
+    durationSeconds: Int
+    removedFromYoutube: Boolean!
+    removedDetectedAt: Instant
+    tags: [Tag!]!
+}
+
+type SyncResult {
+    listId: UUID!
+    newVideos: Int!
+    removedVideos: Int!
+    downloadSuccesses: Int!
+    downloadFailures: Int!
+}

@@ -147,7 +147,7 @@ class FeedIntegrationTest {
         )
         runBlocking { rssFetchService.fetchAndStoreFromXml(feed, sampleXml) }
 
-        val updated = feedRepository.findActiveById(feed.id)
+        val updated = feedRepository.findActiveByIdAndUserId(feed.id, userId)
         assertNotNull(updated)
         assertEquals("Test Feed", updated.title)
         assertEquals("A test RSS feed", updated.description)

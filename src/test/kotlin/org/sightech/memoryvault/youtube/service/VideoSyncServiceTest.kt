@@ -32,7 +32,8 @@ class VideoSyncServiceTest {
 
     @Test
     fun `syncList creates new video records and downloads them`() {
-        every { videoRepository.findByYoutubeListId(list.id) } returns emptyList()
+        every { videoRepository.findByYoutubeListIdInAndYoutubeVideoIdIn(any(), any()) } returns emptyList()
+        every { videoRepository.findByYoutubeListIdAndUserId(list.id, list.userId) } returns emptyList()
         every { videoDownloader.download(any(), any()) } returns DownloadResult(success = true, filePath = "videos/test.mp4")
 
         val metadata = listOf(
@@ -54,7 +55,8 @@ class VideoSyncServiceTest {
             youtubeVideoId = "vid1",
             youtubeUrl = "https://youtube.com/watch?v=vid1"
         )
-        every { videoRepository.findByYoutubeListId(list.id) } returns listOf(existingVideo)
+        every { videoRepository.findByYoutubeListIdInAndYoutubeVideoIdIn(any(), any()) } returns listOf(existingVideo)
+        every { videoRepository.findByYoutubeListIdAndUserId(list.id, list.userId) } returns listOf(existingVideo)
 
         val metadata = listOf(
             VideoMetadata("vid1", "Video 1", "https://youtube.com/watch?v=vid1", "Channel", 100, "desc"),
@@ -74,7 +76,8 @@ class VideoSyncServiceTest {
             youtubeVideoId = "vid1",
             youtubeUrl = "https://youtube.com/watch?v=vid1"
         )
-        every { videoRepository.findByYoutubeListId(list.id) } returns listOf(existingVideo)
+        every { videoRepository.findByYoutubeListIdInAndYoutubeVideoIdIn(any(), any()) } returns listOf(existingVideo)
+        every { videoRepository.findByYoutubeListIdAndUserId(list.id, list.userId) } returns listOf(existingVideo)
 
         // Empty metadata = vid1 was removed
         val result = service.syncList(list, emptyList())
@@ -91,7 +94,8 @@ class VideoSyncServiceTest {
             youtubeVideoId = "vid1",
             youtubeUrl = "https://youtube.com/watch?v=vid1"
         ).apply { removedFromYoutube = true }
-        every { videoRepository.findByYoutubeListId(list.id) } returns listOf(alreadyRemoved)
+        every { videoRepository.findByYoutubeListIdInAndYoutubeVideoIdIn(any(), any()) } returns listOf(alreadyRemoved)
+        every { videoRepository.findByYoutubeListIdAndUserId(list.id, list.userId) } returns listOf(alreadyRemoved)
 
         val result = service.syncList(list, emptyList())
 
@@ -100,7 +104,8 @@ class VideoSyncServiceTest {
 
     @Test
     fun `syncList handles download failures gracefully`() {
-        every { videoRepository.findByYoutubeListId(list.id) } returns emptyList()
+        every { videoRepository.findByYoutubeListIdInAndYoutubeVideoIdIn(any(), any()) } returns emptyList()
+        every { videoRepository.findByYoutubeListIdAndUserId(list.id, list.userId) } returns emptyList()
         every { videoDownloader.download(any(), any()) } returns DownloadResult(success = false, error = "network error")
 
         val metadata = listOf(
@@ -116,7 +121,8 @@ class VideoSyncServiceTest {
 
     @Test
     fun `syncList updates list lastSyncedAt`() {
-        every { videoRepository.findByYoutubeListId(list.id) } returns emptyList()
+        every { videoRepository.findByYoutubeListIdInAndYoutubeVideoIdIn(any(), any()) } returns emptyList()
+        every { videoRepository.findByYoutubeListIdAndUserId(list.id, list.userId) } returns emptyList()
 
         val metadata = listOf(
             VideoMetadata("vid1", "Video 1", "https://youtube.com/watch?v=vid1", "Channel", 100, "desc")

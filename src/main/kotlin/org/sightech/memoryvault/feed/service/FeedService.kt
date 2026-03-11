@@ -1,5 +1,6 @@
 package org.sightech.memoryvault.feed.service
 
+import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.feed.entity.Feed
 import org.sightech.memoryvault.feed.repository.FeedItemRepository
 import org.sightech.memoryvault.feed.repository.FeedRepository
@@ -14,37 +15,37 @@ class FeedService(
     private val rssFetchService: RssFetchService
 ) {
 
-    companion object {
-        val SYSTEM_USER_ID: UUID = UUID.fromString("00000000-0000-0000-0000-000000000001")
-    }
-
     suspend fun addFeed(url: String): Feed {
-        val feed = feedRepository.save(Feed(userId = SYSTEM_USER_ID, url = url))
+        val userId = CurrentUser.userId()
+        val feed = feedRepository.save(Feed(userId = userId, url = url))
         rssFetchService.fetchAndStore(feed)
         return feed
     }
 
     fun listFeeds(): List<Pair<Feed, Long>> {
-        val feeds = feedRepository.findAllActiveByUserId(SYSTEM_USER_ID)
+        val userId = CurrentUser.userId()
+        val feeds = feedRepository.findAllActiveByUserId(userId)
         return feeds.map { feed ->
-            val unreadCount = feedItemRepository.countUnreadByFeedId(feed.id)
+            val unreadCount = feedItemRepository.countUnreadByFeedIdAndUserId(feed.id, userId)
             feed to unreadCount
         }
     }
 
     fun deleteFeed(feedId: UUID): Feed? {
-        val feed = feedRepository.findActiveById(feedId) ?: return null
+        val userId = CurrentUser.userId()
+        val feed = feedRepository.findActiveByIdAndUserId(feedId, userId) ?: return null
         feed.deletedAt = Instant.now()
         feed.updatedAt = Instant.now()
         return feedRepository.save(feed)
     }
 
     suspend fun refreshFeed(feedId: UUID?): List<Pair<Feed, Int>> {
+        val userId = CurrentUser.userId()
         val feeds = if (feedId != null) {
-            val feed = feedRepository.findActiveById(feedId) ?: return emptyList()
+            val feed = feedRepository.findActiveByIdAndUserId(feedId, userId) ?: return emptyList()
             listOf(feed)
         } else {
-            feedRepository.findAllActiveByUserId(SYSTEM_USER_ID)
+            feedRepository.findAllActiveByUserId(userId)
         }
 
         return feeds.map { feed ->

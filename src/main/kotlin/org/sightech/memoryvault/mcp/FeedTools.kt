@@ -1,6 +1,7 @@
 package org.sightech.memoryvault.mcp
 
 import kotlinx.coroutines.runBlocking
+import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.feed.service.FeedItemService
 import org.sightech.memoryvault.feed.service.FeedService
 import org.springframework.ai.tool.annotation.Tool
@@ -34,7 +35,7 @@ class FeedTools(
     fun getFeedItems(feedId: String, limit: Int?, unreadOnly: Boolean?): String {
         val items = feedItemService.getItems(UUID.fromString(feedId), limit, unreadOnly ?: false)
         if (items.isEmpty()) return "No items found."
-
+        
         val lines = items.map { item ->
             val status = if (item.readAt != null) "[read]" else "[unread]"
             val tagStr = if (item.tags.isNotEmpty()) " [${item.tags.joinToString(", ") { it.name }}]" else ""
