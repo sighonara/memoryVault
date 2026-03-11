@@ -2648,3 +2648,32 @@ Expected: All tests pass across all services
 git add docs/plans/2026-03-05-tooling-first-design.md CLAUDE.md
 git commit -m "docs: Phase 6 Bookmark Management complete"
 ```
+
+---
+
+## Summary
+
+| Task | Description                                   | Key Files     |
+|------|-----------------------------------------------|---------------|
+| 1    | Database updates                              | TODO: fill in |
+| 2    | File entities based on database changes       | TODO: fill in |
+| 3    | Folder CRUD and Cycle Detection               | TODO: fill in |
+| 4    | Bookmark-Folder Operations and Export Update  | TODO: fill in |
+| 5    | Create Ingestion Service                      | TODO: fill in |
+| 6    | IngestService — Commit Resolutions            | TODO: fill in |
+| 7    | REST Controllers for Ingest                   | TODO: fill in |
+| 8    | GraphQL Schema and Resolver Updates           | TODO: fill in |
+| 9    | MCP Tool Updates                              | TODO: fill in |
+| 10   | Backend Integration Tests                     | TODO: fill in |
+| 11   | Refactor Existing frontend BookmarksComponent | TODO: fill in |
+| 12   | Update frontend Bookmark Store and GraphQL    | TODO: fill in |
+| 13   | Create Folder Tree Component                  | TODO: fill in |
+| 14   | Create Bookmark List Component                | TODO: fill in |
+| 15   | Create Ingest Panel Component                 | TODO: fill in |
+| 16   | Create Conflict Review Component              | TODO: fill in |
+| 17   | Wire Up Two-Panel Layout                      | TODO: fill in |
+| 18   | Barrel Exports and Route Updates              | TODO: fill in |
+| 19   | Create and update Playwright E2E Tests        | TODO: fill in |
+| 20   | Documentation and Roadmap Updates             | TODO: fill in |
+
+
