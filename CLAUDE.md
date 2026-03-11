@@ -6,6 +6,8 @@
 
 Design docs: `docs/plans/2026-03-05-tooling-first-design.md`
 
+**Master roadmap:** `docs/plans/2026-03-05-tooling-first-design.md` — contains all phase summaries and future work items. Update this document whenever a phase is renamed, completed, or when future work items are identified during design. Do not bury future work only in phase-specific specs.
+
 ---
 
 ## Backend (Spring Boot / Kotlin)
