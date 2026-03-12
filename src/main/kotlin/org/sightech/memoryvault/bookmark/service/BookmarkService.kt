@@ -70,23 +70,66 @@ class BookmarkService(
         return bookmarkRepository.save(bookmark)
     }
 
+    fun moveBookmark(bookmarkId: UUID, folderId: UUID?): Bookmark {
+        val userId = CurrentUser.userId()
+        val bookmark = bookmarkRepository.findActiveByIdAndUserId(bookmarkId, userId)
+            ?: throw IllegalArgumentException("Bookmark not found")
+        if (folderId != null) {
+            folderRepository.findActiveByIdAndUserId(folderId, userId)
+                ?: throw IllegalArgumentException("Folder not found")
+        }
+        bookmark.folderId = folderId
+        bookmark.updatedAt = Instant.now()
+        return bookmarkRepository.save(bookmark)
+    }
+
+    fun reorderBookmarks(folderId: UUID?, bookmarkIds: List<UUID>): List<Bookmark> {
+        val userId = CurrentUser.userId()
+        val bookmarks = if (folderId != null) {
+            bookmarkRepository.findByFolderIdAndUserId(folderId, userId)
+        } else {
+            bookmarkRepository.findUnfiledByUserId(userId)
+        }
+        val bookmarkMap = bookmarks.associateBy { it.id }
+        return bookmarkIds.mapIndexed { index, id ->
+            val bookmark = bookmarkMap[id] ?: throw IllegalArgumentException("Bookmark $id not found in folder")
+            bookmark.sortOrder = index
+            bookmark.updatedAt = Instant.now()
+            bookmarkRepository.save(bookmark)
+        }
+    }
+
     fun exportNetscapeHtml(): String {
         val userId = CurrentUser.userId()
+        val folders = folderRepository.findAllActiveByUserId(userId)
         val bookmarks = bookmarkRepository.findAllActiveByUserId(userId)
+
+        val folderMap = folders.groupBy { it.parentId }
+        val bookmarksByFolder = bookmarks.groupBy { it.folderId }
+
         val sb = StringBuilder()
         sb.appendLine("<!DOCTYPE NETSCAPE-Bookmark-file-1>")
-        sb.appendLine("<!-- This is an automatically generated file. -->")
         sb.appendLine("<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">")
         sb.appendLine("<TITLE>Bookmarks</TITLE>")
         sb.appendLine("<H1>Bookmarks</H1>")
         sb.appendLine("<DL><p>")
-        for (bookmark in bookmarks) {
-            val addDate = bookmark.createdAt.epochSecond
-            val tagAttr = if (bookmark.tags.isNotEmpty()) {
-                " TAGS=\"${bookmark.tags.joinToString(",") { it.name }}\""
-            } else ""
-            sb.appendLine("    <DT><A HREF=\"${bookmark.url}\" ADD_DATE=\"$addDate\"$tagAttr>${bookmark.title}</A>")
+
+        fun writeFolder(folderId: UUID?, indent: String) {
+            // Write subfolders
+            folderMap[folderId]?.forEach { folder ->
+                sb.appendLine("$indent<DT><H3>${folder.name}</H3>")
+                sb.appendLine("$indent<DL><p>")
+                writeFolder(folder.id, "$indent    ")
+                sb.appendLine("$indent</DL><p>")
+            }
+            // Write bookmarks in this folder
+            bookmarksByFolder[folderId]?.forEach { bookmark ->
+                sb.appendLine("$indent<DT><A HREF=\"${bookmark.url}\">${bookmark.title}</A>")
+            }
         }
+
+        writeFolder(null, "    ")
+
         sb.appendLine("</DL><p>")
         return sb.toString()
     }

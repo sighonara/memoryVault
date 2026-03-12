@@ -545,7 +545,7 @@ git commit -m "feat: folder CRUD with cycle detection in BookmarkService"
 - Modify: `src/main/kotlin/org/sightech/memoryvault/bookmark/service/BookmarkService.kt`
 - Modify: `src/test/kotlin/org/sightech/memoryvault/bookmark/service/BookmarkServiceTest.kt`
 
-- [ ] **Step 1: Write failing tests for bookmark-folder operations**
+- [x] **Step 1: Write failing tests for bookmark-folder operations**
 
 Add to `BookmarkServiceTest.kt`:
 
@@ -616,12 +616,12 @@ fun `exportNetscapeHtml includes folder hierarchy`() {
 }
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `./gradlew test --tests "*BookmarkServiceTest*" -q`
 Expected: FAIL — methods don't exist
 
-- [ ] **Step 3: Implement moveBookmark, reorderBookmarks, and update exportNetscapeHtml**
+- [x] **Step 3: Implement moveBookmark, reorderBookmarks, and update exportNetscapeHtml**
 
 Add to `BookmarkService.kt`:
 
@@ -695,12 +695,12 @@ fun exportNetscapeHtml(): String {
 }
 ```
 
-- [ ] **Step 4: Run all tests**
+- [x] **Step 4: Run all tests**
 
 Run: `./gradlew test -q`
 Expected: All tests pass
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```
 git add src/main/kotlin/org/sightech/memoryvault/bookmark/service/BookmarkService.kt src/test/kotlin/org/sightech/memoryvault/bookmark/service/BookmarkServiceTest.kt

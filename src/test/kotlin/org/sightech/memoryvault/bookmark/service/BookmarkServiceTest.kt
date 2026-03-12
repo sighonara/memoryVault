@@ -3,7 +3,9 @@ package org.sightech.memoryvault.bookmark.service
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.sightech.memoryvault.bookmark.entity.Bookmark
+import org.sightech.memoryvault.bookmark.entity.Folder
 import org.sightech.memoryvault.bookmark.repository.BookmarkRepository
 import org.sightech.memoryvault.bookmark.repository.FolderRepository
 import org.sightech.memoryvault.tag.entity.Tag
@@ -162,6 +164,7 @@ class BookmarkServiceTest {
     @Test
     fun `exportNetscapeHtml produces valid Netscape format`() {
         val bookmark = Bookmark(userId = userId, url = "https://example.com", title = "Example")
+        every { folderRepository.findAllActiveByUserId(userId) } returns emptyList()
         every { bookmarkRepository.findAllActiveByUserId(userId) } returns listOf(bookmark)
 
         val result = service.exportNetscapeHtml()
@@ -169,5 +172,70 @@ class BookmarkServiceTest {
         assert(result.contains("<!DOCTYPE NETSCAPE-Bookmark-file-1>"))
         assert(result.contains("HREF=\"https://example.com\""))
         assert(result.contains("Example"))
+    }
+
+    @Test
+    fun `moveBookmark updates folderId`() {
+        val bookmarkId = UUID.randomUUID()
+        val folderId = UUID.randomUUID()
+        val bookmark = Bookmark(id = bookmarkId, url = "https://example.com", title = "Ex", userId = userId)
+        val folder = Folder(id = folderId, name = "Tech", userId = userId)
+
+        every { bookmarkRepository.findActiveByIdAndUserId(bookmarkId, userId) } returns bookmark
+        every { folderRepository.findActiveByIdAndUserId(folderId, userId) } returns folder
+        every { bookmarkRepository.save(any()) } answers { firstArg() }
+
+        val result = service.moveBookmark(bookmarkId, folderId)
+
+        assertEquals(folderId, result.folderId)
+    }
+
+    @Test
+    fun `moveBookmark to null unfiles the bookmark`() {
+        val bookmarkId = UUID.randomUUID()
+        val bookmark = Bookmark(id = bookmarkId, url = "https://example.com", title = "Ex", userId = userId, folderId = UUID.randomUUID())
+
+        every { bookmarkRepository.findActiveByIdAndUserId(bookmarkId, userId) } returns bookmark
+        every { bookmarkRepository.save(any()) } answers { firstArg() }
+
+        val result = service.moveBookmark(bookmarkId, null)
+
+        assertNull(result.folderId)
+    }
+
+    @Test
+    fun `reorderBookmarks updates sortOrder for all bookmarks in folder`() {
+        val folderId = UUID.randomUUID()
+        val id1 = UUID.randomUUID()
+        val id2 = UUID.randomUUID()
+        val id3 = UUID.randomUUID()
+        val b1 = Bookmark(id = id1, url = "https://a.com", title = "A", userId = userId, folderId = folderId, sortOrder = 0)
+        val b2 = Bookmark(id = id2, url = "https://b.com", title = "B", userId = userId, folderId = folderId, sortOrder = 1)
+        val b3 = Bookmark(id = id3, url = "https://c.com", title = "C", userId = userId, folderId = folderId, sortOrder = 2)
+
+        every { bookmarkRepository.findByFolderIdAndUserId(folderId, userId) } returns listOf(b1, b2, b3)
+        every { bookmarkRepository.save(any()) } answers { firstArg() }
+
+        // Reorder: C, A, B
+        val result = service.reorderBookmarks(folderId, listOf(id3, id1, id2))
+
+        verify { bookmarkRepository.save(match { it.id == id3 && it.sortOrder == 0 }) }
+        verify { bookmarkRepository.save(match { it.id == id1 && it.sortOrder == 1 }) }
+        verify { bookmarkRepository.save(match { it.id == id2 && it.sortOrder == 2 }) }
+    }
+
+    @Test
+    fun `exportNetscapeHtml includes folder hierarchy`() {
+        val folderId = UUID.randomUUID()
+        val folder = Folder(id = folderId, name = "Tech", userId = userId)
+        val bookmark = Bookmark(id = UUID.randomUUID(), url = "https://example.com", title = "Example", userId = userId, folderId = folderId)
+
+        every { folderRepository.findAllActiveByUserId(userId) } returns listOf(folder)
+        every { bookmarkRepository.findAllActiveByUserId(userId) } returns listOf(bookmark)
+
+        val html = service.exportNetscapeHtml()
+
+        assertTrue(html.contains("<H3>Tech</H3>"))
+        assertTrue(html.contains("<A HREF=\"https://example.com\">Example</A>"))
     }
 }
