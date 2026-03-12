@@ -21,6 +21,9 @@ interface BookmarkRepository : JpaRepository<Bookmark, UUID> {
     @Query("SELECT b FROM Bookmark b LEFT JOIN FETCH b.tags WHERE b.folderId IS NULL AND b.userId = :userId AND b.deletedAt IS NULL ORDER BY b.sortOrder")
     fun findUnfiledByUserId(userId: UUID): List<Bookmark>
 
-    @Query("SELECT b FROM Bookmark b WHERE b.normalizedUrl = :normalizedUrl AND b.userId = :userId")
+    @Query("SELECT b FROM Bookmark b WHERE b.normalizedUrl = :normalizedUrl AND b.userId = :userId AND b.deletedAt IS NULL")
     fun findByNormalizedUrlAndUserId(normalizedUrl: String, userId: UUID): Bookmark?
+
+    @Query("SELECT b FROM Bookmark b WHERE b.normalizedUrl = :normalizedUrl AND b.userId = :userId AND b.deletedAt IS NOT NULL")
+    fun findByNormalizedUrlIncludingDeleted(normalizedUrl: String, userId: UUID): Bookmark?
 }

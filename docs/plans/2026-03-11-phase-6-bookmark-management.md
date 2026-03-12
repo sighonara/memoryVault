@@ -716,7 +716,7 @@ git commit -m "feat: moveBookmark, reorderBookmarks, folder-aware Netscape expor
 - Create: `src/main/kotlin/org/sightech/memoryvault/bookmark/entity/IngestPreview.kt`
 - Create: `src/test/kotlin/org/sightech/memoryvault/bookmark/service/IngestServiceTest.kt`
 
-- [ ] **Step 1: Create IngestPreviewEntity and IngestPreviewRepository first (needed by IngestService constructor)**
+- [x] **Step 1: Create IngestPreviewEntity and IngestPreviewRepository first (needed by IngestService constructor)**
 
 Create `src/main/kotlin/org/sightech/memoryvault/bookmark/entity/IngestPreviewEntity.kt`:
 
@@ -770,7 +770,7 @@ interface IngestPreviewRepository : JpaRepository<IngestPreviewEntity, UUID> {
 }
 ```
 
-- [ ] **Step 2: Write failing tests for URL normalization**
+- [x] **Step 2: Write failing tests for URL normalization**
 
 Create `src/test/kotlin/org/sightech/memoryvault/bookmark/service/UrlNormalizationTest.kt`:
 
@@ -809,12 +809,12 @@ class UrlNormalizationTest {
 }
 ```
 
-- [ ] **Step 3: Run tests to verify they fail**
+- [x] **Step 3: Run tests to verify they fail**
 
 Run: `./gradlew test --tests "*UrlNormalizationTest*" -q`
 Expected: FAIL — IngestService does not exist
 
-- [ ] **Step 4: Create IngestService with normalizeUrl**
+- [x] **Step 4: Create IngestService with normalizeUrl**
 
 ```kotlin
 package org.sightech.memoryvault.bookmark.service
@@ -850,12 +850,12 @@ class IngestService(
 }
 ```
 
-- [ ] **Step 5: Run normalization tests**
+- [x] **Step 5: Run normalization tests**
 
 Run: `./gradlew test --tests "*UrlNormalizationTest*" -q`
 Expected: PASS
 
-- [ ] **Step 6: Write failing tests for ingest diff/preview**
+- [x] **Step 6: Write failing tests for ingest diff/preview**
 
 Add to `IngestServiceTest.kt`:
 
@@ -961,12 +961,12 @@ class IngestServiceTest {
 }
 ```
 
-- [ ] **Step 7: Run tests to verify they fail**
+- [x] **Step 7: Run tests to verify they fail**
 
 Run: `./gradlew test --tests "*IngestServiceTest*" -q`
 Expected: FAIL — missing data classes and methods
 
-- [ ] **Step 8: Create IngestPreview data classes**
+- [x] **Step 8: Create IngestPreview data classes**
 
 Create `src/main/kotlin/org/sightech/memoryvault/bookmark/entity/IngestPreview.kt`:
 
@@ -1026,14 +1026,14 @@ data class CommitResult(
 
 Note: IngestPreviewEntity and IngestPreviewRepository were already created in Step 1 of this task.
 
-- [ ] **Step 9: Add findByNormalizedUrlIncludingDeleted to BookmarkRepository**
+- [x] **Step 9: Add findByNormalizedUrlIncludingDeleted to BookmarkRepository**
 
 ```kotlin
 @Query("SELECT b FROM Bookmark b WHERE b.normalizedUrl = :normalizedUrl AND b.userId = :userId AND b.deletedAt IS NOT NULL")
 fun findByNormalizedUrlIncludingDeleted(normalizedUrl: String, userId: UUID): Bookmark?
 ```
 
-- [ ] **Step 10: Implement generatePreview in IngestService**
+- [x] **Step 10: Implement generatePreview in IngestService**
 
 Note: Use `objectMapper` (injected via constructor) instead of instantiating a new one.
 
@@ -1103,17 +1103,17 @@ fun generatePreview(input: List<IngestBookmarkInput>): IngestPreviewResult {
 }
 ```
 
-- [ ] **Step 11: Run tests**
+- [x] **Step 11: Run tests**
 
 Run: `./gradlew test --tests "*IngestServiceTest*" -q`
 Expected: PASS
 
-- [ ] **Step 12: Run all tests**
+- [x] **Step 12: Run all tests**
 
 Run: `./gradlew test -q`
 Expected: All pass
 
-- [ ] **Step 13: Commit**
+- [x] **Step 13: Commit**
 
 Note: IngestPreviewEntity.kt and IngestPreviewRepository.kt were created in Step 1.
 
@@ -2653,27 +2653,27 @@ git commit -m "docs: Phase 6 Bookmark Management complete"
 
 ## Summary
 
-| Task | Description                                   | Key Files                                                                                                                               |
-|------|-----------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
-| 1    | Flyway V5 Migration                           | `V5__folders_and_ingest.sql` — folders table, bookmark columns (folder_id, sort_order, normalized_url), ingest_previews table           |
-| 2    | Folder Entity and Repository                  | `Folder.kt`, `FolderRepository.kt`, `Bookmark.kt` (add folderId/sortOrder/normalizedUrl), `BookmarkRepository.kt` (folder-aware queries) |
-| 3    | Folder CRUD with Cycle Detection              | `BookmarkService.kt` (createFolder, renameFolder, moveFolder, deleteFolder, getSubtree), `FolderOperationsTest.kt`                      |
-| 4    | Bookmark-Folder Operations and Export Update  | `BookmarkService.kt` (moveBookmark, reorderBookmarks, listByFolder, exportBookmarks with folders), `BookmarkServiceTest.kt`             |
+| Task | Description                                    | Key Files                                                                                                                               |
+|------|------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| 1    | Flyway V5 Migration                            | `V5__folders_and_ingest.sql` — folders table, bookmark columns (folder_id, sort_order, normalized_url), ingest_previews table           |
+| 2    | Folder Entity and Repository                   | `Folder.kt`, `FolderRepository.kt`, `Bookmark.kt` (add folderId/sortOrder/normalizedUrl), `BookmarkRepository.kt` (folder-aware queries) |
+| 3    | Folder CRUD with Cycle Detection               | `BookmarkService.kt` (createFolder, renameFolder, moveFolder, deleteFolder, getSubtree), `FolderOperationsTest.kt`                      |
+| 4    | Bookmark-Folder Operations and Export Update   | `BookmarkService.kt` (moveBookmark, reorderBookmarks, listByFolder, exportBookmarks with folders), `BookmarkServiceTest.kt`             |
 | 5    | IngestService — URL Normalization and Preview  | `IngestService.kt`, `IngestPreviewEntity.kt`, `IngestPreviewRepository.kt`, `IngestPreview.kt` (DTO)                                    |
-| 6    | IngestService — Commit Resolutions            | `IngestService.kt` (commitResolutions, applyResolution), `IngestServiceTest.kt`                                                         |
-| 7    | REST Controllers for Ingest                   | `IngestController.kt` (POST upload, GET preview, POST commit), `IngestControllerTest.kt`                                                |
-| 8    | GraphQL Schema and Resolver Updates           | `schema.graphqls`, `FolderResolver.kt`, `BookmarkResolver.kt` (folder-aware queries)                                                    |
-| 9    | MCP Tool Updates                              | `BookmarkTools.kt` (folder params on addBookmark/listBookmarks, createFolder, moveBookmark, importBookmarks)                            |
-| 10   | Backend Integration Tests                     | `FolderIntegrationTest.kt`, `BookmarkIntegrationTest.kt` (folder operations, ingest flow, cycle detection)                              |
-| 11   | Refactor Existing BookmarksComponent          | `client/src/app/bookmarks/bookmarks.ts` (remove CommonModule, use @if/@for, drop subscribe)                                             |
-| 12   | Update Bookmark Store and GraphQL             | `bookmarks.graphql`, `bookmarks.store.ts`, `generated.ts` (folder queries, folder state)                                                |
-| 13   | Folder Tree Component                         | `bookmark-tree/bookmark-tree.ts`, `bookmark-tree.spec.ts` (recursive tree, drag-drop, context menu)                                     |
-| 14   | Bookmark List Component                       | `bookmark-list/bookmark-list.ts`, `bookmark-list.spec.ts` (folder-scoped list, sort, drag reorder)                                      |
-| 15   | Ingest Panel Component                        | `ingest-panel/ingest-panel.ts`, `ingest-panel.spec.ts` (file upload, CLI command display, preview trigger)                              |
-| 16   | Conflict Review Component                     | `conflict-review/conflict-review.ts`, `conflict-review.spec.ts` (diff view, resolution actions, commit)                                 |
-| 17   | Wire Up Two-Panel Layout                      | `bookmarks.ts` (two-panel: folder tree left, bookmark list right, ingest/conflict overlays)                                             |
-| 18   | Barrel Exports and Route Updates              | `bookmarks/index.ts`, sub-component `index.ts` files, `bookmarks.routes.ts`                                                             |
-| 19   | Playwright E2E Tests                          | `client/e2e/bookmarks.spec.ts` (folder CRUD, drag-drop, ingest flow, export)                                                            |
-| 20   | Documentation and Roadmap Updates             | `docs/plans/2026-03-05-tooling-first-design.md`, `CLAUDE.md`, `MEMORY.md`                                                               |
+| 6    | IngestService — Commit Resolutions             | `IngestService.kt` (commitResolutions, applyResolution), `IngestServiceTest.kt`                                                         |
+| 7    | REST Controllers for Ingest                    | `IngestController.kt` (POST upload, GET preview, POST commit), `IngestControllerTest.kt`                                                |
+| 8    | GraphQL Schema and Resolver Updates            | `schema.graphqls`, `FolderResolver.kt`, `BookmarkResolver.kt` (folder-aware queries)                                                    |
+| 9    | MCP Tool Updates                               | `BookmarkTools.kt` (folder params on addBookmark/listBookmarks, createFolder, moveBookmark, importBookmarks)                            |
+| 10   | Backend Integration Tests                      | `FolderIntegrationTest.kt`, `BookmarkIntegrationTest.kt` (folder operations, ingest flow, cycle detection)                              |
+| 11   | Refactor Existing BookmarksComponent           | `client/src/app/bookmarks/bookmarks.ts` (remove CommonModule, use @if/@for, drop subscribe)                                             |
+| 12   | Update Bookmark Store and GraphQL              | `bookmarks.graphql`, `bookmarks.store.ts`, `generated.ts` (folder queries, folder state)                                                |
+| 13   | Folder Tree Component                          | `bookmark-tree/bookmark-tree.ts`, `bookmark-tree.spec.ts` (recursive tree, drag-drop, context menu)                                     |
+| 14   | Bookmark List Component                        | `bookmark-list/bookmark-list.ts`, `bookmark-list.spec.ts` (folder-scoped list, sort, drag reorder)                                      |
+| 15   | Ingest Panel Component                         | `ingest-panel/ingest-panel.ts`, `ingest-panel.spec.ts` (file upload, CLI command display, preview trigger)                              |
+| 16   | Conflict Review Component                      | `conflict-review/conflict-review.ts`, `conflict-review.spec.ts` (diff view, resolution actions, commit)                                 |
+| 17   | Wire Up Two-Panel Layout                       | `bookmarks.ts` (two-panel: folder tree left, bookmark list right, ingest/conflict overlays)                                             |
+| 18   | Barrel Exports and Route Updates               | `bookmarks/index.ts`, sub-component `index.ts` files, `bookmarks.routes.ts`                                                             |
+| 19   | Playwright E2E Tests                           | `client/e2e/bookmarks.spec.ts` (folder CRUD, drag-drop, ingest flow, export)                                                            |
+| 20   | Documentation and Roadmap Updates              | `docs/plans/2026-03-05-tooling-first-design.md`, `CLAUDE.md`, `MEMORY.md`                                                               |
 
 

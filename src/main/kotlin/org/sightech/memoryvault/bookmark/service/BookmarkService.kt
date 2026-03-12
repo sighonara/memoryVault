@@ -124,7 +124,11 @@ class BookmarkService(
             }
             // Write bookmarks in this folder
             bookmarksByFolder[folderId]?.forEach { bookmark ->
-                sb.appendLine("$indent<DT><A HREF=\"${bookmark.url}\">${bookmark.title}</A>")
+                val addDate = bookmark.createdAt.epochSecond
+                val tagAttr = if (bookmark.tags.isNotEmpty()) {
+                    " TAGS=\"${bookmark.tags.joinToString(",") { it.name }}\""
+                } else ""
+                sb.appendLine("$indent<DT><A HREF=\"${bookmark.url}\" ADD_DATE=\"$addDate\"$tagAttr>${bookmark.title}</A>")
             }
         }
 

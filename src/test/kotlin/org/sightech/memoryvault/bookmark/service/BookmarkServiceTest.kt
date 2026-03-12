@@ -236,6 +236,7 @@ class BookmarkServiceTest {
         val html = service.exportNetscapeHtml()
 
         assertTrue(html.contains("<H3>Tech</H3>"))
-        assertTrue(html.contains("<A HREF=\"https://example.com\">Example</A>"))
+        assertTrue(html.contains("HREF=\"https://example.com\""))
+        assertTrue(html.contains(">Example</A>"))
     }
 }
