@@ -228,11 +228,14 @@ JWT authentication (jjwt, BCrypt), Spring for GraphQL (schema-first), Angular 21
 ### Phase 6 — Bookmark Management
 Folder hierarchy (adjacency list), full bookmark manager UI (two-panel tree + list), browser bookmark ingestion via CLI commands generated in the UI (Chrome, Firefox, Safari, Opera, Edge, Brave), conflict resolution with preview/commit flow, Netscape HTML export with folder structure. See `docs/superpowers/specs/2026-03-11-phase-6-bookmark-management-design.md`.
 
-### Phase 7 — Infrastructure
-Terraform, GitHub Actions CI/CD, production AWS deployment (EC2, RDS, S3, Lambda, EventBridge). AWS Cognito auth swap (CurrentUser abstraction is already in place), CloudWatch log retrieval (LocalLogService/CloudWatchLogService interface is stubbed), AWS cost tracking (AwsCostRecord entity defined but not implemented).
+### Phase 7 — Mirror OldReader functionality
+Import feeds. Export feeds. Support (or stubs for) OAuth from social media logins. Supporting 3rd party integrations (unclear about what all these are). Other (need to research)?
 
 ### Phase 8 — Real-Time Updates
 WebSocket support for live UI updates — new feed items, sync job progress, download status changes pushed to the Angular client without polling.
+
+### Phase 9 — Infrastructure
+Terraform, GitHub Actions CI/CD, production AWS deployment (EC2, RDS, S3, Lambda, EventBridge). AWS Cognito auth swap (CurrentUser abstraction is already in place), CloudWatch log retrieval (LocalLogService/CloudWatchLogService interface is stubbed), AWS cost tracking (AwsCostRecord entity defined but not implemented).
 
 ---
 
