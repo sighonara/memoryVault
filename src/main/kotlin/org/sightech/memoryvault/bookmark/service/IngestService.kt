@@ -95,9 +95,9 @@ class IngestService(
                 url = node["url"].asText(),
                 title = node["title"].asText(),
                 status = IngestStatus.valueOf(node["status"].asText()),
-                existingBookmarkId = node["existingBookmarkId"]?.asText()?.let { UUID.fromString(it) },
-                suggestedFolderId = node["suggestedFolderId"]?.asText()?.let { UUID.fromString(it) },
-                browserFolder = node["browserFolder"]?.asText()
+                existingBookmarkId = node["existingBookmarkId"]?.textValue()?.let { UUID.fromString(it) },
+                suggestedFolderId = node["suggestedFolderId"]?.textValue()?.let { UUID.fromString(it) },
+                browserFolder = node["browserFolder"]?.textValue()
             )
         }
 
@@ -169,9 +169,9 @@ class IngestService(
                 url = node["url"].asText(),
                 title = node["title"].asText(),
                 status = IngestStatus.valueOf(node["status"].asText()),
-                existingBookmarkId = node["existingBookmarkId"]?.asText()?.let { UUID.fromString(it) },
-                suggestedFolderId = node["suggestedFolderId"]?.asText()?.let { UUID.fromString(it) },
-                browserFolder = node["browserFolder"]?.asText()
+                existingBookmarkId = node["existingBookmarkId"]?.textValue()?.let { UUID.fromString(it) },
+                suggestedFolderId = node["suggestedFolderId"]?.textValue()?.let { UUID.fromString(it) },
+                browserFolder = node["browserFolder"]?.textValue()
             )
         }
         val summary = IngestSummary(

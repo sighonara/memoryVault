@@ -8,7 +8,6 @@ import java.util.UUID
 @Table(name = "folders")
 class Folder(
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     val id: UUID = UUID.randomUUID(),
 
     @Column(nullable = false, length = 255)

@@ -45,7 +45,8 @@ CREATE TABLE ingest_previews (
     preview_data JSONB NOT NULL,
     committed   BOOLEAN NOT NULL DEFAULT false,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-    expires_at  TIMESTAMPTZ NOT NULL DEFAULT (now() + interval '1 hour')
+    expires_at  TIMESTAMPTZ NOT NULL DEFAULT (now() + interval '1 hour'),
+    version     BIGINT NOT NULL DEFAULT 0
 );
 
 CREATE INDEX idx_ingest_previews_user_id ON ingest_previews(user_id);

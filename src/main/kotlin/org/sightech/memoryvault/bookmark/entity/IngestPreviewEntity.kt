@@ -10,7 +10,6 @@ import java.util.UUID
 @Table(name = "ingest_previews")
 class IngestPreviewEntity(
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     val id: UUID = UUID.randomUUID(),
 
     @Column(name = "user_id", nullable = false)
@@ -27,5 +26,8 @@ class IngestPreviewEntity(
     val createdAt: Instant = Instant.now(),
 
     @Column(name = "expires_at", nullable = false)
-    val expiresAt: Instant = Instant.now().plusSeconds(3600)
+    val expiresAt: Instant = Instant.now().plusSeconds(3600),
+
+    @Version
+    val version: Long = 0
 )

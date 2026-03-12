@@ -1337,7 +1337,7 @@ git commit -m "feat: IngestService commit resolutions — accept, skip, undelete
 - Create: `src/test/kotlin/org/sightech/memoryvault/bookmark/controller/IngestControllerTest.kt`
 - Modify: `src/main/kotlin/org/sightech/memoryvault/config/SecurityConfig.kt`
 
-- [ ] **Step 1: Write failing tests for ingest endpoints**
+- [x] **Step 1: Write failing tests for ingest endpoints**
 
 ```kotlin
 package org.sightech.memoryvault.bookmark.controller
@@ -1408,12 +1408,12 @@ class IngestControllerTest {
 
 Note: The exact test setup (JWT tokens, SecurityContext) should follow the pattern established in `BookmarkIntegrationTest.kt`. Read that file for the auth test helper pattern before implementing.
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `./gradlew test --tests "*IngestControllerTest*" -q`
 Expected: FAIL — IngestController does not exist
 
-- [ ] **Step 3: Create IngestController**
+- [x] **Step 3: Create IngestController**
 
 ```kotlin
 package org.sightech.memoryvault.bookmark.controller
@@ -1462,16 +1462,16 @@ class IngestController(
 }
 ```
 
-- [ ] **Step 4: Update SecurityConfig to permit ingest endpoints (they require auth, already covered by default)**
+- [x] **Step 4: Update SecurityConfig to permit ingest endpoints (they require auth, already covered by default)**
 
 Verify that `/api/bookmarks/ingest/**` is NOT in the permit list — it should require authentication (which is the default). No changes needed to SecurityConfig unless the endpoints need special handling.
 
-- [ ] **Step 5: Run all tests**
+- [x] **Step 5: Run all tests**
 
 Run: `./gradlew test -q`
 Expected: All pass
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```
 git add src/main/kotlin/org/sightech/memoryvault/bookmark/controller/IngestController.kt src/test/kotlin/org/sightech/memoryvault/bookmark/controller/IngestControllerTest.kt
