@@ -103,7 +103,7 @@ git commit -m "feat: V5 migration — folders table, bookmark columns, ingest pr
 - Modify: `src/main/kotlin/org/sightech/memoryvault/bookmark/entity/Bookmark.kt`
 - Modify: `src/main/kotlin/org/sightech/memoryvault/bookmark/repository/BookmarkRepository.kt`
 
-- [ ] **Step 1: Write Folder entity test**
+- [x] **Step 1: Write Folder entity test**
 
 Create: `src/test/kotlin/org/sightech/memoryvault/bookmark/entity/FolderEntityTest.kt`
 
@@ -139,12 +139,12 @@ class FolderEntityTest {
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `./gradlew test --tests "*FolderEntityTest*" -q`
 Expected: FAIL — `Folder` class does not exist
 
-- [ ] **Step 3: Create Folder entity**
+- [x] **Step 3: Create Folder entity**
 
 ```kotlin
 package org.sightech.memoryvault.bookmark.entity
@@ -186,12 +186,12 @@ class Folder(
 )
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `./gradlew test --tests "*FolderEntityTest*" -q`
 Expected: PASS
 
-- [ ] **Step 5: Create FolderRepository**
+- [x] **Step 5: Create FolderRepository**
 
 ```kotlin
 package org.sightech.memoryvault.bookmark.repository
@@ -216,7 +216,7 @@ interface FolderRepository : JpaRepository<Folder, UUID> {
 }
 ```
 
-- [ ] **Step 6: Update Bookmark entity — add folderId, sortOrder, normalizedUrl**
+- [x] **Step 6: Update Bookmark entity — add folderId, sortOrder, normalizedUrl**
 
 Modify `src/main/kotlin/org/sightech/memoryvault/bookmark/entity/Bookmark.kt`:
 
@@ -233,7 +233,7 @@ Add these fields to the Bookmark class:
     var normalizedUrl: String? = null,
 ```
 
-- [ ] **Step 7: Update BookmarkRepository — add folder-aware queries**
+- [x] **Step 7: Update BookmarkRepository — add folder-aware queries**
 
 Add to `BookmarkRepository.kt`:
 
@@ -248,7 +248,7 @@ Add to `BookmarkRepository.kt`:
     fun findByNormalizedUrlAndUserId(normalizedUrl: String, userId: UUID): Bookmark?
 ```
 
-- [ ] **Step 8: Run all tests to verify nothing is broken**
+- [x] **Step 8: Run all tests to verify nothing is broken**
 
 Run: `./gradlew test -q`
 Expected: All existing tests pass

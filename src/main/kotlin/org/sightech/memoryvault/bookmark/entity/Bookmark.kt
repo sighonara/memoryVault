@@ -29,6 +29,15 @@ class Bookmark(
     @Version
     val version: Long = 0,
 
+    @Column(name = "folder_id")
+    var folderId: UUID? = null,
+
+    @Column(name = "sort_order", nullable = false)
+    var sortOrder: Int = 0,
+
+    @Column(name = "normalized_url", length = 2048)
+    var normalizedUrl: String? = null,
+
     @ManyToMany
     @JoinTable(
         name = "bookmark_tags",
