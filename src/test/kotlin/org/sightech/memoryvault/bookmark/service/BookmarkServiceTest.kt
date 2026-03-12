@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.sightech.memoryvault.bookmark.entity.Bookmark
 import org.sightech.memoryvault.bookmark.repository.BookmarkRepository
+import org.sightech.memoryvault.bookmark.repository.FolderRepository
 import org.sightech.memoryvault.tag.entity.Tag
 import org.sightech.memoryvault.tag.service.TagService
 import org.springframework.security.core.Authentication
@@ -20,8 +21,9 @@ import kotlin.test.assertNull
 class BookmarkServiceTest {
 
     private val bookmarkRepository = mockk<BookmarkRepository>()
+    private val folderRepository = mockk<FolderRepository>(relaxed = true)
     private val tagService = mockk<TagService>()
-    private val service = BookmarkService(bookmarkRepository, tagService)
+    private val service = BookmarkService(bookmarkRepository, folderRepository, tagService)
     private val userId = UUID.fromString("00000000-0000-0000-0000-000000000001")
 
     @BeforeEach

@@ -268,7 +268,7 @@ git commit -m "feat: Folder entity, FolderRepository, Bookmark folder/sort/norma
 - Modify: `src/main/kotlin/org/sightech/memoryvault/bookmark/service/BookmarkService.kt`
 - Create: `src/test/kotlin/org/sightech/memoryvault/bookmark/service/FolderOperationsTest.kt`
 
-- [ ] **Step 1: Write failing tests for folder CRUD**
+- [x] **Step 1: Write failing tests for folder CRUD**
 
 ```kotlin
 package org.sightech.memoryvault.bookmark.service
@@ -418,12 +418,12 @@ class FolderOperationsTest {
 }
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `./gradlew test --tests "*FolderOperationsTest*" -q`
 Expected: FAIL — BookmarkService constructor doesn't accept FolderRepository, methods don't exist
 
-- [ ] **Step 3: Implement folder CRUD in BookmarkService**
+- [x] **Step 3: Implement folder CRUD in BookmarkService**
 
 Modify `src/main/kotlin/org/sightech/memoryvault/bookmark/service/BookmarkService.kt`:
 
@@ -504,7 +504,7 @@ fun findFolder(id: UUID): Folder? {
 }
 ```
 
-- [ ] **Step 4: Update existing BookmarkService constructor to accept FolderRepository**
+- [x] **Step 4: Update existing BookmarkService constructor to accept FolderRepository**
 
 The existing constructor is `BookmarkService(bookmarkRepository: BookmarkRepository, tagService: TagService)`. Change it to:
 
@@ -525,12 +525,12 @@ service = BookmarkService(bookmarkRepository, folderRepository, tagService)
 
 Move this into a `@BeforeEach` if it's currently at declaration.
 
-- [ ] **Step 5: Run all tests**
+- [x] **Step 5: Run all tests**
 
 Run: `./gradlew test -q`
 Expected: All tests pass (existing + new folder tests)
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```
 git add src/main/kotlin/org/sightech/memoryvault/bookmark/service/BookmarkService.kt src/test/kotlin/org/sightech/memoryvault/bookmark/service/FolderOperationsTest.kt src/test/kotlin/org/sightech/memoryvault/bookmark/service/BookmarkServiceTest.kt
