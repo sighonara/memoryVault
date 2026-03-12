@@ -1130,7 +1130,7 @@ git commit -m "feat: IngestService with URL normalization and diff/preview gener
 - Modify: `src/main/kotlin/org/sightech/memoryvault/bookmark/service/IngestService.kt`
 - Modify: `src/test/kotlin/org/sightech/memoryvault/bookmark/service/IngestServiceTest.kt`
 
-- [ ] **Step 1: Write failing tests for commit**
+- [x] **Step 1: Write failing tests for commit**
 
 Add to `IngestServiceTest.kt`:
 
@@ -1203,12 +1203,12 @@ fun `commitResolutions marks preview as committed`() {
 }
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `./gradlew test --tests "*IngestServiceTest*commitResolutions*" -q`
 Expected: FAIL — commitResolutions does not exist
 
-- [ ] **Step 3: Implement commitResolutions**
+- [x] **Step 3: Implement commitResolutions**
 
 Add to `IngestService.kt`:
 
@@ -1316,12 +1316,12 @@ fun getPreview(previewId: UUID): IngestPreviewResult? {
 }
 ```
 
-- [ ] **Step 4: Run all tests**
+- [x] **Step 4: Run all tests**
 
 Run: `./gradlew test -q`
 Expected: All pass
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```
 git add src/main/kotlin/org/sightech/memoryvault/bookmark/service/IngestService.kt src/test/kotlin/org/sightech/memoryvault/bookmark/service/IngestServiceTest.kt

@@ -8,6 +8,8 @@ import org.sightech.memoryvault.bookmark.repository.IngestPreviewRepository
 import org.springframework.stereotype.Service
 import tools.jackson.databind.ObjectMapper
 import java.net.URI
+import java.time.Instant
+import java.util.UUID
 
 @Service
 class IngestService(
@@ -80,6 +82,106 @@ class IngestService(
         ingestPreviewRepository.save(previewEntity)
 
         return IngestPreviewResult(previewId = previewEntity.id, items = items, summary = summary)
+    }
+
+    fun commitResolutions(previewId: UUID, resolutions: List<IngestResolution>): CommitResult {
+        val userId = CurrentUser.userId()
+        val preview = ingestPreviewRepository.findActiveByIdAndUserId(previewId, userId)
+            ?: throw IllegalArgumentException("Preview not found or expired")
+
+        val data = objectMapper.readTree(preview.previewData)
+        val items = data["items"].map { node ->
+            IngestItem(
+                url = node["url"].asText(),
+                title = node["title"].asText(),
+                status = IngestStatus.valueOf(node["status"].asText()),
+                existingBookmarkId = node["existingBookmarkId"]?.asText()?.let { UUID.fromString(it) },
+                suggestedFolderId = node["suggestedFolderId"]?.asText()?.let { UUID.fromString(it) },
+                browserFolder = node["browserFolder"]?.asText()
+            )
+        }
+
+        val resolutionMap = resolutions.associateBy { normalizeUrl(it.url) }
+        var accepted = 0
+        var skipped = 0
+        var undeleted = 0
+
+        items.forEach { item ->
+            val normalizedUrl = normalizeUrl(item.url)
+            val resolution = resolutionMap[normalizedUrl] ?: return@forEach
+            when (resolution.action) {
+                IngestAction.SKIP -> skipped++
+                IngestAction.ACCEPT -> {
+                    when (item.status) {
+                        IngestStatus.NEW -> {
+                            val bookmark = bookmarkService.create(item.url, item.title, emptyList())
+                            item.suggestedFolderId?.let { folderId ->
+                                bookmarkService.moveBookmark(bookmark.id, folderId)
+                            }
+                        }
+                        IngestStatus.TITLE_CHANGED -> {
+                            item.existingBookmarkId?.let { id ->
+                                val bookmark = bookmarkRepository.findById(id).orElse(null)
+                                if (bookmark != null) {
+                                    bookmark.title = item.title
+                                    bookmark.updatedAt = Instant.now()
+                                    bookmarkRepository.save(bookmark)
+                                }
+                            }
+                        }
+                        IngestStatus.MOVED -> {
+                            item.existingBookmarkId?.let { id ->
+                                item.suggestedFolderId?.let { folderId ->
+                                    bookmarkService.moveBookmark(id, folderId)
+                                }
+                            }
+                        }
+                        else -> {}
+                    }
+                    accepted++
+                }
+                IngestAction.UNDELETE -> {
+                    item.existingBookmarkId?.let { id ->
+                        val bookmark = bookmarkRepository.findById(id).orElse(null)
+                        if (bookmark != null) {
+                            bookmark.deletedAt = null
+                            bookmark.updatedAt = Instant.now()
+                            bookmarkRepository.save(bookmark)
+                        }
+                    }
+                    undeleted++
+                }
+            }
+        }
+
+        preview.committed = true
+        ingestPreviewRepository.save(preview)
+
+        return CommitResult(accepted = accepted, skipped = skipped, undeleted = undeleted)
+    }
+
+    fun getPreview(previewId: UUID): IngestPreviewResult? {
+        val userId = CurrentUser.userId()
+        val preview = ingestPreviewRepository.findActiveByIdAndUserId(previewId, userId) ?: return null
+        val data = objectMapper.readTree(preview.previewData)
+        val items = data["items"].map { node ->
+            IngestItem(
+                url = node["url"].asText(),
+                title = node["title"].asText(),
+                status = IngestStatus.valueOf(node["status"].asText()),
+                existingBookmarkId = node["existingBookmarkId"]?.asText()?.let { UUID.fromString(it) },
+                suggestedFolderId = node["suggestedFolderId"]?.asText()?.let { UUID.fromString(it) },
+                browserFolder = node["browserFolder"]?.asText()
+            )
+        }
+        val summary = IngestSummary(
+            newCount = items.count { it.status == IngestStatus.NEW },
+            unchangedCount = items.count { it.status == IngestStatus.UNCHANGED },
+            movedCount = items.count { it.status == IngestStatus.MOVED },
+            titleChangedCount = items.count { it.status == IngestStatus.TITLE_CHANGED },
+            previouslyDeletedCount = items.count { it.status == IngestStatus.PREVIOUSLY_DELETED }
+        )
+        return IngestPreviewResult(previewId = preview.id, items = items, summary = summary)
     }
 
     companion object {
