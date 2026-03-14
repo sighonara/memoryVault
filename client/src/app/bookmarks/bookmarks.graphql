@@ -3,6 +3,8 @@ query GetBookmarks($query: String, $tags: [String]) {
     id
     url
     title
+    folderId
+    sortOrder
     tags {
       name
     }
@@ -29,4 +31,52 @@ query GetSystemStats {
     bookmarkCount
     tagCount
   }
+}
+
+query GetFolders {
+  folders {
+    id
+    name
+    parentId
+    bookmarkCount
+    sortOrder
+  }
+}
+
+mutation CreateFolder($name: String!, $parentId: UUID) {
+  createFolder(name: $name, parentId: $parentId) {
+    id
+    name
+    parentId
+    sortOrder
+  }
+}
+
+mutation RenameFolder($id: UUID!, $name: String!) {
+  renameFolder(id: $id, name: $name) {
+    id
+    name
+  }
+}
+
+mutation MoveFolder($id: UUID!, $newParentId: UUID) {
+  moveFolder(id: $id, newParentId: $newParentId) {
+    id
+    parentId
+  }
+}
+
+mutation DeleteFolder($id: UUID!) {
+  deleteFolder(id: $id)
+}
+
+mutation MoveBookmark($id: UUID!, $folderId: UUID) {
+  moveBookmark(id: $id, folderId: $folderId) {
+    id
+    folderId
+  }
+}
+
+query ExportBookmarks {
+  exportBookmarks
 }

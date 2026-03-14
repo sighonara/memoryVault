@@ -12,14 +12,29 @@ describe('BookmarksComponent', () => {
 
   const mockStore = {
     bookmarks: signal([] as any[]),
+    folders: signal([] as any[]),
+    selectedFolderId: signal(null as string | null),
+    filteredBookmarks: signal([] as any[]),
     loading: signal(false),
     searchQuery: signal(''),
     selectedTags: signal([] as string[]),
+    ingestPreview: signal(null),
+    ingestLoading: signal(false),
     loadBookmarks: vi.fn(),
+    loadFolders: vi.fn(),
+    selectFolder: vi.fn(),
     setSearchQuery: vi.fn(),
     toggleTag: vi.fn(),
     addBookmark: vi.fn(),
     deleteBookmark: vi.fn(),
+    createFolder: vi.fn(),
+    renameFolder: vi.fn(),
+    moveFolder: vi.fn(),
+    deleteFolder: vi.fn(),
+    moveBookmark: vi.fn(),
+    fetchIngestPreview: vi.fn(),
+    commitIngest: vi.fn(),
+    exportBookmarks: vi.fn(),
   };
 
   const mockDialog = {

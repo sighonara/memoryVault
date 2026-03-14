@@ -1920,7 +1920,7 @@ git commit -m "refactor: BookmarksComponent — remove CommonModule, use @if/@fo
 - Modify: `client/src/app/bookmarks/bookmarks.graphql`
 - Regenerate: `client/src/app/shared/graphql/generated.ts`
 
-- [ ] **Step 1: Update bookmarks.graphql with folder queries and mutations**
+- [x] **Step 1: Update bookmarks.graphql with folder queries and mutations**
 
 Add:
 
@@ -1976,12 +1976,12 @@ query ExportBookmarks {
 
 Update `GetBookmarks` query to include `folderId` and `sortOrder` in the response fields.
 
-- [ ] **Step 2: Regenerate GraphQL types**
+- [x] **Step 2: Regenerate GraphQL types**
 
 Run: `cd client && npx graphql-codegen`
 Expected: `generated.ts` updated with new types
 
-- [ ] **Step 3: Expand bookmarks.store.ts**
+- [x] **Step 3: Expand bookmarks.store.ts**
 
 Add to state:
 
@@ -2062,12 +2062,12 @@ filteredBookmarks: computed(() => {
 
 The `loadBookmarks` method should load ALL bookmarks for the user (remove server-side folder filtering). Search query and tag filtering remain server-side.
 
-- [ ] **Step 4: Run frontend tests**
+- [x] **Step 4: Run frontend tests**
 
 Run: `cd client && npm test`
 Expected: All pass (update existing tests for new store shape)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```
 git add client/src/app/bookmarks/bookmarks.graphql client/src/app/bookmarks/bookmarks.store.ts client/src/app/shared/graphql/generated.ts
