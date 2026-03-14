@@ -1487,7 +1487,7 @@ git commit -m "feat: REST endpoints for bookmark ingest — preview, get, commit
 - Modify: `src/main/kotlin/org/sightech/memoryvault/graphql/BookmarkResolver.kt`
 - Create: `src/main/kotlin/org/sightech/memoryvault/graphql/FolderResolver.kt`
 
-- [ ] **Step 1: Update GraphQL schema**
+- [x] **Step 1: Update GraphQL schema**
 
 Add to `schema.graphqls`:
 
@@ -1589,7 +1589,7 @@ Add to Bookmark type:
     sortOrder: Int!
 ```
 
-- [ ] **Step 2: Create FolderResolver**
+- [x] **Step 2: Create FolderResolver**
 
 ```kotlin
 package org.sightech.memoryvault.graphql
@@ -1656,7 +1656,7 @@ class FolderResolver(
 }
 ```
 
-- [ ] **Step 3: Update BookmarkResolver**
+- [x] **Step 3: Update BookmarkResolver**
 
 Move `exportBookmarks` from `@MutationMapping` to `@QueryMapping`. Add new mutations:
 
@@ -1702,12 +1702,12 @@ data class IngestResolutionInput(val url: String, val action: IngestAction)
 
 Also verify that `UUID` scalar is registered in `ScalarConfig.kt` — the schema uses `UUID!` throughout. If not registered, the app will fail to start.
 
-- [ ] **Step 4: Run all tests**
+- [x] **Step 4: Run all tests**
 
 Run: `./gradlew test -q`
 Expected: All pass
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```
 git add src/main/resources/graphql/schema.graphqls src/main/kotlin/org/sightech/memoryvault/graphql/FolderResolver.kt src/main/kotlin/org/sightech/memoryvault/graphql/BookmarkResolver.kt
