@@ -2082,57 +2082,14 @@ git commit -m "feat: bookmark store with folders, ingest, and export support"
 - Create: `client/src/app/bookmarks/bookmark-tree/bookmark-tree.ts`
 - Create: `client/src/app/bookmarks/bookmark-tree/bookmark-tree.spec.ts`
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
-```typescript
-import { describe, it, expect } from 'vitest';
-import { signal } from '@angular/core';
-
-describe('BookmarkTreeComponent logic', () => {
-    it('builds tree from flat folder list', () => {
-        const folders = signal([
-            { id: '1', name: 'Tech', parentId: null, bookmarkCount: 5, sortOrder: 0 },
-            { id: '2', name: 'Frontend', parentId: '1', bookmarkCount: 3, sortOrder: 0 },
-            { id: '3', name: 'Work', parentId: null, bookmarkCount: 2, sortOrder: 1 },
-        ]);
-
-        // Tree-building logic (will be extracted as a utility or computed)
-        function buildTree(flatFolders: any[]) {
-            const root: any[] = [];
-            const map = new Map<string, any>();
-            flatFolders.forEach(f => map.set(f.id, { ...f, children: [] }));
-            flatFolders.forEach(f => {
-                const node = map.get(f.id)!;
-                if (f.parentId && map.has(f.parentId)) {
-                    map.get(f.parentId)!.children.push(node);
-                } else {
-                    root.push(node);
-                }
-            });
-            return root;
-        }
-
-        const tree = buildTree(folders());
-        expect(tree.length).toBe(2); // Tech, Work
-        expect(tree[0].children.length).toBe(1); // Frontend under Tech
-        expect(tree[0].children[0].name).toBe('Frontend');
-    });
-
-    it('emits folder selection', () => {
-        let selectedId: string | null = null;
-        const onSelect = (id: string | null) => { selectedId = id; };
-        onSelect('folder-1');
-        expect(selectedId).toBe('folder-1');
-    });
-});
-```
-
-- [ ] **Step 2: Run test to verify it passes (logic test, no component import)**
+- [x] **Step 2: Run test to verify it passes (logic test, no component import)**
 
 Run: `cd client && npm test -- --grep "BookmarkTreeComponent"`
 Expected: PASS
 
-- [ ] **Step 3: Create bookmark-tree component**
+- [x] **Step 3: Create bookmark-tree component**
 
 ```typescript
 @Component({
@@ -2158,12 +2115,12 @@ The component should:
 - Show folder bookmark count inline (e.g., "Tech (12)")
 - Right-click context menu via `MatMenu` triggered by `(contextmenu)` event: New Folder, Rename, Delete, Move
 
-- [ ] **Step 4: Run all frontend tests**
+- [x] **Step 4: Run all frontend tests**
 
 Run: `cd client && npm test`
 Expected: All pass
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```
 git add client/src/app/bookmarks/bookmark-tree/
