@@ -80,3 +80,16 @@ mutation MoveBookmark($id: UUID!, $folderId: UUID) {
 query ExportBookmarks {
   exportBookmarks
 }
+
+query GetPendingIngests {
+  pendingIngests {
+    previewId
+    summary {
+      newCount
+      unchangedCount
+      movedCount
+      titleChangedCount
+      previouslyDeletedCount
+    }
+  }
+}

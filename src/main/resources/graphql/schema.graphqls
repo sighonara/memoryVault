@@ -22,6 +22,9 @@ type Query {
     logs(level: String, service: String, limit: Int): [LogEntry!]!
     stats: SystemStats!
 
+    # Ingest
+    pendingIngests: [IngestPreview!]!
+
     # Search
     search(query: String!, types: [String]): [SearchResult!]!
 }

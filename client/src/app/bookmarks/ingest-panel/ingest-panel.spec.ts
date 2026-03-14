@@ -38,12 +38,32 @@ describe('IngestPanel command generation', () => {
     expect(command).toContain('Bookmarks.plist');
   });
 
+  it('generates Brave macOS command with Brave path', () => {
+    const command = generateIngestCommand('brave', 'macos', 'token', 'http://localhost:8080');
+    expect(command).toContain('BraveSoftware/Brave-Browser/Default/Bookmarks');
+    expect(command).toContain('curl');
+  });
+
+  it('generates Brave Windows command', () => {
+    const command = generateIngestCommand('brave', 'windows', 'token', 'http://localhost:8080');
+    expect(command).toContain('BraveSoftware\\Brave-Browser');
+  });
+
+  it('generates Brave Linux command', () => {
+    const command = generateIngestCommand('brave', 'linux', 'token', 'http://localhost:8080');
+    expect(command).toContain('BraveSoftware/Brave-Browser');
+  });
+
   it('all commands include response parser with review URL', () => {
-    for (const browser of ['chrome', 'firefox', 'safari'] as const) {
+    for (const browser of ['chrome', 'brave', 'firefox', 'safari'] as const) {
       const command = generateIngestCommand(browser, 'macos', 'token', 'http://localhost:4200');
       expect(command).toContain('Preview created:');
       expect(command).toContain('Review and commit at: http://localhost:4200/bookmarks?ingest=');
     }
+  });
+
+  it('detects Brave from user agent', () => {
+    expect(detectBrowser('Mozilla/5.0 ... Chrome/120.0.0.0 Safari/537.36 Brave/1.62')).toBe('brave');
   });
 
   it('detects Chrome from user agent', () => {

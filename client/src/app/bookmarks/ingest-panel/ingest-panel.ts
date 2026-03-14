@@ -16,8 +16,9 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { AuthService } from '../../auth/auth.service';
 import { BookmarksStore } from '../bookmarks.store';
 
-export function detectBrowser(userAgent: string): 'chrome' | 'firefox' | 'safari' {
+export function detectBrowser(userAgent: string): 'chrome' | 'brave' | 'firefox' | 'safari' {
   if (userAgent.includes('Firefox')) return 'firefox';
+  if (userAgent.includes('Brave')) return 'brave';
   if (userAgent.includes('Chrome') && !userAgent.includes('Edg')) return 'chrome';
   if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) return 'safari';
   return 'chrome';
@@ -33,6 +34,12 @@ const CHROME_PATHS: Record<string, string> = {
   macos: '~/Library/Application\\ Support/Google/Chrome/Default/Bookmarks',
   windows: '%LOCALAPPDATA%\\Google\\Chrome\\User\\ Data\\Default\\Bookmarks',
   linux: '~/.config/google-chrome/Default/Bookmarks',
+};
+
+const BRAVE_PATHS: Record<string, string> = {
+  macos: '~/Library/Application\\ Support/BraveSoftware/Brave-Browser/Default/Bookmarks',
+  windows: '%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser\\User\\ Data\\Default\\Bookmarks',
+  linux: '~/.config/BraveSoftware/Brave-Browser/Default/Bookmarks',
 };
 
 const FIREFOX_PATHS: Record<string, string> = {
@@ -120,8 +127,9 @@ export function generateIngestCommand(
     ].join('\n');
   }
 
-  // Chrome / Chromium
-  const bookmarksPath = CHROME_PATHS[os] || CHROME_PATHS['linux'];
+  // Chrome / Brave / Chromium
+  const pathMap = browser === 'brave' ? BRAVE_PATHS : CHROME_PATHS;
+  const bookmarksPath = pathMap[os] || pathMap['linux'];
   return [
     `cat ${bookmarksPath} | python3 -c "`,
     `import json, sys`,
@@ -180,6 +188,7 @@ export function generateIngestCommand(
                 <mat-label>Browser</mat-label>
                 <mat-select [value]="browser()" (selectionChange)="browser.set($event.value)">
                   <mat-option value="chrome">Chrome</mat-option>
+                  <mat-option value="brave">Brave</mat-option>
                   <mat-option value="firefox">Firefox</mat-option>
                   <mat-option value="safari">Safari</mat-option>
                 </mat-select>
@@ -241,6 +250,7 @@ export function generateIngestCommand(
               </mat-expansion-panel-header>
               <ul class="import-instructions">
                 <li><strong>Chrome:</strong> Settings &gt; Bookmarks &gt; Import bookmarks and settings &gt; HTML file</li>
+                <li><strong>Brave:</strong> Settings &gt; Bookmarks &gt; Import bookmarks and settings &gt; HTML file</li>
                 <li><strong>Firefox:</strong> Bookmarks &gt; Manage Bookmarks &gt; Import/Export &gt; Import from HTML</li>
                 <li><strong>Safari:</strong> File &gt; Import From &gt; Bookmarks HTML File</li>
               </ul>

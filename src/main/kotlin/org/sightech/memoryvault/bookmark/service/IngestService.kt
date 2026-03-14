@@ -7,6 +7,7 @@ import org.sightech.memoryvault.bookmark.repository.FolderRepository
 import org.sightech.memoryvault.bookmark.repository.IngestPreviewRepository
 import org.springframework.stereotype.Service
 import tools.jackson.databind.ObjectMapper
+import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.Instant
 import java.util.UUID
@@ -19,6 +20,7 @@ class IngestService(
     private val ingestPreviewRepository: IngestPreviewRepository,
     private val objectMapper: ObjectMapper
 ) {
+    private val log = LoggerFactory.getLogger(javaClass)
 
     fun generatePreview(input: List<IngestBookmarkInput>): IngestPreviewResult {
         val userId = CurrentUser.userId()
@@ -105,6 +107,7 @@ class IngestService(
         var accepted = 0
         var skipped = 0
         var undeleted = 0
+        val createdFolders = mutableMapOf<String, UUID>()
 
         items.forEach { item ->
             val normalizedUrl = normalizeUrl(item.url)
@@ -115,9 +118,13 @@ class IngestService(
                     when (item.status) {
                         IngestStatus.NEW -> {
                             val bookmark = bookmarkService.create(item.url, item.title, emptyList())
-                            item.suggestedFolderId?.let { folderId ->
-                                bookmarkService.moveBookmark(bookmark.id, folderId)
+                            val folderId = item.suggestedFolderId ?: item.browserFolder?.let { folderName ->
+                                createdFolders.getOrPut(folderName) {
+                                    log.info("Creating folder '{}' during ingest commit", folderName)
+                                    bookmarkService.createFolder(folderName, null).id
+                                }
                             }
+                            folderId?.let { bookmarkService.moveBookmark(bookmark.id, it) }
                         }
                         IngestStatus.TITLE_CHANGED -> {
                             item.existingBookmarkId?.let { id ->
@@ -131,9 +138,13 @@ class IngestService(
                         }
                         IngestStatus.MOVED -> {
                             item.existingBookmarkId?.let { id ->
-                                item.suggestedFolderId?.let { folderId ->
-                                    bookmarkService.moveBookmark(id, folderId)
+                                val folderId = item.suggestedFolderId ?: item.browserFolder?.let { folderName ->
+                                    createdFolders.getOrPut(folderName) {
+                                        log.info("Creating folder '{}' during ingest commit", folderName)
+                                        bookmarkService.createFolder(folderName, null).id
+                                    }
                                 }
+                                folderId?.let { bookmarkService.moveBookmark(id, it) }
                             }
                         }
                         else -> {}
@@ -182,6 +193,31 @@ class IngestService(
             previouslyDeletedCount = items.count { it.status == IngestStatus.PREVIOUSLY_DELETED }
         )
         return IngestPreviewResult(previewId = preview.id, items = items, summary = summary)
+    }
+
+    fun getPendingPreviews(): List<IngestPreviewResult> {
+        val userId = CurrentUser.userId()
+        return ingestPreviewRepository.findPendingByUserId(userId).map { preview ->
+            val data = objectMapper.readTree(preview.previewData)
+            val items = data["items"].map { node ->
+                IngestItem(
+                    url = node["url"].asText(),
+                    title = node["title"].asText(),
+                    status = IngestStatus.valueOf(node["status"].asText()),
+                    existingBookmarkId = node["existingBookmarkId"]?.textValue()?.let { UUID.fromString(it) },
+                    suggestedFolderId = node["suggestedFolderId"]?.textValue()?.let { UUID.fromString(it) },
+                    browserFolder = node["browserFolder"]?.textValue()
+                )
+            }
+            val summary = IngestSummary(
+                newCount = items.count { it.status == IngestStatus.NEW },
+                unchangedCount = items.count { it.status == IngestStatus.UNCHANGED },
+                movedCount = items.count { it.status == IngestStatus.MOVED },
+                titleChangedCount = items.count { it.status == IngestStatus.TITLE_CHANGED },
+                previouslyDeletedCount = items.count { it.status == IngestStatus.PREVIOUSLY_DELETED }
+            )
+            IngestPreviewResult(previewId = preview.id, items = items, summary = summary)
+        }
     }
 
     companion object {

@@ -29,8 +29,10 @@ describe('BookmarksComponent', () => {
     selectedTags: signal([] as string[]),
     ingestPreview: signal(null),
     ingestLoading: signal(false),
+    pendingIngests: signal([] as any[]),
     loadBookmarks: vi.fn(),
     loadFolders: vi.fn(),
+    loadPendingIngests: vi.fn(),
     selectFolder: vi.fn(),
     setSearchQuery: vi.fn(),
     toggleTag: vi.fn(),
@@ -98,10 +100,14 @@ describe('BookmarksComponent', () => {
     expect(mockStore.loadFolders).toHaveBeenCalled();
   });
 
-  it('should delegate search to store', () => {
+  it('should delegate search to store after debounce', () => {
+    vi.useFakeTimers();
     const event = { target: { value: 'test query' } };
     component.onSearch(event);
+    expect(mockStore.setSearchQuery).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(300);
     expect(mockStore.setSearchQuery).toHaveBeenCalledWith('test query');
+    vi.useRealTimers();
   });
 
   it('should delegate toggleTag to store', () => {

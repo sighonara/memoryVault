@@ -1,6 +1,6 @@
 import { Component, DestroyRef, effect, inject, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { filter } from 'rxjs';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
@@ -27,6 +27,7 @@ import { ConflictReviewComponent } from './conflict-review/conflict-review';
     MatProgressSpinnerModule,
     MatToolbarModule,
     MatSnackBarModule,
+    RouterLink,
     BookmarkTreeComponent,
     BookmarkListComponent,
     IngestPanelComponent,
@@ -36,9 +37,24 @@ import { ConflictReviewComponent } from './conflict-review/conflict-review';
     <div class="bookmarks-page">
       <app-ingest-panel />
 
+      @if (store.pendingIngests().length > 0) {
+        <div class="pending-ingest-banner">
+          <mat-icon>info</mat-icon>
+          @for (pending of store.pendingIngests(); track pending.previewId) {
+            <span>
+              Import pending: {{ pending.totalCount }} bookmark(s) ready to review.
+              <a [routerLink]="[]" [queryParams]="{ ingest: pending.previewId }">Review now</a>
+            </span>
+          }
+        </div>
+      }
+
       <mat-toolbar class="page-toolbar">
         <input type="text" class="toolbar-search" placeholder="Search bookmarks..."
                (input)="onSearch($event)" [value]="store.searchQuery()" />
+        @if (store.searchQuery()) {
+          <span class="result-count">{{ store.filteredBookmarks().length }} result(s)</span>
+        }
         <span class="spacer"></span>
         <button mat-stroked-button (click)="openAddDialog()">
           <mat-icon>add</mat-icon> Add
@@ -72,11 +88,18 @@ import { ConflictReviewComponent } from './conflict-review/conflict-review';
               (contextAction)="onFolderAction($event)" />
           </div>
           <div class="list-panel">
-            <app-bookmark-list
-              [bookmarks]="store.filteredBookmarks()"
-              (bookmarkDeleted)="deleteBookmark($event)"
-              (bookmarkMoved)="store.moveBookmark($event)"
-              (bulkDeleted)="bulkDelete($event)" />
+            @if (store.filteredBookmarks().length === 0 && store.searchQuery()) {
+              <div class="no-results">
+                <mat-icon>search_off</mat-icon>
+                <p>No bookmarks match "{{ store.searchQuery() }}"</p>
+              </div>
+            } @else {
+              <app-bookmark-list
+                [bookmarks]="store.filteredBookmarks()"
+                (bookmarkDeleted)="deleteBookmark($event)"
+                (bookmarkMoved)="store.moveBookmark($event)"
+                (bulkDeleted)="bulkDelete($event)" />
+            }
           </div>
         </div>
       }
@@ -84,6 +107,13 @@ import { ConflictReviewComponent } from './conflict-review/conflict-review';
   `,
   styles: [`
     .bookmarks-page { display: flex; flex-direction: column; height: 100%; }
+    .pending-ingest-banner {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 16px; background: #e8f0fe; border-bottom: 1px solid #c6dafc;
+      font-size: 0.8125rem; color: #1a73e8;
+    }
+    .pending-ingest-banner mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    .pending-ingest-banner a { font-weight: 500; cursor: pointer; }
     .page-toolbar {
       background: #fff; border-bottom: 1px solid #dadce0;
       min-height: 40px; height: 40px; padding: 0 16px;
@@ -96,6 +126,7 @@ import { ConflictReviewComponent } from './conflict-review/conflict-review';
       background: #fff; outline: none;
     }
     .toolbar-search:focus { border-color: #1a73e8; }
+    .result-count { font-size: 0.75rem; color: #5f6368; white-space: nowrap; }
     .spacer { flex: 1 1 auto; }
     .tags-bar { padding: 8px 16px; border-bottom: 1px solid #e8eaed; background: #f8f9fa; }
     .tags-bar mat-chip-option { font-size: 0.75rem; height: 24px; }
@@ -112,6 +143,12 @@ import { ConflictReviewComponent } from './conflict-review/conflict-review';
     .list-panel {
       flex: 1; overflow-y: auto;
     }
+    .no-results {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 60px 20px; color: #9aa0a6;
+    }
+    .no-results mat-icon { font-size: 48px; width: 48px; height: 48px; margin-bottom: 12px; }
+    .no-results p { font-size: 0.875rem; margin: 0; }
   `]
 })
 export class BookmarksComponent implements OnInit {
@@ -121,6 +158,7 @@ export class BookmarksComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
+  private searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     // Watch for ingest query param
@@ -168,10 +206,15 @@ export class BookmarksComponent implements OnInit {
   ngOnInit() {
     this.store.loadBookmarks();
     this.store.loadFolders();
+    this.store.loadPendingIngests();
   }
 
   onSearch(event: any) {
-    this.store.setSearchQuery((event.target as HTMLInputElement).value);
+    const query = (event.target as HTMLInputElement).value;
+    if (this.searchTimeout) clearTimeout(this.searchTimeout);
+    this.searchTimeout = setTimeout(() => {
+      this.store.setSearchQuery(query);
+    }, 300);
   }
 
   toggleTag(tag: string) {

@@ -28,6 +28,11 @@ class BookmarkResolver(
     }
 
     @QueryMapping
+    fun pendingIngests(): List<IngestPreviewResult> {
+        return ingestService.getPendingPreviews()
+    }
+
+    @QueryMapping
     fun exportBookmarks(): String {
         return bookmarkService.exportNetscapeHtml()
     }

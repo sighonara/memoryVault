@@ -309,6 +309,7 @@ export type Query = {
   folders: Array<Folder>;
   jobs: Array<SyncJob>;
   logs: Array<LogEntry>;
+  pendingIngests: Array<IngestPreview>;
   search: Array<SearchResult>;
   stats: SystemStats;
   videoStatus?: Maybe<Video>;
@@ -561,6 +562,11 @@ export type ExportBookmarksQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type ExportBookmarksQuery = { __typename?: 'Query', exportBookmarks: string };
+
+export type GetPendingIngestsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetPendingIngestsQuery = { __typename?: 'Query', pendingIngests: Array<{ __typename?: 'IngestPreview', previewId: any, summary: { __typename?: 'IngestSummary', newCount: number, unchangedCount: number, movedCount: number, titleChangedCount: number, previouslyDeletedCount: number } }> };
 
 export type GetFeedsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -914,6 +920,31 @@ export const ExportBookmarksDocument = gql`
   })
   export class ExportBookmarksGQL extends Apollo.Query<ExportBookmarksQuery, ExportBookmarksQueryVariables> {
     document = ExportBookmarksDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const GetPendingIngestsDocument = gql`
+    query GetPendingIngests {
+  pendingIngests {
+    previewId
+    summary {
+      newCount
+      unchangedCount
+      movedCount
+      titleChangedCount
+      previouslyDeletedCount
+    }
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class GetPendingIngestsGQL extends Apollo.Query<GetPendingIngestsQuery, GetPendingIngestsQueryVariables> {
+    document = GetPendingIngestsDocument;
     
     constructor(apollo: Apollo.Apollo) {
       super(apollo);

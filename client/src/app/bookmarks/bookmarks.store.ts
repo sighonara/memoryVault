@@ -14,6 +14,7 @@ import {
   DeleteFolderDocument,
   MoveBookmarkDocument,
   ExportBookmarksDocument,
+  GetPendingIngestsDocument,
   Bookmark,
   Folder,
   IngestPreview,
@@ -51,6 +52,12 @@ export interface IngestPreviewResult {
   };
 }
 
+export interface PendingIngestSummary {
+  previewId: string;
+  newCount: number;
+  totalCount: number;
+}
+
 export interface BookmarksState {
   bookmarks: Bookmark[];
   folders: Folder[];
@@ -60,6 +67,7 @@ export interface BookmarksState {
   selectedTags: string[];
   ingestPreview: IngestPreviewResult | null;
   ingestLoading: boolean;
+  pendingIngests: PendingIngestSummary[];
 }
 
 const initialState: BookmarksState = {
@@ -71,6 +79,7 @@ const initialState: BookmarksState = {
   selectedTags: [],
   ingestPreview: null,
   ingestLoading: false,
+  pendingIngests: [],
 };
 
 export const BookmarksStore = signalStore(
@@ -80,15 +89,25 @@ export const BookmarksStore = signalStore(
     filteredBookmarks: computed(() => {
       const folderId = store.selectedFolderId();
       const bookmarks = store.bookmarks();
+      const query = store.searchQuery();
+      // When searching, show results from all folders
+      if (query) return bookmarks;
       if (folderId === null) return bookmarks;
       if (folderId === 'unfiled') return bookmarks.filter(b => !b.folderId);
       return bookmarks.filter(b => b.folderId === folderId);
     }),
   })),
-  withMethods((store, apollo = inject(Apollo), http = inject(HttpClient)) => ({
-    loadBookmarks: rxMethod<void>(
+  withMethods((store, apollo = inject(Apollo), http = inject(HttpClient)) => {
+    // Define rxMethod methods as local variables so they can be called
+    // from other methods within the same withMethods block.
+    // The `store` parameter only has state/computed — NOT methods.
+    const loadBookmarks = rxMethod<void>(
       pipe(
-        tap(() => patchState(store, { loading: true })),
+        tap(() => {
+          if (store.bookmarks().length === 0) {
+            patchState(store, { loading: true });
+          }
+        }),
         switchMap(() =>
           apollo.query({
             query: GetBookmarksDocument,
@@ -106,9 +125,9 @@ export const BookmarksStore = signalStore(
           });
         })
       )
-    ),
+    );
 
-    loadFolders: rxMethod<void>(
+    const loadFolders = rxMethod<void>(
       pipe(
         switchMap(() =>
           apollo.query({
@@ -120,151 +139,178 @@ export const BookmarksStore = signalStore(
           patchState(store, { folders: result.data.folders });
         })
       )
-    ),
+    );
 
-    selectFolder: (folderId: string | null) => {
-      patchState(store, { selectedFolderId: folderId });
-    },
-
-    setSearchQuery: (query: string) => {
-      patchState(store, { searchQuery: query });
-      (store as any).loadBookmarks();
-    },
-
-    toggleTag: (tag: string) => {
-      const current = store.selectedTags();
-      const next = current.includes(tag) ? current.filter((t) => t !== tag) : [...current, tag];
-      patchState(store, { selectedTags: next });
-      (store as any).loadBookmarks();
-    },
-
-    addBookmark: rxMethod<{ url: string; title?: string; tags?: string[] }>(
-      pipe(
-        switchMap((variables) =>
-          apollo.mutate({
-            mutation: CreateBookmarkDocument,
-            variables,
-          })
-        ),
-        tap(() => (store as any).loadBookmarks())
-      )
-    ),
-
-    deleteBookmark: rxMethod<string>(
-      pipe(
-        switchMap((id) =>
-          apollo.mutate({
-            mutation: DeleteBookmarkDocument,
-            variables: { id },
-          })
-        ),
-        tap(() => (store as any).loadBookmarks())
-      )
-    ),
-
-    createFolder: rxMethod<{ name: string; parentId?: string }>(
-      pipe(
-        switchMap((input) =>
-          apollo.mutate({
-            mutation: CreateFolderDocument,
-            variables: input,
-          })
-        ),
-        tap(() => (store as any).loadFolders())
-      )
-    ),
-
-    renameFolder: rxMethod<{ id: string; name: string }>(
-      pipe(
-        switchMap((input) =>
-          apollo.mutate({
-            mutation: RenameFolderDocument,
-            variables: input,
-          })
-        ),
-        tap(() => (store as any).loadFolders())
-      )
-    ),
-
-    moveFolder: rxMethod<{ id: string; newParentId?: string }>(
-      pipe(
-        switchMap((input) =>
-          apollo.mutate({
-            mutation: MoveFolderDocument,
-            variables: input,
-          })
-        ),
-        tap(() => (store as any).loadFolders())
-      )
-    ),
-
-    deleteFolder: rxMethod<string>(
-      pipe(
-        switchMap((id) =>
-          apollo.mutate({
-            mutation: DeleteFolderDocument,
-            variables: { id },
-          })
-        ),
-        tap(() => (store as any).loadFolders())
-      )
-    ),
-
-    moveBookmark: rxMethod<{ id: string; folderId?: string }>(
-      pipe(
-        switchMap((input) =>
-          apollo.mutate({
-            mutation: MoveBookmarkDocument,
-            variables: input,
-          })
-        ),
-        tap(() => (store as any).loadBookmarks())
-      )
-    ),
-
-    fetchIngestPreview: rxMethod<string>(
-      pipe(
-        tap(() => patchState(store, { ingestLoading: true })),
-        switchMap((previewId) =>
-          http.get<IngestPreviewResult>(`/api/bookmarks/ingest/${previewId}`)
-        ),
-        tap((preview) =>
-          patchState(store, { ingestPreview: preview, ingestLoading: false })
-        )
-      )
-    ),
-
-    commitIngest: rxMethod<{ previewId: string; resolutions: IngestResolutionInput[] }>(
-      pipe(
-        switchMap(({ previewId, resolutions }) =>
-          http.post<CommitResult>(`/api/bookmarks/ingest/${previewId}/commit`, { resolutions })
-        ),
-        tap(() => {
-          patchState(store, { ingestPreview: null });
-          (store as any).loadBookmarks();
-          (store as any).loadFolders();
-        })
-      )
-    ),
-
-    exportBookmarks: rxMethod<void>(
+    const loadPendingIngests = rxMethod<void>(
       pipe(
         switchMap(() =>
           apollo.query({
-            query: ExportBookmarksDocument,
-            fetchPolicy: 'no-cache',
+            query: GetPendingIngestsDocument,
+            fetchPolicy: 'network-only',
           })
         ),
         tap((result: any) => {
-          const blob = new Blob([result.data.exportBookmarks], { type: 'text/html' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = 'memoryvault-export.html';
-          a.click();
-          URL.revokeObjectURL(url);
+          const pending = result.data.pendingIngests.map((p: any) => ({
+            previewId: p.previewId,
+            newCount: p.summary.newCount,
+            totalCount: p.summary.newCount + p.summary.movedCount +
+              p.summary.titleChangedCount + p.summary.previouslyDeletedCount,
+          }));
+          patchState(store, { pendingIngests: pending });
         })
       )
-    ),
-  }))
+    );
+
+    return {
+      loadBookmarks,
+      loadFolders,
+      loadPendingIngests,
+
+      selectFolder: (folderId: string | null) => {
+        patchState(store, { selectedFolderId: folderId });
+      },
+
+      setSearchQuery: (query: string) => {
+        patchState(store, { searchQuery: query });
+        loadBookmarks();
+      },
+
+      toggleTag: (tag: string) => {
+        const current = store.selectedTags();
+        const next = current.includes(tag) ? current.filter((t) => t !== tag) : [...current, tag];
+        patchState(store, { selectedTags: next });
+        loadBookmarks();
+      },
+
+      addBookmark: rxMethod<{ url: string; title?: string; tags?: string[] }>(
+        pipe(
+          switchMap((variables) =>
+            apollo.mutate({
+              mutation: CreateBookmarkDocument,
+              variables,
+            })
+          ),
+          tap(() => loadBookmarks())
+        )
+      ),
+
+      deleteBookmark: rxMethod<string>(
+        pipe(
+          switchMap((id) =>
+            apollo.mutate({
+              mutation: DeleteBookmarkDocument,
+              variables: { id },
+            })
+          ),
+          tap(() => loadBookmarks())
+        )
+      ),
+
+      createFolder: rxMethod<{ name: string; parentId?: string }>(
+        pipe(
+          switchMap((input) =>
+            apollo.mutate({
+              mutation: CreateFolderDocument,
+              variables: input,
+            })
+          ),
+          tap(() => loadFolders())
+        )
+      ),
+
+      renameFolder: rxMethod<{ id: string; name: string }>(
+        pipe(
+          switchMap((input) =>
+            apollo.mutate({
+              mutation: RenameFolderDocument,
+              variables: input,
+            })
+          ),
+          tap(() => loadFolders())
+        )
+      ),
+
+      moveFolder: rxMethod<{ id: string; newParentId?: string }>(
+        pipe(
+          switchMap((input) =>
+            apollo.mutate({
+              mutation: MoveFolderDocument,
+              variables: input,
+            })
+          ),
+          tap(() => loadFolders())
+        )
+      ),
+
+      deleteFolder: rxMethod<string>(
+        pipe(
+          switchMap((id) =>
+            apollo.mutate({
+              mutation: DeleteFolderDocument,
+              variables: { id },
+            })
+          ),
+          tap(() => loadFolders())
+        )
+      ),
+
+      moveBookmark: rxMethod<{ id: string; folderId?: string }>(
+        pipe(
+          switchMap((input) =>
+            apollo.mutate({
+              mutation: MoveBookmarkDocument,
+              variables: input,
+            })
+          ),
+          tap(() => loadBookmarks())
+        )
+      ),
+
+      fetchIngestPreview: rxMethod<string>(
+        pipe(
+          tap(() => patchState(store, { ingestLoading: true })),
+          switchMap((previewId) =>
+            http.get<IngestPreviewResult>(`/api/bookmarks/ingest/${previewId}`)
+          ),
+          tap((preview) =>
+            patchState(store, { ingestPreview: preview, ingestLoading: false })
+          )
+        )
+      ),
+
+      commitIngest: rxMethod<{ previewId: string; resolutions: IngestResolutionInput[] }>(
+        pipe(
+          switchMap(({ previewId, resolutions }) =>
+            http.post<CommitResult>(`/api/bookmarks/ingest/${previewId}/commit`, { resolutions })
+          ),
+          tap(() => {
+            patchState(store, { ingestPreview: null });
+            loadBookmarks();
+            loadFolders();
+            loadPendingIngests();
+          })
+        )
+      ),
+
+      exportBookmarks: rxMethod<void>(
+        pipe(
+          switchMap(() =>
+            apollo.query({
+              query: ExportBookmarksDocument,
+              fetchPolicy: 'no-cache',
+            })
+          ),
+          tap((result: any) => {
+            const blob = new Blob([result.data.exportBookmarks], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'memoryvault-export.html';
+            a.click();
+            URL.revokeObjectURL(url);
+          })
+        )
+      ),
+    };
+  })
 );
