@@ -2463,7 +2463,7 @@ git commit -m "feat: two-panel bookmark manager layout with tree, list, ingest, 
 - Create: `client/src/app/bookmarks/index.ts`
 - Verify: `client/src/app/bookmarks/bookmarks.routes.ts` (create if missing)
 
-- [ ] **Step 1: Create barrel export**
+- [x] **Step 1: Create barrel export**
 
 ```typescript
 export { BookmarksComponent } from './bookmarks';
@@ -2474,7 +2474,7 @@ export { IngestPanelComponent } from './ingest-panel/ingest-panel';
 export { ConflictReviewComponent } from './conflict-review/conflict-review';
 ```
 
-- [ ] **Step 2: Create sub-component barrel exports**
+- [x] **Step 2: Create sub-component barrel exports**
 
 Each sub-component folder also needs an `index.ts` per CLAUDE.md conventions:
 
@@ -2497,11 +2497,11 @@ export { IngestPanelComponent } from './ingest-panel';
 export { ConflictReviewComponent } from './conflict-review';
 ```
 
-- [ ] **Step 3: Verify route handles ingest query param**
+- [x] **Step 3: Verify route handles ingest query param**
 
 Ensure the bookmarks route can accept `?ingest=<previewId>` query param and the component reads it to auto-load the ingest preview.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```
 git add client/src/app/bookmarks/index.ts client/src/app/bookmarks/bookmarks.routes.ts

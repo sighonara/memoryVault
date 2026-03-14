@@ -11,10 +11,10 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { BookmarksStore } from './bookmarks.store';
 import { BookmarkDialogComponent } from './bookmark-dialog';
-import { BookmarkTreeComponent } from './bookmark-tree/bookmark-tree';
-import { BookmarkListComponent } from './bookmark-list/bookmark-list';
-import { IngestPanelComponent } from './ingest-panel/ingest-panel';
-import { ConflictReviewComponent } from './conflict-review/conflict-review';
+import { BookmarkTreeComponent } from './bookmark-tree';
+import { BookmarkListComponent } from './bookmark-list';
+import { IngestPanelComponent } from './ingest-panel';
+import { ConflictReviewComponent } from './conflict-review';
 
 @Component({
   selector: 'app-bookmarks',
