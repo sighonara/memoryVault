@@ -47,4 +47,30 @@ class BookmarkTools(private val bookmarkService: BookmarkService) {
     fun exportBookmarks(format: String?): String {
         return bookmarkService.exportNetscapeHtml()
     }
+
+    @Tool(description = "Create a bookmark folder. Use when the user wants to organize bookmarks into folders.")
+    fun createFolder(name: String, parentFolderName: String?): String {
+        val parentId = if (parentFolderName != null) {
+            bookmarkService.findAllFolders().find { it.name == parentFolderName }?.id
+        } else null
+        val folder = bookmarkService.createFolder(name, parentId)
+        return "Created folder: ${folder.name}" + if (folder.parentId != null) " (inside $parentFolderName)" else ""
+    }
+
+    @Tool(description = "List all bookmark folders. Use when the user wants to see their folder structure.")
+    fun listFolders(): String {
+        val folders = bookmarkService.findAllFolders()
+        if (folders.isEmpty()) return "No folders found."
+        return folders.joinToString("\n") { "- ${it.name} (${it.id})" }
+    }
+
+    @Tool(description = "Move a bookmark to a folder. Use when the user wants to organize a bookmark into a specific folder.")
+    fun moveBookmarkToFolder(bookmarkId: String, folderName: String?): String {
+        val folderId = if (folderName != null) {
+            bookmarkService.findAllFolders().find { it.name == folderName }?.id
+                ?: return "Folder '$folderName' not found"
+        } else null
+        bookmarkService.moveBookmark(UUID.fromString(bookmarkId), folderId)
+        return "Moved bookmark to ${folderName ?: "Unfiled"}"
+    }
 }

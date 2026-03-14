@@ -1721,7 +1721,7 @@ git commit -m "feat: GraphQL schema + resolvers for folders, ingest, reorder"
 **Files:**
 - Modify: `src/main/kotlin/org/sightech/memoryvault/mcp/BookmarkTools.kt`
 
-- [ ] **Step 1: Update MCP tools for folder awareness**
+- [x] **Step 1: Update MCP tools for folder awareness**
 
 Add folder parameter to `addBookmark`, add new tools:
 
@@ -1753,12 +1753,12 @@ fun moveBookmarkToFolder(bookmarkId: String, folderName: String?): String {
 }
 ```
 
-- [ ] **Step 2: Run all tests**
+- [x] **Step 2: Run all tests**
 
 Run: `./gradlew test -q`
 Expected: All pass
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```
 git add src/main/kotlin/org/sightech/memoryvault/mcp/BookmarkTools.kt
