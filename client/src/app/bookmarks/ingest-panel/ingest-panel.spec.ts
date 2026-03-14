@@ -38,6 +38,14 @@ describe('IngestPanel command generation', () => {
     expect(command).toContain('Bookmarks.plist');
   });
 
+  it('all commands include response parser with review URL', () => {
+    for (const browser of ['chrome', 'firefox', 'safari'] as const) {
+      const command = generateIngestCommand(browser, 'macos', 'token', 'http://localhost:4200');
+      expect(command).toContain('Preview created:');
+      expect(command).toContain('Review and commit at: http://localhost:4200/bookmarks?ingest=');
+    }
+  });
+
   it('detects Chrome from user agent', () => {
     expect(detectBrowser('Mozilla/5.0 ... Chrome/120.0.0.0 Safari/537.36')).toBe('chrome');
   });

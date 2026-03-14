@@ -5,10 +5,12 @@ import {
   signal,
   computed,
 } from '@angular/core';
+import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AuthService } from '../../auth/auth.service';
@@ -39,6 +41,21 @@ const FIREFOX_PATHS: Record<string, string> = {
   linux: '~/.mozilla/firefox/*.default-release/places.sqlite',
 };
 
+function responseParserLines(apiUrl: string): string[] {
+  return [
+    `  -d @- | python3 -c "`,
+    `import json, sys`,
+    `r = json.load(sys.stdin)`,
+    `s = r.get('summary', {})`,
+    `print()`,
+    `print('Preview created: %d new, %d unchanged, %d moved, %d title changed, %d previously deleted' % (`,
+    `    s.get('newCount', 0), s.get('unchangedCount', 0), s.get('movedCount', 0),`,
+    `    s.get('titleChangedCount', 0), s.get('previouslyDeletedCount', 0)))`,
+    `print('Review and commit at: ${apiUrl}/bookmarks?ingest=' + r.get('previewId', ''))`,
+    `"`,
+  ];
+}
+
 export function generateIngestCommand(
   browser: string,
   os: string,
@@ -47,7 +64,6 @@ export function generateIngestCommand(
 ): string {
   if (browser === 'safari') {
     return [
-      '# Safari bookmarks (macOS only)',
       `plutil -convert json -o /tmp/safari-bookmarks.json ~/Library/Safari/Bookmarks.plist`,
       '',
       `# Extract and send to MemoryVault`,
@@ -68,14 +84,13 @@ export function generateIngestCommand(
       `" | curl -s -X POST ${apiUrl}/api/bookmarks/ingest \\`,
       `  -H "Authorization: Bearer ${token}" \\`,
       `  -H "Content-Type: application/json" \\`,
-      `  -d @-`,
+      ...responseParserLines(apiUrl),
     ].join('\n');
   }
 
   if (browser === 'firefox') {
     const dbPath = FIREFOX_PATHS[os] || FIREFOX_PATHS['linux'];
     return [
-      '# Firefox bookmarks',
       'if ! command -v sqlite3 &>/dev/null; then',
       '  echo "sqlite3 not found. Use Firefox: Bookmarks > Manage Bookmarks > Import/Export > Export to HTML"',
       '  echo "Then use the Safari/HTML import method instead."',
@@ -101,14 +116,13 @@ export function generateIngestCommand(
       `" | curl -s -X POST ${apiUrl}/api/bookmarks/ingest \\`,
       `  -H "Authorization: Bearer ${token}" \\`,
       `  -H "Content-Type: application/json" \\`,
-      `  -d @-`,
+      ...responseParserLines(apiUrl),
     ].join('\n');
   }
 
   // Chrome / Chromium
   const bookmarksPath = CHROME_PATHS[os] || CHROME_PATHS['linux'];
   return [
-    '# Chrome/Chromium bookmarks',
     `cat ${bookmarksPath} | python3 -c "`,
     `import json, sys`,
     `data = json.load(sys.stdin)`,
@@ -126,7 +140,7 @@ export function generateIngestCommand(
     `" | curl -s -X POST ${apiUrl}/api/bookmarks/ingest \\`,
     `  -H "Authorization: Bearer ${token}" \\`,
     `  -H "Content-Type: application/json" \\`,
-    `  -d @-`,
+    ...responseParserLines(apiUrl),
   ].join('\n');
 }
 
@@ -139,6 +153,7 @@ export function generateIngestCommand(
     MatButtonModule,
     MatSelectModule,
     MatFormFieldModule,
+    MatInputModule,
     MatExpansionModule,
     MatTooltipModule,
   ],
@@ -152,10 +167,13 @@ export function generateIngestCommand(
           </mat-panel-title>
         </mat-expansion-panel-header>
 
-        <div class="ingest-content">
-          <div class="section">
-            <h3>Import from Browser</h3>
-            <p class="hint">Run this command in your terminal to send bookmarks to MemoryVault:</p>
+        <div class="ingest-columns">
+          <div class="section import-section">
+            <div class="section-header">
+              <mat-icon>cloud_upload</mat-icon>
+              <h3>Import from Browser</h3>
+            </div>
+            <p class="hint">Run a terminal command to send your browser bookmarks to MemoryVault.</p>
 
             <div class="controls">
               <mat-form-field appearance="outline" class="browser-select">
@@ -175,22 +193,45 @@ export function generateIngestCommand(
                   <mat-option value="linux">Linux</mat-option>
                 </mat-select>
               </mat-form-field>
+
+              <button mat-stroked-button class="copy-command-btn" (click)="copyCommand()" matTooltip="Copy import command to clipboard">
+                <mat-icon>{{ copied() ? 'check' : 'content_copy' }}</mat-icon>
+                {{ copied() ? 'Copied!' : 'Copy Command' }}
+              </button>
             </div>
 
-            <div class="code-block">
-              <button mat-icon-button class="copy-btn" (click)="copyCommand()" matTooltip="Copy to clipboard">
-                <mat-icon>{{ copied() ? 'check' : 'content_copy' }}</mat-icon>
+            <mat-expansion-panel class="code-panel">
+              <mat-expansion-panel-header>
+                <mat-panel-title>View command</mat-panel-title>
+              </mat-expansion-panel-header>
+              <div class="code-block">
+                <pre>{{ command() }}</pre>
+              </div>
+            </mat-expansion-panel>
+
+            <div class="review-section">
+              <mat-form-field appearance="outline" class="preview-id-field">
+                <mat-label>Preview ID</mat-label>
+                <input matInput (input)="previewId.set($any($event.target).value)"
+                       placeholder="Paste from CLI output" />
+              </mat-form-field>
+              <button mat-stroked-button [disabled]="!previewId()" (click)="reviewImport()"
+                      matTooltip="Open the review dialog for this import">
+                <mat-icon>rate_review</mat-icon> Review
               </button>
-              <pre>{{ command() }}</pre>
             </div>
           </div>
 
-          <div class="divider"></div>
+          <div class="column-divider"></div>
 
-          <div class="section">
-            <h3>Export Bookmarks</h3>
-            <p class="hint">Download your bookmarks as a Netscape HTML file for import into any browser.</p>
-            <button mat-stroked-button (click)="store.exportBookmarks()">
+          <div class="section export-section">
+            <div class="section-header">
+              <mat-icon>cloud_download</mat-icon>
+              <h3>Export Bookmarks</h3>
+            </div>
+            <p class="hint">Download as a Netscape HTML file compatible with all browsers.</p>
+
+            <button mat-stroked-button (click)="store.exportBookmarks()" class="export-btn">
               <mat-icon>download</mat-icon> Download HTML
             </button>
 
@@ -211,36 +252,63 @@ export function generateIngestCommand(
   `,
   styles: [`
     mat-expansion-panel-header mat-icon { margin-right: 8px; }
-    .ingest-content { padding: 8px 0; }
-    .section h3 { font-size: 0.875rem; font-weight: 500; margin: 0 0 4px; }
+
+    .ingest-columns {
+      display: flex; gap: 0; padding: 8px 0;
+    }
+    .section { flex: 1; min-width: 0; }
+    .section-header {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 4px;
+    }
+    .section-header mat-icon { color: #5f6368; font-size: 20px; width: 20px; height: 20px; }
+    .section-header h3 { font-size: 0.875rem; font-weight: 500; margin: 0; }
     .hint { font-size: 0.75rem; color: #5f6368; margin: 0 0 12px; }
-    .controls { display: flex; gap: 12px; margin-bottom: 12px; }
-    .browser-select, .os-select { width: 140px; }
+
+    .controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+    .browser-select, .os-select { width: 130px; }
+    .copy-command-btn { white-space: nowrap; }
+
+    .review-section {
+      display: flex; gap: 12px; align-items: center; margin-top: 12px;
+      padding-top: 12px; border-top: 1px solid #e8eaed;
+    }
+    .preview-id-field { flex: 1; }
+
+    .code-panel { margin-top: 4px; }
     .code-block {
-      position: relative; background: #1e1e1e; border-radius: 6px;
+      background: #1e1e1e; border-radius: 4px;
       padding: 12px 16px; overflow-x: auto;
     }
     .code-block pre {
-      margin: 0; font-size: 0.75rem; color: #d4d4d4;
+      margin: 0; font-size: 0.7rem; color: #d4d4d4; line-height: 1.5;
       font-family: 'SF Mono', Monaco, Consolas, monospace;
       white-space: pre-wrap; word-break: break-all;
     }
-    .copy-btn {
-      position: absolute; top: 4px; right: 4px; color: #999;
+
+    .column-divider {
+      width: 1px; background: #e8eaed; margin: 0 24px; flex-shrink: 0;
     }
-    .divider { border-top: 1px solid #e8eaed; margin: 16px 0; }
-    .help-panel { margin-top: 12px; }
-    .import-instructions { font-size: 0.8125rem; padding-left: 20px; }
+
+    .export-btn { margin-bottom: 12px; }
+    .help-panel { margin-top: 4px; }
+    .import-instructions { font-size: 0.8125rem; padding-left: 20px; margin: 0; }
     .import-instructions li { margin-bottom: 6px; }
+
+    @media (max-width: 768px) {
+      .ingest-columns { flex-direction: column; }
+      .column-divider { width: auto; height: 1px; margin: 16px 0; }
+    }
   `]
 })
 export class IngestPanelComponent {
   readonly store = inject(BookmarksStore);
   private authService = inject(AuthService);
+  private router = inject(Router);
 
   browser = signal(detectBrowser(navigator.userAgent));
   os = signal(detectOS(navigator.userAgent));
   copied = signal(false);
+  previewId = signal('');
 
   command = computed(() =>
     generateIngestCommand(
@@ -255,5 +323,12 @@ export class IngestPanelComponent {
     await navigator.clipboard.writeText(this.command());
     this.copied.set(true);
     setTimeout(() => this.copied.set(false), 2000);
+  }
+
+  reviewImport() {
+    const id = this.previewId().trim();
+    if (id) {
+      this.router.navigate(['/bookmarks'], { queryParams: { ingest: id } });
+    }
   }
 }

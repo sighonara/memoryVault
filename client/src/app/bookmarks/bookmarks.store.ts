@@ -242,6 +242,7 @@ export const BookmarksStore = signalStore(
         tap(() => {
           patchState(store, { ingestPreview: null });
           (store as any).loadBookmarks();
+          (store as any).loadFolders();
         })
       )
     ),

@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { CUSTOM_ELEMENTS_SCHEMA, DestroyRef, signal } from '@angular/core';
 import { of } from 'rxjs';
 import { MatDialogModule } from '@angular/material/dialog';
@@ -10,6 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { BookmarksComponent } from './bookmarks';
 import { BookmarksStore } from './bookmarks.store';
 
@@ -48,6 +50,10 @@ describe('BookmarksComponent', () => {
     open: vi.fn(),
   };
 
+  const mockSnackBar = {
+    open: vi.fn(),
+  };
+
   beforeEach(async () => {
     vi.clearAllMocks();
     await TestBed.configureTestingModule({
@@ -66,11 +72,13 @@ describe('BookmarksComponent', () => {
             MatChipsModule,
             MatProgressSpinnerModule,
             MatToolbarModule,
+            MatSnackBarModule,
           ],
           schemas: [CUSTOM_ELEMENTS_SCHEMA],
           providers: [
             { provide: BookmarksStore, useValue: mockStore },
             { provide: MatDialog, useValue: mockDialog },
+            { provide: MatSnackBar, useValue: mockSnackBar },
           ],
         },
       })

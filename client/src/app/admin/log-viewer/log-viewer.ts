@@ -1,23 +1,34 @@
 import { Component, input, output } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormsModule } from '@angular/forms';
 import { LogEntry } from '../../shared/graphql/generated';
 
 const LOG_LEVELS = ['ERROR', 'WARN', 'INFO', 'DEBUG'];
 
+export function formatTimestamp(ts: any): string {
+  if (!ts) return '\u2014';
+  const d = new Date(ts);
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
 @Component({
   selector: 'app-log-viewer',
   standalone: true,
   imports: [
-    CommonModule,
     MatTableModule,
     MatSelectModule,
     MatFormFieldModule,
     MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
     FormsModule,
   ],
   template: `
@@ -41,11 +52,26 @@ const LOG_LEVELS = ['ERROR', 'WARN', 'INFO', 'DEBUG'];
           placeholder="e.g. FeedService"
         />
       </mat-form-field>
+
+      <span class="spacer"></span>
+
+      <button
+        mat-stroked-button
+        class="follow-btn"
+        [class.active]="followActive()"
+        (click)="followToggle.emit()"
+        [matTooltip]="followActive() ? 'Stop auto-refresh' : 'Auto-refresh every 3s'"
+      >
+        <mat-icon>{{ followActive() ? 'pause' : 'play_arrow' }}</mat-icon>
+        {{ followActive() ? 'Following' : 'Follow' }}
+      </button>
     </div>
+
+    <div class="order-hint">Newest first</div>
 
     <table mat-table [dataSource]="logs()" class="log-table">
       <ng-container matColumnDef="timestamp">
-        <th mat-header-cell *matHeaderCellDef>Time</th>
+        <th mat-header-cell *matHeaderCellDef>Timestamp</th>
         <td mat-cell *matCellDef="let log" class="mono">{{ formatTime(log.timestamp) }}</td>
       </ng-container>
 
@@ -75,8 +101,15 @@ const LOG_LEVELS = ['ERROR', 'WARN', 'INFO', 'DEBUG'];
     }
   `,
   styles: [`
-    .log-toolbar { display: flex; gap: 12px; padding: 8px 16px; }
+    .log-toolbar { display: flex; gap: 12px; padding: 8px 16px; align-items: center; }
     .filter-field { min-width: 120px; }
+    .spacer { flex: 1 1 auto; }
+    .follow-btn { white-space: nowrap; }
+    .follow-btn.active { background: #e8f5e9; color: #2e7d32; }
+    .order-hint {
+      font-size: 0.7rem; color: #9aa0a6; padding: 0 16px 4px;
+      font-style: italic;
+    }
     .log-table { width: 100%; }
     .mono { font-family: "SF Mono", "Fira Code", monospace; font-size: 0.75rem; }
     .logger-cell { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -95,15 +128,16 @@ export class LogViewerComponent {
   logs = input<LogEntry[]>([]);
   levelFilter = input<string | null>(null);
   serviceFilter = input<string | null>(null);
+  followActive = input<boolean>(false);
   levelFilterChange = output<string | null>();
   serviceFilterChange = output<string>();
+  followToggle = output<void>();
 
   displayedColumns = ['timestamp', 'level', 'logger', 'message'];
   logLevels = LOG_LEVELS;
 
   formatTime(ts: any): string {
-    if (!ts) return '—';
-    return new Date(ts).toLocaleTimeString();
+    return formatTimestamp(ts);
   }
 
   shortLogger(logger: string): string {

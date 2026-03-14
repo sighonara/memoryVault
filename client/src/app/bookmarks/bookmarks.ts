@@ -1,6 +1,6 @@
 import { Component, DestroyRef, effect, inject, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { BookmarksStore } from './bookmarks.store';
 import { BookmarkDialogComponent } from './bookmark-dialog';
 import { BookmarkTreeComponent } from './bookmark-tree/bookmark-tree';
@@ -25,6 +26,7 @@ import { ConflictReviewComponent } from './conflict-review/conflict-review';
     MatChipsModule,
     MatProgressSpinnerModule,
     MatToolbarModule,
+    MatSnackBarModule,
     BookmarkTreeComponent,
     BookmarkListComponent,
     IngestPanelComponent,
@@ -117,6 +119,8 @@ export class BookmarksComponent implements OnInit {
   private dialog = inject(MatDialog);
   private destroyRef = inject(DestroyRef);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private snackBar = inject(MatSnackBar);
 
   constructor() {
     // Watch for ingest query param
@@ -129,10 +133,29 @@ export class BookmarksComponent implements OnInit {
       }
     });
 
-    // Open conflict review dialog when ingest preview is loaded
+    // Handle ingest preview: auto-accept if no conflicts, otherwise open review dialog
     effect(() => {
       const preview = this.store.ingestPreview();
-      if (preview) {
+      if (!preview) return;
+
+      const hasConflicts = preview.summary.movedCount > 0
+        || preview.summary.titleChangedCount > 0
+        || preview.summary.previouslyDeletedCount > 0;
+
+      if (!hasConflicts && preview.summary.newCount > 0) {
+        // All items are new — auto-accept without review
+        const resolutions = preview.items
+          .filter(i => i.status === 'NEW')
+          .map(i => ({ url: i.url, action: 'ACCEPT' as const }));
+        this.store.commitIngest({ previewId: preview.previewId, resolutions });
+        this.snackBar.open(
+          `Imported ${preview.summary.newCount} bookmark(s)`,
+          'OK',
+          { duration: 5000 },
+        );
+        // Clean up the query param
+        this.router.navigate([], { queryParams: {}, replaceUrl: true });
+      } else if (hasConflicts) {
         this.dialog.open(ConflictReviewComponent, {
           data: preview,
           width: '800px',

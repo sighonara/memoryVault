@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AdminStore } from './admin.store';
@@ -39,8 +39,10 @@ import { LogViewerComponent } from './log-viewer/log-viewer';
             [logs]="store.logs()"
             [levelFilter]="store.logLevelFilter()"
             [serviceFilter]="store.logServiceFilter()"
+            [followActive]="store.followActive()"
             (levelFilterChange)="store.setLogLevelFilter($event)"
             (serviceFilterChange)="store.setLogServiceFilter($event)"
+            (followToggle)="toggleFollow()"
           />
         </mat-tab>
       </mat-tab-group>
@@ -53,6 +55,12 @@ import { LogViewerComponent } from './log-viewer/log-viewer';
 })
 export class AdminComponent implements OnInit {
   readonly store = inject(AdminStore);
+  private destroyRef = inject(DestroyRef);
+  private followInterval: ReturnType<typeof setInterval> | null = null;
+
+  constructor() {
+    this.destroyRef.onDestroy(() => this.stopFollow());
+  }
 
   ngOnInit() {
     this.store.loadStats();
@@ -64,5 +72,26 @@ export class AdminComponent implements OnInit {
     if (index === 0) this.store.loadStats();
     else if (index === 1) this.store.loadJobs();
     else if (index === 2) this.store.loadLogs();
+
+    // Stop follow when navigating away from logs tab
+    if (index !== 2) this.stopFollow();
+  }
+
+  toggleFollow() {
+    if (this.followInterval) {
+      this.stopFollow();
+    } else {
+      this.store.loadLogs();
+      this.followInterval = setInterval(() => this.store.loadLogs(), 3000);
+      this.store.setFollowActive(true);
+    }
+  }
+
+  private stopFollow() {
+    if (this.followInterval) {
+      clearInterval(this.followInterval);
+      this.followInterval = null;
+    }
+    this.store.setFollowActive(false);
   }
 }
