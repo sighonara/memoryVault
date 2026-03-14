@@ -1,5 +1,6 @@
 package org.sightech.memoryvault.crosscutting
 
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.sightech.memoryvault.bookmark.service.BookmarkService
 import org.sightech.memoryvault.feed.entity.Feed
@@ -19,6 +20,7 @@ import org.sightech.memoryvault.youtube.repository.VideoRepository
 import org.sightech.memoryvault.youtube.repository.YoutubeListRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
@@ -53,6 +55,11 @@ class CrossCuttingIntegrationTest {
     }
 
     private val userId = UUID.fromString("00000000-0000-0000-0000-000000000001")
+
+    @BeforeEach
+    fun setUp() {
+        SecurityContextHolder.clearContext()
+    }
 
     @Autowired lateinit var searchService: SearchService
     @Autowired lateinit var statsService: StatsService

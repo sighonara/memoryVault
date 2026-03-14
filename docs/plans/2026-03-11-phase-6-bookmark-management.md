@@ -1773,7 +1773,7 @@ git commit -m "feat: MCP tools for folder create, list, and bookmark move"
 - Create: `src/test/kotlin/org/sightech/memoryvault/bookmark/FolderIntegrationTest.kt`
 - Modify: `src/test/kotlin/org/sightech/memoryvault/bookmark/BookmarkIntegrationTest.kt`
 
-- [ ] **Step 1: Write integration tests for folder CRUD via GraphQL**
+- [x] **Step 1: Write integration tests for folder CRUD via GraphQL**
 
 Follow the pattern in `BookmarkIntegrationTest.kt` — use TestContainers, authenticate with JWT, send GraphQL queries/mutations via MockMvc.
 
@@ -1842,7 +1842,7 @@ Test cases:
 - Move bookmark to folder
 - Export with folder structure
 
-- [ ] **Step 2: Write integration tests for ingest REST endpoints**
+- [x] **Step 2: Write integration tests for ingest REST endpoints**
 
 Test cases:
 - POST /api/bookmarks/ingest with new bookmarks — verify preview response
@@ -1851,12 +1851,12 @@ Test cases:
 - Expired preview returns 404
 - Already-committed preview returns 404
 
-- [ ] **Step 3: Run all tests**
+- [x] **Step 3: Run all tests**
 
 Run: `./gradlew test -q`
 Expected: All pass
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```
 git add src/test/kotlin/org/sightech/memoryvault/bookmark/FolderIntegrationTest.kt src/test/kotlin/org/sightech/memoryvault/bookmark/BookmarkIntegrationTest.kt
