@@ -2135,7 +2135,7 @@ git commit -m "feat: BookmarkTree component with folder hierarchy and context me
 - Create: `client/src/app/bookmarks/bookmark-list/bookmark-list.ts`
 - Create: `client/src/app/bookmarks/bookmark-list/bookmark-list.spec.ts`
 
-- [ ] **Step 1: Write failing test for bookmark list logic**
+- [x] **Step 1: Write failing test for bookmark list logic**
 
 Create `client/src/app/bookmarks/bookmark-list/bookmark-list.spec.ts`:
 
@@ -2172,7 +2172,7 @@ describe('BookmarkListComponent logic', () => {
 });
 ```
 
-- [ ] **Step 2: Create bookmark-list component**
+- [x] **Step 2: Create bookmark-list component**
 
 ```typescript
 @Component({
@@ -2199,12 +2199,12 @@ The component should:
 - Click URL opens in new tab
 - Tags as `mat-chip` (editable)
 
-- [ ] **Step 3: Run all frontend tests**
+- [x] **Step 3: Run all frontend tests**
 
 Run: `cd client && npm test`
 Expected: All pass
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```
 git add client/src/app/bookmarks/bookmark-list/
@@ -2219,7 +2219,7 @@ git commit -m "feat: BookmarkList component with sorting, multi-select, bulk act
 - Create: `client/src/app/bookmarks/ingest-panel/ingest-panel.ts`
 - Create: `client/src/app/bookmarks/ingest-panel/ingest-panel.spec.ts`
 
-- [ ] **Step 1: Write test for CLI command generation**
+- [x] **Step 1: Write test for CLI command generation**
 
 ```typescript
 describe('IngestPanel command generation', () => {
@@ -2266,7 +2266,7 @@ describe('IngestPanel command generation', () => {
 });
 ```
 
-- [ ] **Step 2: Create ingest-panel component**
+- [x] **Step 2: Create ingest-panel component**
 
 The component should:
 - Collapsible panel (expanded by default? No — collapsed by default per spec)
@@ -2285,12 +2285,12 @@ The component should:
 - Component uses `changeDetection: ChangeDetectionStrategy.OnPush`
 - Firefox command must include `command -v sqlite3` check with fallback message directing user to Firefox's built-in HTML export
 
-- [ ] **Step 3: Run all frontend tests**
+- [x] **Step 3: Run all frontend tests**
 
 Run: `cd client && npm test`
 Expected: All pass
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```
 git add client/src/app/bookmarks/ingest-panel/
