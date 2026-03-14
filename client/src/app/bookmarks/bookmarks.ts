@@ -1,5 +1,6 @@
-import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { Component, DestroyRef, effect, inject, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute } from '@angular/router';
 import { filter } from 'rxjs';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,6 +10,10 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { BookmarksStore } from './bookmarks.store';
 import { BookmarkDialogComponent } from './bookmark-dialog';
+import { BookmarkTreeComponent } from './bookmark-tree/bookmark-tree';
+import { BookmarkListComponent } from './bookmark-list/bookmark-list';
+import { IngestPanelComponent } from './ingest-panel/ingest-panel';
+import { ConflictReviewComponent } from './conflict-review/conflict-review';
 
 @Component({
   selector: 'app-bookmarks',
@@ -20,12 +25,18 @@ import { BookmarkDialogComponent } from './bookmark-dialog';
     MatChipsModule,
     MatProgressSpinnerModule,
     MatToolbarModule,
+    BookmarkTreeComponent,
+    BookmarkListComponent,
+    IngestPanelComponent,
   ],
   providers: [BookmarksStore],
   template: `
     <div class="bookmarks-page">
+      <app-ingest-panel />
+
       <mat-toolbar class="page-toolbar">
-        <input type="text" class="toolbar-search" placeholder="Search bookmarks..." (input)="onSearch($event)" [value]="store.searchQuery()" />
+        <input type="text" class="toolbar-search" placeholder="Search bookmarks..."
+               (input)="onSearch($event)" [value]="store.searchQuery()" />
         <span class="spacer"></span>
         <button mat-stroked-button (click)="openAddDialog()">
           <mat-icon>add</mat-icon> Add
@@ -51,28 +62,20 @@ import { BookmarkDialogComponent } from './bookmark-dialog';
           <mat-spinner diameter="32"></mat-spinner>
         </div>
       } @else {
-        <div class="bookmark-list">
-          @for (bookmark of store.bookmarks(); track bookmark.id) {
-            <div class="bookmark-row">
-              <div class="bookmark-info">
-                <a class="bookmark-title" [href]="bookmark.url" target="_blank">{{ bookmark.title || bookmark.url }}</a>
-                <span class="bookmark-url">{{ bookmark.url }}</span>
-              </div>
-              <div class="bookmark-tags">
-                @for (tag of bookmark.tags; track tag.name) {
-                  <span class="tag-label">{{ tag.name }}</span>
-                }
-              </div>
-              <button mat-icon-button (click)="deleteBookmark(bookmark.id)" class="delete-btn">
-                <mat-icon>close</mat-icon>
-              </button>
-            </div>
-          } @empty {
-            <div class="empty-state">
-              <mat-icon>bookmark_border</mat-icon>
-              <p>No bookmarks found.</p>
-            </div>
-          }
+        <div class="bookmark-manager">
+          <div class="tree-panel">
+            <app-bookmark-tree
+              [folders]="store.folders()"
+              (folderSelected)="store.selectFolder($event)"
+              (contextAction)="onFolderAction($event)" />
+          </div>
+          <div class="list-panel">
+            <app-bookmark-list
+              [bookmarks]="store.filteredBookmarks()"
+              (bookmarkDeleted)="deleteBookmark($event)"
+              (bookmarkMoved)="store.moveBookmark($event)"
+              (bulkDeleted)="bulkDelete($event)" />
+          </div>
         </div>
       }
     </div>
@@ -96,49 +99,52 @@ import { BookmarkDialogComponent } from './bookmark-dialog';
     .tags-bar mat-chip-option { font-size: 0.75rem; height: 24px; }
     .loading { display: flex; justify-content: center; padding: 40px; }
 
-    .bookmark-list { max-width: 900px; }
-    .bookmark-row {
-      display: flex; align-items: center; gap: 12px;
-      padding: 8px 16px;
-      border-bottom: 1px solid #f1f3f4;
-      min-height: 0;
+    .bookmark-manager {
+      display: flex; flex: 1; overflow: hidden;
     }
-    .bookmark-row:hover { background: #f8f9fa; }
-    .bookmark-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-    .bookmark-title {
-      font-size: 0.875rem; font-weight: 500; color: #1a73e8;
-      text-decoration: none;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    .tree-panel {
+      width: 240px; min-width: 200px;
+      border-right: 1px solid #e8eaed;
+      overflow-y: auto; background: #fff;
     }
-    .bookmark-title:hover { text-decoration: underline; }
-    .bookmark-url {
-      font-size: 0.7rem; color: #80868b;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    .list-panel {
+      flex: 1; overflow-y: auto;
     }
-    .bookmark-tags { display: flex; gap: 4px; flex-shrink: 0; }
-    .tag-label {
-      font-size: 0.65rem; padding: 1px 6px; border-radius: 3px;
-      background: #e8eaed; color: #5f6368;
-    }
-    .delete-btn { opacity: 0; transition: opacity 0.15s; flex-shrink: 0; }
-    .bookmark-row:hover .delete-btn { opacity: 0.6; }
-    .delete-btn:hover { opacity: 1 !important; }
-
-    .empty-state {
-      display: flex; flex-direction: column; align-items: center;
-      padding: 60px; color: #9aa0a6;
-    }
-    .empty-state mat-icon { font-size: 48px; width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.5; }
-    .empty-state p { font-size: 0.8125rem; margin: 0; }
   `]
 })
 export class BookmarksComponent implements OnInit {
   readonly store = inject(BookmarksStore);
   private dialog = inject(MatDialog);
   private destroyRef = inject(DestroyRef);
+  private route = inject(ActivatedRoute);
+
+  constructor() {
+    // Watch for ingest query param
+    this.route.queryParamMap.pipe(
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(params => {
+      const previewId = params.get('ingest');
+      if (previewId) {
+        this.store.fetchIngestPreview(previewId);
+      }
+    });
+
+    // Open conflict review dialog when ingest preview is loaded
+    effect(() => {
+      const preview = this.store.ingestPreview();
+      if (preview) {
+        this.dialog.open(ConflictReviewComponent, {
+          data: preview,
+          width: '800px',
+          disableClose: true,
+        });
+      }
+    });
+  }
 
   ngOnInit() {
     this.store.loadBookmarks();
+    this.store.loadFolders();
   }
 
   onSearch(event: any) {
@@ -160,6 +166,37 @@ export class BookmarksComponent implements OnInit {
   deleteBookmark(id: string) {
     if (confirm('Delete this bookmark?')) {
       this.store.deleteBookmark(id);
+    }
+  }
+
+  bulkDelete(ids: string[]) {
+    if (confirm(`Delete ${ids.length} bookmark(s)?`)) {
+      ids.forEach(id => this.store.deleteBookmark(id));
+    }
+  }
+
+  onFolderAction(event: { action: string; folderId: string | null }) {
+    switch (event.action) {
+      case 'new': {
+        const name = prompt('Folder name:');
+        if (name) {
+          this.store.createFolder({ name, parentId: event.folderId ?? undefined });
+        }
+        break;
+      }
+      case 'rename': {
+        const newName = prompt('New name:');
+        if (newName && event.folderId) {
+          this.store.renameFolder({ id: event.folderId, name: newName });
+        }
+        break;
+      }
+      case 'delete': {
+        if (event.folderId && confirm('Delete this folder? Bookmarks will be moved to the parent folder.')) {
+          this.store.deleteFolder(event.folderId);
+        }
+        break;
+      }
     }
   }
 

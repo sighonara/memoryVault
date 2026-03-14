@@ -2305,7 +2305,7 @@ git commit -m "feat: IngestPanel component with CLI command generation and expor
 - Create: `client/src/app/bookmarks/conflict-review/conflict-review.ts`
 - Create: `client/src/app/bookmarks/conflict-review/conflict-review.spec.ts`
 
-- [ ] **Step 1: Write test for conflict grouping and resolution logic**
+- [x] **Step 1: Write test for conflict grouping and resolution logic**
 
 ```typescript
 describe('ConflictReview logic', () => {
@@ -2346,7 +2346,7 @@ describe('ConflictReview logic', () => {
 });
 ```
 
-- [ ] **Step 2: Create conflict-review component**
+- [x] **Step 2: Create conflict-review component**
 
 ```typescript
 @Component({
@@ -2371,12 +2371,12 @@ The component should:
 - "Commit" button calls store `commitIngest()`
 - "Cancel" closes the modal
 
-- [ ] **Step 3: Run all frontend tests**
+- [x] **Step 3: Run all frontend tests**
 
 Run: `cd client && npm test`
 Expected: All pass
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```
 git add client/src/app/bookmarks/conflict-review/
@@ -2391,7 +2391,7 @@ git commit -m "feat: ConflictReview component with grouping, bulk actions, commi
 - Modify: `client/src/app/bookmarks/bookmarks.ts`
 - Modify: `client/src/app/bookmarks/bookmarks.spec.ts`
 
-- [ ] **Step 1: Rewrite bookmarks.ts template to two-panel layout**
+- [x] **Step 1: Rewrite bookmarks.ts template to two-panel layout**
 
 Structure:
 ```
@@ -2431,24 +2431,24 @@ effect(() => {
 });
 ```
 
-- [ ] **Step 2: Update bookmarks.spec.ts**
+- [x] **Step 2: Update bookmarks.spec.ts**
 
 Update tests for new component structure. Test:
 - Folder selection changes bookmark list
 - Ingest panel generates correct command
 - Conflict review opens when preview is loaded
 
-- [ ] **Step 3: Run all frontend tests**
+- [x] **Step 3: Run all frontend tests**
 
 Run: `cd client && npm test`
 Expected: All pass
 
-- [ ] **Step 4: Verify production build**
+- [x] **Step 4: Verify production build**
 
 Run: `cd client && npm run build`
 Expected: Build succeeds with no errors
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```
 git add client/src/app/bookmarks/
