@@ -1875,15 +1875,15 @@ git commit -m "test: integration tests for folders, ingest, and bookmark-folder 
 
 **Prerequisites:** The existing component uses `CommonModule`, `*ngIf`/`*ngFor`, and `subscribe()`. These must be removed before building the new two-panel layout.
 
-- [ ] **Step 1: Read the current bookmarks.ts file to understand the full template and logic**
+- [x] **Step 1: Read the current bookmarks.ts file to understand the full template and logic**
 
-- [ ] **Step 2: Replace `CommonModule` import with nothing (standalone components don't need it)**
+- [x] **Step 2: Replace `CommonModule` import with nothing (standalone components don't need it)**
 
-- [ ] **Step 3: Replace all `*ngIf` with `@if` blocks**
+- [x] **Step 3: Replace all `*ngIf` with `@if` blocks**
 
-- [ ] **Step 4: Replace all `*ngFor` with `@for` blocks**
+- [x] **Step 4: Replace all `*ngFor` with `@for` blocks**
 
-- [ ] **Step 5: Remove any `subscribe()` calls — use signals/store methods instead**
+- [x] **Step 5: Remove any `subscribe()` calls — use signals/store methods instead**
 
 The `openAddDialog()` method uses `dialogRef.afterClosed().subscribe(...)`. Replace with:
 
@@ -1899,12 +1899,12 @@ openAddDialog() {
 
 This uses `takeUntilDestroyed` (import from `@angular/core/rxjs-interop`) with `inject(DestroyRef)` — this is the standard Angular pattern for one-shot subscriptions that need cleanup. Add `private destroyRef = inject(DestroyRef);` to the component.
 
-- [ ] **Step 6: Run frontend tests**
+- [x] **Step 6: Run frontend tests**
 
 Run: `cd client && npm test`
 Expected: All pass
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```
 git add client/src/app/bookmarks/bookmarks.ts client/src/app/bookmarks/bookmarks.spec.ts

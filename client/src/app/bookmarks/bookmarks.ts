@@ -1,5 +1,6 @@
-import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter } from 'rxjs';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -13,7 +14,6 @@ import { BookmarkDialogComponent } from './bookmark-dialog';
   selector: 'app-bookmarks',
   standalone: true,
   imports: [
-    CommonModule,
     MatDialogModule,
     MatButtonModule,
     MatIconModule,
@@ -32,40 +32,49 @@ import { BookmarkDialogComponent } from './bookmark-dialog';
         </button>
       </mat-toolbar>
 
-      <div class="tags-bar" *ngIf="getAllTags().length > 0">
-        <mat-chip-listbox multiple>
-          <mat-chip-option
-            *ngFor="let tag of getAllTags()"
-            [selected]="store.selectedTags().includes(tag)"
-            (click)="toggleTag(tag)">
-            {{ tag }}
-          </mat-chip-option>
-        </mat-chip-listbox>
-      </div>
-
-      <div class="loading" *ngIf="store.loading()">
-        <mat-spinner diameter="32"></mat-spinner>
-      </div>
-
-      <div class="bookmark-list" *ngIf="!store.loading()">
-        <div *ngFor="let bookmark of store.bookmarks()" class="bookmark-row">
-          <div class="bookmark-info">
-            <a class="bookmark-title" [href]="bookmark.url" target="_blank">{{ bookmark.title || bookmark.url }}</a>
-            <span class="bookmark-url">{{ bookmark.url }}</span>
-          </div>
-          <div class="bookmark-tags">
-            <span *ngFor="let tag of bookmark.tags" class="tag-label">{{ tag.name }}</span>
-          </div>
-          <button mat-icon-button (click)="deleteBookmark(bookmark.id)" class="delete-btn">
-            <mat-icon>close</mat-icon>
-          </button>
+      @if (getAllTags().length > 0) {
+        <div class="tags-bar">
+          <mat-chip-listbox multiple>
+            @for (tag of getAllTags(); track tag) {
+              <mat-chip-option
+                [selected]="store.selectedTags().includes(tag)"
+                (click)="toggleTag(tag)">
+                {{ tag }}
+              </mat-chip-option>
+            }
+          </mat-chip-listbox>
         </div>
+      }
 
-        <div class="empty-state" *ngIf="store.bookmarks().length === 0">
-          <mat-icon>bookmark_border</mat-icon>
-          <p>No bookmarks found.</p>
+      @if (store.loading()) {
+        <div class="loading">
+          <mat-spinner diameter="32"></mat-spinner>
         </div>
-      </div>
+      } @else {
+        <div class="bookmark-list">
+          @for (bookmark of store.bookmarks(); track bookmark.id) {
+            <div class="bookmark-row">
+              <div class="bookmark-info">
+                <a class="bookmark-title" [href]="bookmark.url" target="_blank">{{ bookmark.title || bookmark.url }}</a>
+                <span class="bookmark-url">{{ bookmark.url }}</span>
+              </div>
+              <div class="bookmark-tags">
+                @for (tag of bookmark.tags; track tag.name) {
+                  <span class="tag-label">{{ tag.name }}</span>
+                }
+              </div>
+              <button mat-icon-button (click)="deleteBookmark(bookmark.id)" class="delete-btn">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          } @empty {
+            <div class="empty-state">
+              <mat-icon>bookmark_border</mat-icon>
+              <p>No bookmarks found.</p>
+            </div>
+          }
+        </div>
+      }
     </div>
   `,
   styles: [`
@@ -126,6 +135,7 @@ import { BookmarkDialogComponent } from './bookmark-dialog';
 export class BookmarksComponent implements OnInit {
   readonly store = inject(BookmarksStore);
   private dialog = inject(MatDialog);
+  private destroyRef = inject(DestroyRef);
 
   ngOnInit() {
     this.store.loadBookmarks();
@@ -141,11 +151,10 @@ export class BookmarksComponent implements OnInit {
 
   openAddDialog() {
     const dialogRef = this.dialog.open(BookmarkDialogComponent, { width: '420px' });
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.store.addBookmark(result);
-      }
-    });
+    dialogRef.afterClosed().pipe(
+      takeUntilDestroyed(this.destroyRef),
+      filter((result): result is { url: string; title?: string; tags?: string[] } => !!result)
+    ).subscribe(result => this.store.addBookmark(result));
   }
 
   deleteBookmark(id: string) {

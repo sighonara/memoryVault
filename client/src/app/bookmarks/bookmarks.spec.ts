@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { MatDialog } from '@angular/material/dialog';
-import { signal } from '@angular/core';
+import { DestroyRef, signal } from '@angular/core';
 import { of } from 'rxjs';
 import { BookmarksComponent } from './bookmarks';
 import { BookmarksStore } from './bookmarks.store';
