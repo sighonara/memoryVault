@@ -88,12 +88,15 @@ export function buildTree(flatFolders: Array<{ id: string; name: string; parentI
         </mat-tree-node>
       </mat-tree>
 
-      <div class="tree-node unfiled-node"
-           [class.selected]="selectedId() === 'unfiled'"
-           (click)="onSelect('unfiled')">
-        <mat-icon class="tree-icon">inbox</mat-icon>
-        <span class="node-label">Unfiled</span>
-      </div>
+      @if (unfiledCount() > 0) {
+        <div class="tree-node unfiled-node"
+             [class.selected]="selectedId() === 'unfiled'"
+             (click)="onSelect('unfiled')">
+          <mat-icon class="tree-icon">inbox</mat-icon>
+          <span class="node-label">Unfiled</span>
+          <span class="node-count">({{ unfiledCount() }})</span>
+        </div>
+      }
     </div>
 
     <div [matMenuTriggerFor]="contextMenu"
@@ -138,6 +141,7 @@ export function buildTree(flatFolders: Array<{ id: string; name: string; parentI
 })
 export class BookmarkTreeComponent {
   folders = input.required<Folder[]>();
+  unfiledCount = input<number>(0);
   folderSelected = output<string | null>();
   contextAction = output<{ action: string; folderId: string | null }>();
 

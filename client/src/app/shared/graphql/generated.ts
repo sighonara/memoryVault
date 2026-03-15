@@ -186,6 +186,7 @@ export type Mutation = {
 
 
 export type MutationAddBookmarkArgs = {
+  folderId?: InputMaybe<Scalars['UUID']['input']>;
   tags?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
   title?: InputMaybe<Scalars['String']['input']>;
   url: Scalars['String']['input'];
@@ -497,10 +498,11 @@ export type CreateBookmarkMutationVariables = Exact<{
   url: Scalars['String']['input'];
   title?: InputMaybe<Scalars['String']['input']>;
   tags?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>> | InputMaybe<Scalars['String']['input']>>;
+  folderId?: InputMaybe<Scalars['UUID']['input']>;
 }>;
 
 
-export type CreateBookmarkMutation = { __typename?: 'Mutation', addBookmark: { __typename?: 'Bookmark', id: any, url: string, title?: string | null } };
+export type CreateBookmarkMutation = { __typename?: 'Mutation', addBookmark: { __typename?: 'Bookmark', id: any, url: string, title?: string | null, folderId?: any | null } };
 
 export type DeleteBookmarkMutationVariables = Exact<{
   id: Scalars['UUID']['input'];
@@ -737,11 +739,12 @@ export const GetBookmarksDocument = gql`
     }
   }
 export const CreateBookmarkDocument = gql`
-    mutation CreateBookmark($url: String!, $title: String, $tags: [String]) {
-  addBookmark(url: $url, title: $title, tags: $tags) {
+    mutation CreateBookmark($url: String!, $title: String, $tags: [String], $folderId: UUID) {
+  addBookmark(url: $url, title: $title, tags: $tags, folderId: $folderId) {
     id
     url
     title
+    folderId
   }
 }
     `;

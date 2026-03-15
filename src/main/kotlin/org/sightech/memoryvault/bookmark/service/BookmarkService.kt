@@ -17,13 +17,14 @@ class BookmarkService(
     private val tagService: TagService
 ) {
 
-    fun create(url: String, title: String?, tagNames: List<String>?): Bookmark {
+    fun create(url: String, title: String?, tagNames: List<String>?, folderId: UUID? = null): Bookmark {
         val userId = CurrentUser.userId()
         val bookmark = Bookmark(
             userId = userId,
             url = url,
             title = title ?: url
         )
+        folderId?.let { bookmark.folderId = it }
         if (!tagNames.isNullOrEmpty()) {
             val tags = tagService.findOrCreateByNames(tagNames)
             bookmark.tags.addAll(tags)

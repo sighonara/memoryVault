@@ -11,8 +11,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { Bookmark } from '../../shared/graphql/generated';
+import { Bookmark, Folder } from '../../shared/graphql/generated';
 
 export function sortByOrder<T extends { sortOrder: number }>(items: T[]): T[] {
   return [...items].sort((a, b) => a.sortOrder - b.sortOrder);
@@ -28,13 +29,14 @@ export function sortByOrder<T extends { sortOrder: number }>(items: T[]): T[] {
     MatCheckboxModule,
     MatChipsModule,
     MatMenuModule,
+    MatDividerModule,
     MatTooltipModule,
   ],
   template: `
     @if (selectedIds().size > 0) {
       <div class="bulk-toolbar">
         <span class="bulk-count">{{ selectedIds().size }} selected</span>
-        <button mat-button [matMenuTriggerFor]="bulkMenu">
+        <button mat-button [matMenuTriggerFor]="bulkMoveMenu">
           <mat-icon>drive_file_move</mat-icon> Move
         </button>
         <button mat-button (click)="bulkDelete()">
@@ -43,10 +45,18 @@ export function sortByOrder<T extends { sortOrder: number }>(items: T[]): T[] {
         <button mat-icon-button (click)="clearSelection()">
           <mat-icon>close</mat-icon>
         </button>
-        <mat-menu #bulkMenu="matMenu">
-          <button mat-menu-item (click)="bulkMoved.emit({ ids: Array.from(selectedIds()), folderId: null })">
-            Unfiled
-          </button>
+        <mat-menu #bulkMoveMenu="matMenu">
+          @for (folder of folders(); track folder.id) {
+            <button mat-menu-item (click)="bulkMoved.emit({ ids: Array.from(selectedIds()), folderId: folder.id })">
+              <mat-icon>folder</mat-icon> {{ folder.name }}
+            </button>
+          }
+          @if (hasFolderedSelection()) {
+            <mat-divider></mat-divider>
+            <button mat-menu-item (click)="bulkMoved.emit({ ids: Array.from(selectedIds()), folderId: null })">
+              <mat-icon>remove_circle_outline</mat-icon> Remove from folder
+            </button>
+          }
         </mat-menu>
       </div>
     }
@@ -77,12 +87,27 @@ export function sortByOrder<T extends { sortOrder: number }>(items: T[]): T[] {
             <mat-icon>more_vert</mat-icon>
           </button>
           <mat-menu #rowMenu="matMenu">
-            <button mat-menu-item (click)="bookmarkMoved.emit({ id: bookmark.id, folderId: '' })">
+            <button mat-menu-item [matMenuTriggerFor]="moveSubmenu">
               <mat-icon>drive_file_move</mat-icon> Move to folder
             </button>
+            @if (bookmark.folderId) {
+              <button mat-menu-item (click)="bookmarkMoved.emit({ id: bookmark.id, folderId: undefined })">
+                <mat-icon>remove_circle_outline</mat-icon> Remove from folder
+              </button>
+            }
             <button mat-menu-item (click)="bookmarkDeleted.emit(bookmark.id)">
               <mat-icon>delete</mat-icon> Delete
             </button>
+          </mat-menu>
+          <mat-menu #moveSubmenu="matMenu">
+            @for (folder of folders(); track folder.id) {
+              <button mat-menu-item (click)="bookmarkMoved.emit({ id: bookmark.id, folderId: folder.id })">
+                {{ folder.name }}
+              </button>
+            }
+            @empty {
+              <button mat-menu-item disabled>No folders yet</button>
+            }
           </mat-menu>
         </div>
       } @empty {
@@ -143,8 +168,9 @@ export function sortByOrder<T extends { sortOrder: number }>(items: T[]): T[] {
 })
 export class BookmarkListComponent {
   bookmarks = input.required<Bookmark[]>();
+  folders = input<Folder[]>([]);
   bookmarkDeleted = output<string>();
-  bookmarkMoved = output<{ id: string; folderId: string }>();
+  bookmarkMoved = output<{ id: string; folderId?: string }>();
   bulkMoved = output<{ ids: string[]; folderId: string | null }>();
   bulkDeleted = output<string[]>();
 
@@ -153,6 +179,11 @@ export class BookmarkListComponent {
   protected Array = Array;
 
   sortedBookmarks = computed(() => sortByOrder(this.bookmarks()));
+
+  hasFolderedSelection = computed(() => {
+    const ids = this.selectedIds();
+    return this.bookmarks().some(b => ids.has(b.id) && b.folderId);
+  });
 
   toggleSelect(id: string) {
     const current = new Set(this.selectedIds());

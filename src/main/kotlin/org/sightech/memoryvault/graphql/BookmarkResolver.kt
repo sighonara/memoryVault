@@ -41,9 +41,10 @@ class BookmarkResolver(
     fun addBookmark(
         @Argument url: String,
         @Argument title: String?,
-        @Argument tags: List<String>?
+        @Argument tags: List<String>?,
+        @Argument folderId: UUID?
     ): Bookmark {
-        return bookmarkService.create(url, title, tags)
+        return bookmarkService.create(url, title, tags, folderId)
     }
 
     @MutationMapping

@@ -107,7 +107,24 @@ class IngestService(
         var accepted = 0
         var skipped = 0
         var undeleted = 0
+        // Maps full folder path (e.g., "Tech/AI") to its folder ID
         val createdFolders = mutableMapOf<String, UUID>()
+
+        fun resolveOrCreateFolderPath(path: String): UUID {
+            return createdFolders.getOrPut(path) {
+                val segments = path.split("/")
+                var parentId: UUID? = null
+                // Walk each segment, creating intermediate folders as needed
+                for (i in segments.indices) {
+                    val subPath = segments.subList(0, i + 1).joinToString("/")
+                    parentId = createdFolders.getOrPut(subPath) {
+                        log.info("Creating folder '{}' (parent={}) during ingest commit", segments[i], parentId)
+                        bookmarkService.createFolder(segments[i], parentId).id
+                    }
+                }
+                parentId!!
+            }
+        }
 
         items.forEach { item ->
             val normalizedUrl = normalizeUrl(item.url)
@@ -118,12 +135,7 @@ class IngestService(
                     when (item.status) {
                         IngestStatus.NEW -> {
                             val bookmark = bookmarkService.create(item.url, item.title, emptyList())
-                            val folderId = item.suggestedFolderId ?: item.browserFolder?.let { folderName ->
-                                createdFolders.getOrPut(folderName) {
-                                    log.info("Creating folder '{}' during ingest commit", folderName)
-                                    bookmarkService.createFolder(folderName, null).id
-                                }
-                            }
+                            val folderId = item.suggestedFolderId ?: item.browserFolder?.let { resolveOrCreateFolderPath(it) }
                             folderId?.let { bookmarkService.moveBookmark(bookmark.id, it) }
                         }
                         IngestStatus.TITLE_CHANGED -> {
@@ -138,12 +150,7 @@ class IngestService(
                         }
                         IngestStatus.MOVED -> {
                             item.existingBookmarkId?.let { id ->
-                                val folderId = item.suggestedFolderId ?: item.browserFolder?.let { folderName ->
-                                    createdFolders.getOrPut(folderName) {
-                                        log.info("Creating folder '{}' during ingest commit", folderName)
-                                        bookmarkService.createFolder(folderName, null).id
-                                    }
-                                }
+                                val folderId = item.suggestedFolderId ?: item.browserFolder?.let { resolveOrCreateFolderPath(it) }
                                 folderId?.let { bookmarkService.moveBookmark(id, it) }
                             }
                         }

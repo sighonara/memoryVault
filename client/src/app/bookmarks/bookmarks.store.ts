@@ -20,7 +20,7 @@ import {
   IngestPreview,
 } from '../shared/graphql/generated';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
-import { pipe, switchMap, tap } from 'rxjs';
+import { pipe, switchMap, tap, catchError, EMPTY } from 'rxjs';
 
 export interface IngestResolutionInput {
   url: string;
@@ -96,6 +96,7 @@ export const BookmarksStore = signalStore(
       if (folderId === 'unfiled') return bookmarks.filter(b => !b.folderId);
       return bookmarks.filter(b => b.folderId === folderId);
     }),
+    unfiledCount: computed(() => store.bookmarks().filter(b => !b.folderId).length),
   })),
   withMethods((store, apollo = inject(Apollo), http = inject(HttpClient)) => {
     // Define rxMethod methods as local variables so they can be called
@@ -116,7 +117,7 @@ export const BookmarksStore = signalStore(
               tags: store.selectedTags().length > 0 ? store.selectedTags() : null,
             },
             fetchPolicy: 'network-only',
-          })
+          }).pipe(catchError(() => EMPTY))
         ),
         tap((result: any) => {
           patchState(store, {
@@ -133,7 +134,7 @@ export const BookmarksStore = signalStore(
           apollo.query({
             query: GetFoldersDocument,
             fetchPolicy: 'network-only',
-          })
+          }).pipe(catchError(() => EMPTY))
         ),
         tap((result: any) => {
           patchState(store, { folders: result.data.folders });
@@ -147,7 +148,7 @@ export const BookmarksStore = signalStore(
           apollo.query({
             query: GetPendingIngestsDocument,
             fetchPolicy: 'network-only',
-          })
+          }).pipe(catchError(() => EMPTY))
         ),
         tap((result: any) => {
           const pending = result.data.pendingIngests.map((p: any) => ({
@@ -182,13 +183,13 @@ export const BookmarksStore = signalStore(
         loadBookmarks();
       },
 
-      addBookmark: rxMethod<{ url: string; title?: string; tags?: string[] }>(
+      addBookmark: rxMethod<{ url: string; title?: string; tags?: string[]; folderId?: string }>(
         pipe(
           switchMap((variables) =>
             apollo.mutate({
               mutation: CreateBookmarkDocument,
               variables,
-            })
+            }).pipe(catchError(() => EMPTY))
           ),
           tap(() => loadBookmarks())
         )
@@ -200,7 +201,7 @@ export const BookmarksStore = signalStore(
             apollo.mutate({
               mutation: DeleteBookmarkDocument,
               variables: { id },
-            })
+            }).pipe(catchError(() => EMPTY))
           ),
           tap(() => loadBookmarks())
         )
@@ -212,9 +213,12 @@ export const BookmarksStore = signalStore(
             apollo.mutate({
               mutation: CreateFolderDocument,
               variables: input,
-            })
+            }).pipe(catchError(() => EMPTY))
           ),
-          tap(() => loadFolders())
+          tap((result: any) => {
+            const newFolder = result.data.createFolder;
+            patchState(store, { folders: [...store.folders(), newFolder] });
+          })
         )
       ),
 
@@ -224,9 +228,14 @@ export const BookmarksStore = signalStore(
             apollo.mutate({
               mutation: RenameFolderDocument,
               variables: input,
-            })
+            }).pipe(catchError(() => EMPTY))
           ),
-          tap(() => loadFolders())
+          tap((result: any) => {
+            const updated = result.data.renameFolder;
+            patchState(store, {
+              folders: store.folders().map(f => f.id === updated.id ? { ...f, name: updated.name } : f),
+            });
+          })
         )
       ),
 
@@ -236,7 +245,7 @@ export const BookmarksStore = signalStore(
             apollo.mutate({
               mutation: MoveFolderDocument,
               variables: input,
-            })
+            }).pipe(catchError(() => EMPTY))
           ),
           tap(() => loadFolders())
         )
@@ -248,9 +257,15 @@ export const BookmarksStore = signalStore(
             apollo.mutate({
               mutation: DeleteFolderDocument,
               variables: { id },
-            })
+            }).pipe(
+              tap(() => {
+                patchState(store, {
+                  folders: store.folders().filter(f => f.id !== id),
+                });
+              }),
+              catchError(() => EMPTY),
+            )
           ),
-          tap(() => loadFolders())
         )
       ),
 
@@ -260,7 +275,7 @@ export const BookmarksStore = signalStore(
             apollo.mutate({
               mutation: MoveBookmarkDocument,
               variables: input,
-            })
+            }).pipe(catchError(() => EMPTY))
           ),
           tap(() => loadBookmarks())
         )
@@ -270,7 +285,12 @@ export const BookmarksStore = signalStore(
         pipe(
           tap(() => patchState(store, { ingestLoading: true })),
           switchMap((previewId) =>
-            http.get<IngestPreviewResult>(`/api/bookmarks/ingest/${previewId}`)
+            http.get<IngestPreviewResult>(`/api/bookmarks/ingest/${previewId}`).pipe(
+              catchError(() => {
+                patchState(store, { ingestLoading: false });
+                return EMPTY;
+              })
+            )
           ),
           tap((preview) =>
             patchState(store, { ingestPreview: preview, ingestLoading: false })
@@ -281,7 +301,9 @@ export const BookmarksStore = signalStore(
       commitIngest: rxMethod<{ previewId: string; resolutions: IngestResolutionInput[] }>(
         pipe(
           switchMap(({ previewId, resolutions }) =>
-            http.post<CommitResult>(`/api/bookmarks/ingest/${previewId}/commit`, { resolutions })
+            http.post<CommitResult>(`/api/bookmarks/ingest/${previewId}/commit`, { resolutions }).pipe(
+              catchError(() => EMPTY)
+            )
           ),
           tap(() => {
             patchState(store, { ingestPreview: null });
@@ -298,7 +320,7 @@ export const BookmarksStore = signalStore(
             apollo.query({
               query: ExportBookmarksDocument,
               fetchPolicy: 'no-cache',
-            })
+            }).pipe(catchError(() => EMPTY))
           ),
           tap((result: any) => {
             const blob = new Blob([result.data.exportBookmarks], { type: 'text/html' });

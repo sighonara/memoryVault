@@ -12,11 +12,12 @@ query GetBookmarks($query: String, $tags: [String]) {
   }
 }
 
-mutation CreateBookmark($url: String!, $title: String, $tags: [String]) {
-  addBookmark(url: $url, title: $title, tags: $tags) {
+mutation CreateBookmark($url: String!, $title: String, $tags: [String], $folderId: UUID) {
+  addBookmark(url: $url, title: $title, tags: $tags, folderId: $folderId) {
     id
     url
     title
+    folderId
   }
 }
 

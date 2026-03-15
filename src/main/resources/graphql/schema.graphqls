@@ -34,7 +34,7 @@ type Mutation {
     login(email: String!, password: String!): LoginResponse!
 
     # Bookmarks
-    addBookmark(url: String!, title: String, tags: [String]): Bookmark!
+    addBookmark(url: String!, title: String, tags: [String], folderId: UUID): Bookmark!
     tagBookmark(id: UUID!, tags: [String!]!): Bookmark
     deleteBookmark(id: UUID!): Bookmark
     createFolder(name: String!, parentId: UUID): Folder!

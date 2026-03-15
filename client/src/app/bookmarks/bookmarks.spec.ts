@@ -11,6 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { BookmarksComponent } from './bookmarks';
 import { BookmarksStore } from './bookmarks.store';
@@ -30,6 +31,7 @@ describe('BookmarksComponent', () => {
     ingestPreview: signal(null),
     ingestLoading: signal(false),
     pendingIngests: signal([] as any[]),
+    unfiledCount: signal(0),
     loadBookmarks: vi.fn(),
     loadFolders: vi.fn(),
     loadPendingIngests: vi.fn(),
@@ -74,6 +76,7 @@ describe('BookmarksComponent', () => {
             MatChipsModule,
             MatProgressSpinnerModule,
             MatToolbarModule,
+            MatMenuModule,
             MatSnackBarModule,
           ],
           schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -128,13 +131,13 @@ describe('BookmarksComponent', () => {
   });
 
   it('should open add dialog and add bookmark on close', () => {
-    const dialogRef = { afterClosed: () => of({ url: 'https://new.com', title: 'New' }) };
+    const dialogRef = { afterClosed: () => of({ url: 'https://new.com', title: 'New', tags: [], folderId: undefined }) };
     mockDialog.open.mockReturnValue(dialogRef);
 
     component.openAddDialog();
 
     expect(mockDialog.open).toHaveBeenCalled();
-    expect(mockStore.addBookmark).toHaveBeenCalledWith({ url: 'https://new.com', title: 'New' });
+    expect(mockStore.addBookmark).toHaveBeenCalledWith({ url: 'https://new.com', title: 'New', tags: [], folderId: undefined });
   });
 
   it('should not add bookmark when dialog is cancelled', () => {

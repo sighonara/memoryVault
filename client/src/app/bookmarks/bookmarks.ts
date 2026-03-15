@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { BookmarksStore } from './bookmarks.store';
 import { BookmarkDialogComponent } from './bookmark-dialog';
@@ -26,6 +27,7 @@ import { ConflictReviewComponent } from './conflict-review';
     MatChipsModule,
     MatProgressSpinnerModule,
     MatToolbarModule,
+    MatMenuModule,
     MatSnackBarModule,
     RouterLink,
     BookmarkTreeComponent,
@@ -56,9 +58,17 @@ import { ConflictReviewComponent } from './conflict-review';
           <span class="result-count">{{ store.filteredBookmarks().length }} result(s)</span>
         }
         <span class="spacer"></span>
-        <button mat-stroked-button (click)="openAddDialog()">
+        <button mat-stroked-button [matMenuTriggerFor]="addMenu">
           <mat-icon>add</mat-icon> Add
         </button>
+        <mat-menu #addMenu="matMenu">
+          <button mat-menu-item (click)="openAddDialog()">
+            <mat-icon>bookmark_add</mat-icon> Add Bookmark
+          </button>
+          <button mat-menu-item (click)="openNewFolderDialog()">
+            <mat-icon>create_new_folder</mat-icon> New Folder
+          </button>
+        </mat-menu>
       </mat-toolbar>
 
       @if (getAllTags().length > 0) {
@@ -84,6 +94,7 @@ import { ConflictReviewComponent } from './conflict-review';
           <div class="tree-panel">
             <app-bookmark-tree
               [folders]="store.folders()"
+              [unfiledCount]="store.unfiledCount()"
               (folderSelected)="store.selectFolder($event)"
               (contextAction)="onFolderAction($event)" />
           </div>
@@ -96,6 +107,7 @@ import { ConflictReviewComponent } from './conflict-review';
             } @else {
               <app-bookmark-list
                 [bookmarks]="store.filteredBookmarks()"
+                [folders]="store.folders()"
                 (bookmarkDeleted)="deleteBookmark($event)"
                 (bookmarkMoved)="store.moveBookmark($event)"
                 (bulkDeleted)="bulkDelete($event)" />
@@ -222,11 +234,29 @@ export class BookmarksComponent implements OnInit {
   }
 
   openAddDialog() {
-    const dialogRef = this.dialog.open(BookmarkDialogComponent, { width: '420px' });
+    const currentFolderId = this.store.selectedFolderId();
+    const dialogRef = this.dialog.open(BookmarkDialogComponent, {
+      width: '420px',
+      data: {
+        folders: this.store.folders(),
+        currentFolderId: currentFolderId === 'unfiled' ? null : currentFolderId,
+      },
+    });
     dialogRef.afterClosed().pipe(
       takeUntilDestroyed(this.destroyRef),
-      filter((result): result is { url: string; title?: string; tags?: string[] } => !!result)
+      filter((result): result is { url: string; title?: string; tags?: string[]; folderId?: string } => !!result)
     ).subscribe(result => this.store.addBookmark(result));
+  }
+
+  openNewFolderDialog() {
+    const name = prompt('Folder name:');
+    if (name) {
+      const parentId = this.store.selectedFolderId();
+      this.store.createFolder({
+        name,
+        parentId: (parentId && parentId !== 'unfiled') ? parentId : undefined,
+      });
+    }
   }
 
   deleteBookmark(id: string) {
