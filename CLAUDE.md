@@ -26,11 +26,12 @@ Located in `src/`.
 ```
 src/main/kotlin/org/sightech/memoryvault/
 ├── mcp/           # Spring AI @Tool classes (one per domain)
+├── graphql/       # Spring for GraphQL resolvers
 ├── <domain>/
-│   ├── entity/
+│   ├── entity/    # JPA entities (e.g. Bookmark, Folder, IngestPreviewEntity)
 │   ├── repository/
-│   ├── service/
-│   └── controller/
+│   ├── service/   # Business logic (e.g. BookmarkService, IngestService)
+│   └── controller/ # REST controllers (e.g. IngestController)
 ```
 
 ### Commands
@@ -83,6 +84,7 @@ Located in `client/`.
 - No `subscribe()` in components
 - **NgRx Signal Store**: In `withMethods`, the `store` parameter only has state/computed signals — NOT other methods. To call one method from another, define methods as local `const` variables in the closure, then reference them directly. Never use `(store as any).methodName()`.
 - **Search**: Use `(input)` event with 300ms debounce via `setTimeout`/`clearTimeout` for search inputs (consistent across all features)
+- **Bookmarks feature** has sub-components: `bookmark-tree/`, `bookmark-list/`, `ingest-panel/`, `conflict-review/` — each with barrel export (`index.ts`)
 
 ---
 

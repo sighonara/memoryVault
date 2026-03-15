@@ -226,7 +226,7 @@ PostgreSQL full-text search, system stats, job history tracking with SyncJob ent
 JWT authentication (jjwt, BCrypt), Spring for GraphQL (schema-first), Angular 21 frontend (zoneless, Angular Material, NgRx Signal Store, Apollo Angular, graphql-codegen). Pages: login, feed reader, bookmarks, YouTube archive, admin (jobs/logs/stats), global search. Auth interceptor handles token injection and redirects to login on 401/403.
 
 ### Phase 6 — Bookmark Management
-Folder hierarchy (adjacency list), full bookmark manager UI (two-panel tree + list), browser bookmark ingestion via CLI commands generated in the UI (Chrome, Firefox, Safari, Opera, Edge, Brave), conflict resolution with preview/commit flow, Netscape HTML export with folder structure. See `docs/superpowers/specs/2026-03-11-phase-6-bookmark-management-design.md`.
+Folder hierarchy (adjacency list with cycle detection), full bookmark manager UI (two-panel tree + list), browser bookmark ingestion via CLI commands generated in the UI (Chrome, Brave, Firefox, Safari), conflict resolution with preview/commit flow, Netscape HTML export with folder structure, pending ingest notification banner. See `docs/plans/2026-03-11-phase-6-bookmark-management.md`.
 
 ### Phase 7 — Mirror OldReader functionality
 Import feeds. Export feeds. Support (or stubs for) OAuth from social media logins. Supporting 3rd party integrations (unclear about what all these are). Other (need to research)?

@@ -2519,7 +2519,7 @@ git commit -m "chore: barrel exports and route updates for bookmarks"
 
 **Prerequisites:** Backend must be running (`./gradlew bootRun`)
 
-- [ ] **Step 1: Write E2E tests**
+- [x] **Step 1: Write E2E tests**
 
 Test cases:
 
@@ -2553,12 +2553,12 @@ Test cases:
 **Export:**
 - Click export button, verify file download triggers
 
-- [ ] **Step 2: Run E2E tests**
+- [x] **Step 2: Run E2E tests**
 
 Run: `cd client && npm run e2e`
 Expected: All pass
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```
 git add client/e2e/bookmarks.spec.ts
@@ -2573,17 +2573,17 @@ git commit -m "test: Playwright E2E tests for bookmark management"
 - Modify: `docs/plans/2026-03-05-tooling-first-design.md` (mark Phase 6 complete when done)
 - Modify: `CLAUDE.md` (if any new commands or conventions)
 
-- [ ] **Step 1: Update master roadmap**
+- [x] **Step 1: Update master roadmap**
 
 Mark Phase 6 status as complete in the master design doc.
 
-- [ ] **Step 2: Update CLAUDE.md**
+- [x] **Step 2: Update CLAUDE.md**
 
 Add to the Backend package structure: `bookmark/entity/Folder.kt`, `bookmark/service/IngestService.kt`, `bookmark/controller/IngestController.kt`
 
 Add to Frontend component structure note: the bookmarks feature now has sub-components (bookmark-tree, bookmark-list, ingest-panel, conflict-review)
 
-- [ ] **Step 3: Update MEMORY.md**
+- [x] **Step 3: Update MEMORY.md**
 
 Add a "Phase 6 Completed (Bookmark Management)" section with key technical facts:
 - Folder entity: adjacency list (parentId), cycle detection via ancestor walk
@@ -2594,12 +2594,12 @@ Add a "Phase 6 Completed (Bookmark Management)" section with key technical facts
 - CLI command generation: fully client-side (token from AuthService, URL from window.location.origin)
 - ObjectMapper: inject Spring-configured bean, don't instantiate inline (Spring Boot 4.x uses `tools.jackson.databind.ObjectMapper`)
 
-- [ ] **Step 4: Run full test suite**
+- [x] **Step 4: Run full test suite**
 
 Run: `./scripts/test-all.sh`
 Expected: All tests pass across all services
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```
 git add docs/plans/2026-03-05-tooling-first-design.md CLAUDE.md
