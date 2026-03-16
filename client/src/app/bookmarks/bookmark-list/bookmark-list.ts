@@ -19,6 +19,33 @@ export function sortByOrder<T extends { sortOrder: number }>(items: T[]): T[] {
   return [...items].sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
+export interface FolderMenuItem {
+  id: string;
+  name: string;
+  path: string;
+  depth: number;
+}
+
+export function buildFolderMenuItems(folders: Folder[]): FolderMenuItem[] {
+  const byParent = new Map<string | null, Folder[]>();
+  for (const f of folders) {
+    const key = f.parentId ?? null;
+    if (!byParent.has(key)) byParent.set(key, []);
+    byParent.get(key)!.push(f);
+  }
+  const result: FolderMenuItem[] = [];
+  function walk(parentId: string | null, depth: number, pathPrefix: string) {
+    const children = byParent.get(parentId) ?? [];
+    for (const child of children.sort((a, b) => a.sortOrder - b.sortOrder)) {
+      const path = pathPrefix ? `${pathPrefix} / ${child.name}` : child.name;
+      result.push({ id: child.id, name: child.name, path, depth });
+      walk(child.id, depth + 1, path);
+    }
+  }
+  walk(null, 0, '');
+  return result;
+}
+
 @Component({
   selector: 'app-bookmark-list',
   standalone: true,
@@ -46,9 +73,11 @@ export function sortByOrder<T extends { sortOrder: number }>(items: T[]): T[] {
           <mat-icon>close</mat-icon>
         </button>
         <mat-menu #bulkMoveMenu="matMenu">
-          @for (folder of folders(); track folder.id) {
-            <button mat-menu-item (click)="bulkMoved.emit({ ids: Array.from(selectedIds()), folderId: folder.id })">
-              <mat-icon>folder</mat-icon> {{ folder.name }}
+          @for (item of folderMenuItems(); track item.id) {
+            <button mat-menu-item
+                    [style.padding-left.px]="16 + item.depth * 20"
+                    (click)="bulkMoved.emit({ ids: Array.from(selectedIds()), folderId: item.id })">
+              <mat-icon>folder</mat-icon> {{ item.name }}
             </button>
           }
           @if (hasFolderedSelection()) {
@@ -100,9 +129,11 @@ export function sortByOrder<T extends { sortOrder: number }>(items: T[]): T[] {
             </button>
           </mat-menu>
           <mat-menu #moveSubmenu="matMenu">
-            @for (folder of folders(); track folder.id) {
-              <button mat-menu-item (click)="bookmarkMoved.emit({ id: bookmark.id, folderId: folder.id })">
-                {{ folder.name }}
+            @for (item of folderMenuItems(); track item.id) {
+              <button mat-menu-item
+                      [style.padding-left.px]="16 + item.depth * 20"
+                      (click)="bookmarkMoved.emit({ id: bookmark.id, folderId: item.id })">
+                <mat-icon>folder</mat-icon> {{ item.name }}
               </button>
             }
             @empty {
@@ -179,6 +210,8 @@ export class BookmarkListComponent {
   protected Array = Array;
 
   sortedBookmarks = computed(() => sortByOrder(this.bookmarks()));
+
+  folderMenuItems = computed(() => buildFolderMenuItems(this.folders()));
 
   hasFolderedSelection = computed(() => {
     const ids = this.selectedIds();

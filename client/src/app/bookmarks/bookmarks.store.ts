@@ -191,7 +191,7 @@ export const BookmarksStore = signalStore(
               variables,
             }).pipe(catchError(() => EMPTY))
           ),
-          tap(() => loadBookmarks())
+          tap(() => { loadBookmarks(); loadFolders(); })
         )
       ),
 
@@ -203,7 +203,7 @@ export const BookmarksStore = signalStore(
               variables: { id },
             }).pipe(catchError(() => EMPTY))
           ),
-          tap(() => loadBookmarks())
+          tap(() => { loadBookmarks(); loadFolders(); })
         )
       ),
 
@@ -277,7 +277,7 @@ export const BookmarksStore = signalStore(
               variables: input,
             }).pipe(catchError(() => EMPTY))
           ),
-          tap(() => loadBookmarks())
+          tap(() => { loadBookmarks(); loadFolders(); })
         )
       ),
 

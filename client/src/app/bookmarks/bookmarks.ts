@@ -110,6 +110,7 @@ import { ConflictReviewComponent } from './conflict-review';
                 [folders]="store.folders()"
                 (bookmarkDeleted)="deleteBookmark($event)"
                 (bookmarkMoved)="store.moveBookmark($event)"
+                (bulkMoved)="bulkMove($event)"
                 (bulkDeleted)="bulkDelete($event)" />
             }
           </div>
@@ -263,6 +264,10 @@ export class BookmarksComponent implements OnInit {
     if (confirm('Delete this bookmark?')) {
       this.store.deleteBookmark(id);
     }
+  }
+
+  bulkMove(event: { ids: string[]; folderId: string | null }) {
+    event.ids.forEach(id => this.store.moveBookmark({ id, folderId: event.folderId ?? undefined }));
   }
 
   bulkDelete(ids: string[]) {
