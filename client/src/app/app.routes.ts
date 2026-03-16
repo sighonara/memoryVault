@@ -19,7 +19,7 @@ export const routes: Routes = [
       },
       {
         path: 'bookmarks',
-        loadComponent: () => import('./bookmarks/bookmarks').then(m => m.BookmarksComponent)
+        loadChildren: () => import('./bookmarks/bookmarks.routes').then(m => m.BOOKMARKS_ROUTES)
       },
       {
         path: 'youtube',

@@ -22,11 +22,20 @@ export type Scalars = {
 export type Bookmark = {
   __typename?: 'Bookmark';
   createdAt: Scalars['Instant']['output'];
+  folderId?: Maybe<Scalars['UUID']['output']>;
   id: Scalars['UUID']['output'];
+  sortOrder: Scalars['Int']['output'];
   tags: Array<Tag>;
   title?: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['Instant']['output'];
   url: Scalars['String']['output'];
+};
+
+export type CommitResult = {
+  __typename?: 'CommitResult';
+  accepted: Scalars['Int']['output'];
+  skipped: Scalars['Int']['output'];
+  undeleted: Scalars['Int']['output'];
 };
 
 export type Feed = {
@@ -67,6 +76,72 @@ export type FeedWithUnread = {
   unreadCount: Scalars['Int']['output'];
 };
 
+export type Folder = {
+  __typename?: 'Folder';
+  bookmarkCount: Scalars['Int']['output'];
+  bookmarks: Array<Bookmark>;
+  children: Array<Folder>;
+  id: Scalars['UUID']['output'];
+  name: Scalars['String']['output'];
+  parentId?: Maybe<Scalars['UUID']['output']>;
+  sortOrder: Scalars['Int']['output'];
+};
+
+export enum IngestAction {
+  Accept = 'ACCEPT',
+  Skip = 'SKIP',
+  Undelete = 'UNDELETE'
+}
+
+export type IngestBookmarkInputGql = {
+  browserFolder?: InputMaybe<Scalars['String']['input']>;
+  title: Scalars['String']['input'];
+  url: Scalars['String']['input'];
+};
+
+export type IngestInput = {
+  bookmarks: Array<IngestBookmarkInputGql>;
+};
+
+export type IngestItem = {
+  __typename?: 'IngestItem';
+  browserFolder?: Maybe<Scalars['String']['output']>;
+  existingBookmarkId?: Maybe<Scalars['UUID']['output']>;
+  status: IngestStatus;
+  suggestedFolderId?: Maybe<Scalars['UUID']['output']>;
+  title: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+};
+
+export type IngestPreview = {
+  __typename?: 'IngestPreview';
+  items: Array<IngestItem>;
+  previewId: Scalars['UUID']['output'];
+  summary: IngestSummary;
+};
+
+export type IngestResolutionInput = {
+  action: IngestAction;
+  url: Scalars['String']['input'];
+};
+
+export enum IngestStatus {
+  Moved = 'MOVED',
+  New = 'NEW',
+  PreviouslyDeleted = 'PREVIOUSLY_DELETED',
+  TitleChanged = 'TITLE_CHANGED',
+  Unchanged = 'UNCHANGED'
+}
+
+export type IngestSummary = {
+  __typename?: 'IngestSummary';
+  movedCount: Scalars['Int']['output'];
+  newCount: Scalars['Int']['output'];
+  previouslyDeletedCount: Scalars['Int']['output'];
+  titleChangedCount: Scalars['Int']['output'];
+  unchangedCount: Scalars['Int']['output'];
+};
+
 export type LogEntry = {
   __typename?: 'LogEntry';
   level: Scalars['String']['output'];
@@ -89,21 +164,29 @@ export type Mutation = {
   addBookmark: Bookmark;
   addFeed: Feed;
   addYoutubeList: YoutubeListAddResult;
+  commitIngest: CommitResult;
+  createFolder: Folder;
   deleteBookmark?: Maybe<Bookmark>;
   deleteFeed?: Maybe<Feed>;
+  deleteFolder: Scalars['Boolean']['output'];
   deleteYoutubeList?: Maybe<YoutubeList>;
-  exportBookmarks: Scalars['String']['output'];
+  ingestBookmarks: IngestPreview;
   login: LoginResponse;
   markFeedRead: Scalars['Int']['output'];
   markItemRead?: Maybe<FeedItem>;
   markItemUnread?: Maybe<FeedItem>;
+  moveBookmark: Bookmark;
+  moveFolder: Folder;
   refreshFeed: Array<FeedRefreshResult>;
   refreshYoutubeList: Array<SyncResult>;
+  renameFolder: Folder;
+  reorderBookmarks: Array<Bookmark>;
   tagBookmark?: Maybe<Bookmark>;
 };
 
 
 export type MutationAddBookmarkArgs = {
+  folderId?: InputMaybe<Scalars['UUID']['input']>;
   tags?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
   title?: InputMaybe<Scalars['String']['input']>;
   url: Scalars['String']['input'];
@@ -120,6 +203,18 @@ export type MutationAddYoutubeListArgs = {
 };
 
 
+export type MutationCommitIngestArgs = {
+  previewId: Scalars['UUID']['input'];
+  resolutions: Array<IngestResolutionInput>;
+};
+
+
+export type MutationCreateFolderArgs = {
+  name: Scalars['String']['input'];
+  parentId?: InputMaybe<Scalars['UUID']['input']>;
+};
+
+
 export type MutationDeleteBookmarkArgs = {
   id: Scalars['UUID']['input'];
 };
@@ -130,8 +225,18 @@ export type MutationDeleteFeedArgs = {
 };
 
 
+export type MutationDeleteFolderArgs = {
+  id: Scalars['UUID']['input'];
+};
+
+
 export type MutationDeleteYoutubeListArgs = {
   listId: Scalars['UUID']['input'];
+};
+
+
+export type MutationIngestBookmarksArgs = {
+  input: IngestInput;
 };
 
 
@@ -156,6 +261,18 @@ export type MutationMarkItemUnreadArgs = {
 };
 
 
+export type MutationMoveBookmarkArgs = {
+  folderId?: InputMaybe<Scalars['UUID']['input']>;
+  id: Scalars['UUID']['input'];
+};
+
+
+export type MutationMoveFolderArgs = {
+  id: Scalars['UUID']['input'];
+  newParentId?: InputMaybe<Scalars['UUID']['input']>;
+};
+
+
 export type MutationRefreshFeedArgs = {
   feedId?: InputMaybe<Scalars['UUID']['input']>;
 };
@@ -163,6 +280,18 @@ export type MutationRefreshFeedArgs = {
 
 export type MutationRefreshYoutubeListArgs = {
   listId?: InputMaybe<Scalars['UUID']['input']>;
+};
+
+
+export type MutationRenameFolderArgs = {
+  id: Scalars['UUID']['input'];
+  name: Scalars['String']['input'];
+};
+
+
+export type MutationReorderBookmarksArgs = {
+  bookmarkIds: Array<Scalars['UUID']['input']>;
+  folderId?: InputMaybe<Scalars['UUID']['input']>;
 };
 
 
@@ -174,10 +303,14 @@ export type MutationTagBookmarkArgs = {
 export type Query = {
   __typename?: 'Query';
   bookmarks: Array<Bookmark>;
+  exportBookmarks: Scalars['String']['output'];
   feedItems: Array<FeedItem>;
   feeds: Array<FeedWithUnread>;
+  folder?: Maybe<Folder>;
+  folders: Array<Folder>;
   jobs: Array<SyncJob>;
   logs: Array<LogEntry>;
+  pendingIngests: Array<IngestPreview>;
   search: Array<SearchResult>;
   stats: SystemStats;
   videoStatus?: Maybe<Video>;
@@ -196,6 +329,11 @@ export type QueryFeedItemsArgs = {
   feedId: Scalars['UUID']['input'];
   limit?: InputMaybe<Scalars['Int']['input']>;
   unreadOnly?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+export type QueryFolderArgs = {
+  id: Scalars['UUID']['input'];
 };
 
 
@@ -354,16 +492,17 @@ export type GetBookmarksQueryVariables = Exact<{
 }>;
 
 
-export type GetBookmarksQuery = { __typename?: 'Query', bookmarks: Array<{ __typename?: 'Bookmark', id: any, url: string, title?: string | null, createdAt: any, tags: Array<{ __typename?: 'Tag', name: string }> }> };
+export type GetBookmarksQuery = { __typename?: 'Query', bookmarks: Array<{ __typename?: 'Bookmark', id: any, url: string, title?: string | null, folderId?: any | null, sortOrder: number, createdAt: any, tags: Array<{ __typename?: 'Tag', name: string }> }> };
 
 export type CreateBookmarkMutationVariables = Exact<{
   url: Scalars['String']['input'];
   title?: InputMaybe<Scalars['String']['input']>;
   tags?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>> | InputMaybe<Scalars['String']['input']>>;
+  folderId?: InputMaybe<Scalars['UUID']['input']>;
 }>;
 
 
-export type CreateBookmarkMutation = { __typename?: 'Mutation', addBookmark: { __typename?: 'Bookmark', id: any, url: string, title?: string | null } };
+export type CreateBookmarkMutation = { __typename?: 'Mutation', addBookmark: { __typename?: 'Bookmark', id: any, url: string, title?: string | null, folderId?: any | null } };
 
 export type DeleteBookmarkMutationVariables = Exact<{
   id: Scalars['UUID']['input'];
@@ -376,6 +515,60 @@ export type GetSystemStatsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type GetSystemStatsQuery = { __typename?: 'Query', stats: { __typename?: 'SystemStats', bookmarkCount: number, tagCount: number } };
+
+export type GetFoldersQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetFoldersQuery = { __typename?: 'Query', folders: Array<{ __typename?: 'Folder', id: any, name: string, parentId?: any | null, bookmarkCount: number, sortOrder: number }> };
+
+export type CreateFolderMutationVariables = Exact<{
+  name: Scalars['String']['input'];
+  parentId?: InputMaybe<Scalars['UUID']['input']>;
+}>;
+
+
+export type CreateFolderMutation = { __typename?: 'Mutation', createFolder: { __typename?: 'Folder', id: any, name: string, parentId?: any | null, sortOrder: number } };
+
+export type RenameFolderMutationVariables = Exact<{
+  id: Scalars['UUID']['input'];
+  name: Scalars['String']['input'];
+}>;
+
+
+export type RenameFolderMutation = { __typename?: 'Mutation', renameFolder: { __typename?: 'Folder', id: any, name: string } };
+
+export type MoveFolderMutationVariables = Exact<{
+  id: Scalars['UUID']['input'];
+  newParentId?: InputMaybe<Scalars['UUID']['input']>;
+}>;
+
+
+export type MoveFolderMutation = { __typename?: 'Mutation', moveFolder: { __typename?: 'Folder', id: any, parentId?: any | null } };
+
+export type DeleteFolderMutationVariables = Exact<{
+  id: Scalars['UUID']['input'];
+}>;
+
+
+export type DeleteFolderMutation = { __typename?: 'Mutation', deleteFolder: boolean };
+
+export type MoveBookmarkMutationVariables = Exact<{
+  id: Scalars['UUID']['input'];
+  folderId?: InputMaybe<Scalars['UUID']['input']>;
+}>;
+
+
+export type MoveBookmarkMutation = { __typename?: 'Mutation', moveBookmark: { __typename?: 'Bookmark', id: any, folderId?: any | null } };
+
+export type ExportBookmarksQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type ExportBookmarksQuery = { __typename?: 'Query', exportBookmarks: string };
+
+export type GetPendingIngestsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetPendingIngestsQuery = { __typename?: 'Query', pendingIngests: Array<{ __typename?: 'IngestPreview', previewId: any, summary: { __typename?: 'IngestSummary', newCount: number, unchangedCount: number, movedCount: number, titleChangedCount: number, previouslyDeletedCount: number } }> };
 
 export type GetFeedsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -525,6 +718,8 @@ export const GetBookmarksDocument = gql`
     id
     url
     title
+    folderId
+    sortOrder
     tags {
       name
     }
@@ -544,11 +739,12 @@ export const GetBookmarksDocument = gql`
     }
   }
 export const CreateBookmarkDocument = gql`
-    mutation CreateBookmark($url: String!, $title: String, $tags: [String]) {
-  addBookmark(url: $url, title: $title, tags: $tags) {
+    mutation CreateBookmark($url: String!, $title: String, $tags: [String], $folderId: UUID) {
+  addBookmark(url: $url, title: $title, tags: $tags, folderId: $folderId) {
     id
     url
     title
+    folderId
   }
 }
     `;
@@ -595,6 +791,163 @@ export const GetSystemStatsDocument = gql`
   })
   export class GetSystemStatsGQL extends Apollo.Query<GetSystemStatsQuery, GetSystemStatsQueryVariables> {
     document = GetSystemStatsDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const GetFoldersDocument = gql`
+    query GetFolders {
+  folders {
+    id
+    name
+    parentId
+    bookmarkCount
+    sortOrder
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class GetFoldersGQL extends Apollo.Query<GetFoldersQuery, GetFoldersQueryVariables> {
+    document = GetFoldersDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const CreateFolderDocument = gql`
+    mutation CreateFolder($name: String!, $parentId: UUID) {
+  createFolder(name: $name, parentId: $parentId) {
+    id
+    name
+    parentId
+    sortOrder
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class CreateFolderGQL extends Apollo.Mutation<CreateFolderMutation, CreateFolderMutationVariables> {
+    document = CreateFolderDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const RenameFolderDocument = gql`
+    mutation RenameFolder($id: UUID!, $name: String!) {
+  renameFolder(id: $id, name: $name) {
+    id
+    name
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class RenameFolderGQL extends Apollo.Mutation<RenameFolderMutation, RenameFolderMutationVariables> {
+    document = RenameFolderDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const MoveFolderDocument = gql`
+    mutation MoveFolder($id: UUID!, $newParentId: UUID) {
+  moveFolder(id: $id, newParentId: $newParentId) {
+    id
+    parentId
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class MoveFolderGQL extends Apollo.Mutation<MoveFolderMutation, MoveFolderMutationVariables> {
+    document = MoveFolderDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const DeleteFolderDocument = gql`
+    mutation DeleteFolder($id: UUID!) {
+  deleteFolder(id: $id)
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class DeleteFolderGQL extends Apollo.Mutation<DeleteFolderMutation, DeleteFolderMutationVariables> {
+    document = DeleteFolderDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const MoveBookmarkDocument = gql`
+    mutation MoveBookmark($id: UUID!, $folderId: UUID) {
+  moveBookmark(id: $id, folderId: $folderId) {
+    id
+    folderId
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class MoveBookmarkGQL extends Apollo.Mutation<MoveBookmarkMutation, MoveBookmarkMutationVariables> {
+    document = MoveBookmarkDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const ExportBookmarksDocument = gql`
+    query ExportBookmarks {
+  exportBookmarks
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class ExportBookmarksGQL extends Apollo.Query<ExportBookmarksQuery, ExportBookmarksQueryVariables> {
+    document = ExportBookmarksDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const GetPendingIngestsDocument = gql`
+    query GetPendingIngests {
+  pendingIngests {
+    previewId
+    summary {
+      newCount
+      unchangedCount
+      movedCount
+      titleChangedCount
+      previouslyDeletedCount
+    }
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class GetPendingIngestsGQL extends Apollo.Query<GetPendingIngestsQuery, GetPendingIngestsQueryVariables> {
+    document = GetPendingIngestsDocument;
     
     constructor(apollo: Apollo.Apollo) {
       super(apollo);

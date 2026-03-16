@@ -1,8 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { provideRouter } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { signal } from '@angular/core';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { CUSTOM_ELEMENTS_SCHEMA, DestroyRef, signal } from '@angular/core';
 import { of } from 'rxjs';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { BookmarksComponent } from './bookmarks';
 import { BookmarksStore } from './bookmarks.store';
 
@@ -12,17 +22,39 @@ describe('BookmarksComponent', () => {
 
   const mockStore = {
     bookmarks: signal([] as any[]),
+    folders: signal([] as any[]),
+    selectedFolderId: signal(null as string | null),
+    filteredBookmarks: signal([] as any[]),
     loading: signal(false),
     searchQuery: signal(''),
     selectedTags: signal([] as string[]),
+    ingestPreview: signal(null),
+    ingestLoading: signal(false),
+    pendingIngests: signal([] as any[]),
+    unfiledCount: signal(0),
     loadBookmarks: vi.fn(),
+    loadFolders: vi.fn(),
+    loadPendingIngests: vi.fn(),
+    selectFolder: vi.fn(),
     setSearchQuery: vi.fn(),
     toggleTag: vi.fn(),
     addBookmark: vi.fn(),
     deleteBookmark: vi.fn(),
+    createFolder: vi.fn(),
+    renameFolder: vi.fn(),
+    moveFolder: vi.fn(),
+    deleteFolder: vi.fn(),
+    moveBookmark: vi.fn(),
+    fetchIngestPreview: vi.fn(),
+    commitIngest: vi.fn(),
+    exportBookmarks: vi.fn(),
   };
 
   const mockDialog = {
+    open: vi.fn(),
+  };
+
+  const mockSnackBar = {
     open: vi.fn(),
   };
 
@@ -30,13 +62,28 @@ describe('BookmarksComponent', () => {
     vi.clearAllMocks();
     await TestBed.configureTestingModule({
       imports: [BookmarksComponent],
-      providers: [provideNoopAnimations()],
+      providers: [
+        provideNoopAnimations(),
+        provideRouter([]),
+      ],
     })
       .overrideComponent(BookmarksComponent, {
         set: {
+          imports: [
+            MatDialogModule,
+            MatButtonModule,
+            MatIconModule,
+            MatChipsModule,
+            MatProgressSpinnerModule,
+            MatToolbarModule,
+            MatMenuModule,
+            MatSnackBarModule,
+          ],
+          schemas: [CUSTOM_ELEMENTS_SCHEMA],
           providers: [
             { provide: BookmarksStore, useValue: mockStore },
             { provide: MatDialog, useValue: mockDialog },
+            { provide: MatSnackBar, useValue: mockSnackBar },
           ],
         },
       })
@@ -51,14 +98,19 @@ describe('BookmarksComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should call loadBookmarks on init', () => {
+  it('should call loadBookmarks and loadFolders on init', () => {
     expect(mockStore.loadBookmarks).toHaveBeenCalled();
+    expect(mockStore.loadFolders).toHaveBeenCalled();
   });
 
-  it('should delegate search to store', () => {
+  it('should delegate search to store after debounce', () => {
+    vi.useFakeTimers();
     const event = { target: { value: 'test query' } };
     component.onSearch(event);
+    expect(mockStore.setSearchQuery).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(300);
     expect(mockStore.setSearchQuery).toHaveBeenCalledWith('test query');
+    vi.useRealTimers();
   });
 
   it('should delegate toggleTag to store', () => {
@@ -79,13 +131,13 @@ describe('BookmarksComponent', () => {
   });
 
   it('should open add dialog and add bookmark on close', () => {
-    const dialogRef = { afterClosed: () => of({ url: 'https://new.com', title: 'New' }) };
+    const dialogRef = { afterClosed: () => of({ url: 'https://new.com', title: 'New', tags: [], folderId: undefined }) };
     mockDialog.open.mockReturnValue(dialogRef);
 
     component.openAddDialog();
 
     expect(mockDialog.open).toHaveBeenCalled();
-    expect(mockStore.addBookmark).toHaveBeenCalledWith({ url: 'https://new.com', title: 'New' });
+    expect(mockStore.addBookmark).toHaveBeenCalledWith({ url: 'https://new.com', title: 'New', tags: [], folderId: undefined });
   });
 
   it('should not add bookmark when dialog is cancelled', () => {
@@ -97,24 +149,24 @@ describe('BookmarksComponent', () => {
     expect(mockStore.addBookmark).not.toHaveBeenCalled();
   });
 
-  it('should show empty state when no bookmarks and not loading', () => {
-    mockStore.bookmarks.set([]);
+  it('should render tree and list panels when not loading', () => {
     mockStore.loading.set(false);
     fixture.detectChanges();
 
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.querySelector('.empty-state')).toBeTruthy();
+    expect(el.querySelector('.bookmark-manager')).toBeTruthy();
+    expect(el.querySelector('app-bookmark-tree')).toBeTruthy();
+    expect(el.querySelector('app-bookmark-list')).toBeTruthy();
   });
 
-  it('should render bookmark rows', () => {
-    mockStore.bookmarks.set([
-      { id: '1', url: 'https://example.com', title: 'Example', tags: [] },
-    ]);
-    mockStore.loading.set(false);
-    fixture.detectChanges();
-
+  it('should render ingest panel', () => {
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.querySelector('.bookmark-row')).toBeTruthy();
-    expect(el.querySelector('.bookmark-title')?.textContent).toContain('Example');
+    expect(el.querySelector('app-ingest-panel')).toBeTruthy();
+  });
+
+  it('should handle folder context actions', () => {
+    vi.spyOn(window, 'prompt').mockReturnValue('TestFolder');
+    component.onFolderAction({ action: 'new', folderId: null });
+    expect(mockStore.createFolder).toHaveBeenCalledWith({ name: 'TestFolder', parentId: undefined });
   });
 });

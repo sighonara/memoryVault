@@ -225,19 +225,24 @@ PostgreSQL full-text search, system stats, job history tracking with SyncJob ent
 ### Phase 5 — Web UI + Auth
 JWT authentication (jjwt, BCrypt), Spring for GraphQL (schema-first), Angular 21 frontend (zoneless, Angular Material, NgRx Signal Store, Apollo Angular, graphql-codegen). Pages: login, feed reader, bookmarks, YouTube archive, admin (jobs/logs/stats), global search. Auth interceptor handles token injection and redirects to login on 401/403.
 
-### Phase 6 — Bookmark Automation
-Automatically import bookmarks from browsers and integrate with existing ones.
+### Phase 6 — Bookmark Management
+Folder hierarchy (adjacency list with cycle detection), full bookmark manager UI (two-panel tree + list), browser bookmark ingestion via CLI commands generated in the UI (Chrome, Brave, Firefox, Safari), conflict resolution with preview/commit flow, Netscape HTML export with folder structure, pending ingest notification banner. See `docs/plans/2026-03-11-phase-6-bookmark-management.md`.
 
-### Phase 7 — Infrastructure
-Terraform, GitHub Actions CI/CD, production AWS deployment (EC2, RDS, S3, Lambda, EventBridge). AWS Cognito auth swap (CurrentUser abstraction is already in place), CloudWatch log retrieval (LocalLogService/CloudWatchLogService interface is stubbed), AWS cost tracking (AwsCostRecord entity defined but not implemented).
+### Phase 7 — Mirror OldReader functionality
+Import feeds. Export feeds. Support (or stubs for) OAuth from social media logins. Supporting 3rd party integrations (unclear about what all these are). Other (need to research)?
 
 ### Phase 8 — Real-Time Updates
 WebSocket support for live UI updates — new feed items, sync job progress, download status changes pushed to the Angular client without polling.
+
+### Phase 9 — Infrastructure
+Terraform, GitHub Actions CI/CD, production AWS deployment (EC2, RDS, S3, Lambda, EventBridge). AWS Cognito auth swap (CurrentUser abstraction is already in place), CloudWatch log retrieval (LocalLogService/CloudWatchLogService interface is stubbed), AWS cost tracking (AwsCostRecord entity defined but not implemented).
 
 ---
 
 ## Notes
 
-- True browser bookmark merge (push directly into an open browser) would require a browser extension — deferred to a future phase. For now: export Netscape HTML format, user imports manually.
+- **Browser extension for two-way bookmark sync** — push bookmarks directly into browser without manual HTML import. Deferred from Phase 6.
+- **Configurable conflict resolution modes** — allow users to choose between merge-with-review, auto-accept-all, or manual-only during bookmark ingest. Deferred from Phase 6.
+- **Scheduled bookmark ingest** — cron-based automatic ingestion if the user's bookmark file is accessible on the same machine. Deferred from Phase 6.
 - `color` on `Tag` is nullable; can be dropped in a migration if a better theming approach is chosen later.
 - Multi-tenancy (`userId` foreign keys) is in from the start. SaaS path remains open if the web UI proves compelling enough.

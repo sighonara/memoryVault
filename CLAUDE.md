@@ -6,6 +6,8 @@
 
 Design docs: `docs/plans/2026-03-05-tooling-first-design.md`
 
+**Master roadmap:** `docs/plans/2026-03-05-tooling-first-design.md` — contains all phase summaries and future work items. Update this document whenever a phase is renamed, completed, or when future work items are identified during design. Do not bury future work only in phase-specific specs.
+
 ---
 
 ## Backend (Spring Boot / Kotlin)
@@ -24,11 +26,12 @@ Located in `src/`.
 ```
 src/main/kotlin/org/sightech/memoryvault/
 ├── mcp/           # Spring AI @Tool classes (one per domain)
+├── graphql/       # Spring for GraphQL resolvers
 ├── <domain>/
-│   ├── entity/
+│   ├── entity/    # JPA entities (e.g. Bookmark, Folder, IngestPreviewEntity)
 │   ├── repository/
-│   ├── service/
-│   └── controller/
+│   ├── service/   # Business logic (e.g. BookmarkService, IngestService)
+│   └── controller/ # REST controllers (e.g. IngestController)
 ```
 
 ### Commands
@@ -49,6 +52,7 @@ src/main/kotlin/org/sightech/memoryvault/
 - Optimistic locking via `version` field on mutable entities
 - MCP `@Tool` methods call service layer — never repositories directly
 - Return DTOs or simple types from `@Tool` methods, not JPA entities
+- **Logging**: Every controller and service class must have `private val log = LoggerFactory.getLogger(javaClass)`. Log at INFO level for all mutations (create, update, delete) with relevant context (entity ID, count, etc.). Log at DEBUG for read operations. Log at WARN/ERROR for failures.
 
 ---
 
@@ -78,6 +82,9 @@ Located in `client/`.
 - No constructor injection (use `inject()`)
 - No `*ngIf` / `*ngFor` (use `@if` / `@for`)
 - No `subscribe()` in components
+- **NgRx Signal Store**: In `withMethods`, the `store` parameter only has state/computed signals — NOT other methods. To call one method from another, define methods as local `const` variables in the closure, then reference them directly. Never use `(store as any).methodName()`.
+- **Search**: Use `(input)` event with 300ms debounce via `setTimeout`/`clearTimeout` for search inputs (consistent across all features)
+- **Bookmarks feature** has sub-components: `bookmark-tree/`, `bookmark-list/`, `ingest-panel/`, `conflict-review/` — each with barrel export (`index.ts`)
 
 ---
 

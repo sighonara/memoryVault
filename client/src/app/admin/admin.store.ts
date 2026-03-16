@@ -22,6 +22,7 @@ export interface AdminState {
   logServiceFilter: string | null;
   logLimit: number;
   jobLimit: number;
+  followActive: boolean;
 }
 
 const initialState: AdminState = {
@@ -34,6 +35,7 @@ const initialState: AdminState = {
   logServiceFilter: null,
   logLimit: 100,
   jobLimit: 50,
+  followActive: false,
 };
 
 export const AdminStore = signalStore(
@@ -104,6 +106,10 @@ export const AdminStore = signalStore(
     setLogServiceFilter: (service: string) => {
       patchState(store, { logServiceFilter: service || null });
       (store as any).loadLogs();
+    },
+
+    setFollowActive: (active: boolean) => {
+      patchState(store, { followActive: active });
     },
   }))
 );

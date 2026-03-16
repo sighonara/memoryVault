@@ -2,6 +2,8 @@ type Bookmark {
     id: UUID!
     url: String!
     title: String
+    folderId: UUID
+    sortOrder: Int!
     tags: [Tag!]!
     createdAt: Instant!
     updatedAt: Instant!
@@ -11,4 +13,72 @@ type Tag {
     id: UUID!
     name: String!
     color: String
+}
+
+type Folder {
+    id: UUID!
+    name: String!
+    parentId: UUID
+    children: [Folder!]!
+    bookmarks: [Bookmark!]!
+    bookmarkCount: Int!
+    sortOrder: Int!
+}
+
+type IngestPreview {
+    previewId: UUID!
+    items: [IngestItem!]!
+    summary: IngestSummary!
+}
+
+type IngestItem {
+    url: String!
+    title: String!
+    status: IngestStatus!
+    existingBookmarkId: UUID
+    suggestedFolderId: UUID
+    browserFolder: String
+}
+
+enum IngestStatus {
+    NEW
+    UNCHANGED
+    MOVED
+    TITLE_CHANGED
+    PREVIOUSLY_DELETED
+}
+
+type IngestSummary {
+    newCount: Int!
+    unchangedCount: Int!
+    movedCount: Int!
+    titleChangedCount: Int!
+    previouslyDeletedCount: Int!
+}
+
+type CommitResult {
+    accepted: Int!
+    skipped: Int!
+    undeleted: Int!
+}
+
+input IngestInput {
+    bookmarks: [IngestBookmarkInputGql!]!
+}
+
+input IngestBookmarkInputGql {
+    url: String!
+    title: String!
+    browserFolder: String
+}
+
+input IngestResolutionInput {
+    url: String!
+    action: IngestAction!
+}
+
+enum IngestAction {
+    ACCEPT
+    SKIP
+    UNDELETE
 }

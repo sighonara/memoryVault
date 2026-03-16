@@ -6,13 +6,15 @@ import io.mockk.verify
 import org.junit.jupiter.api.Test
 import org.sightech.memoryvault.bookmark.entity.Bookmark
 import org.sightech.memoryvault.bookmark.service.BookmarkService
+import org.sightech.memoryvault.bookmark.service.IngestService
 import java.util.UUID
 import kotlin.test.assertEquals
 
 class BookmarkResolverTest {
 
     private val bookmarkService = mockk<BookmarkService>()
-    private val resolver = BookmarkResolver(bookmarkService)
+    private val ingestService = mockk<IngestService>()
+    private val resolver = BookmarkResolver(bookmarkService, ingestService)
 
     @Test
     fun `bookmarks query delegates to service`() {

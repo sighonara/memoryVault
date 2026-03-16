@@ -6,7 +6,8 @@ build/
 !**/src/test/**/build/
 
 ### "AI" Stuff ###
-settings.local.json
+.claude/settings.local.json
+.superpowers/
 
 ### STS ###
 .apt_generated

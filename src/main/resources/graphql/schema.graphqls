@@ -4,6 +4,9 @@ scalar Instant
 type Query {
     # Bookmarks
     bookmarks(query: String, tags: [String]): [Bookmark!]!
+    folders: [Folder!]!
+    folder(id: UUID!): Folder
+    exportBookmarks: String!
 
     # Feeds
     feeds: [FeedWithUnread!]!
@@ -19,6 +22,9 @@ type Query {
     logs(level: String, service: String, limit: Int): [LogEntry!]!
     stats: SystemStats!
 
+    # Ingest
+    pendingIngests: [IngestPreview!]!
+
     # Search
     search(query: String!, types: [String]): [SearchResult!]!
 }
@@ -28,10 +34,17 @@ type Mutation {
     login(email: String!, password: String!): LoginResponse!
 
     # Bookmarks
-    addBookmark(url: String!, title: String, tags: [String]): Bookmark!
+    addBookmark(url: String!, title: String, tags: [String], folderId: UUID): Bookmark!
     tagBookmark(id: UUID!, tags: [String!]!): Bookmark
     deleteBookmark(id: UUID!): Bookmark
-    exportBookmarks: String!
+    createFolder(name: String!, parentId: UUID): Folder!
+    renameFolder(id: UUID!, name: String!): Folder!
+    moveFolder(id: UUID!, newParentId: UUID): Folder!
+    deleteFolder(id: UUID!): Boolean!
+    moveBookmark(id: UUID!, folderId: UUID): Bookmark!
+    reorderBookmarks(folderId: UUID, bookmarkIds: [UUID!]!): [Bookmark!]!
+    ingestBookmarks(input: IngestInput!): IngestPreview!
+    commitIngest(previewId: UUID!, resolutions: [IngestResolutionInput!]!): CommitResult!
 
     # Feeds
     addFeed(url: String!): Feed!

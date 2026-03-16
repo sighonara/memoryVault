@@ -1,5 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { MatListModule } from '@angular/material/list';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -15,7 +15,7 @@ import { YoutubeListDialogComponent } from './youtube-list-dialog';
   selector: 'app-youtube',
   standalone: true,
   imports: [
-    CommonModule,
+    DatePipe,
     MatListModule,
     MatButtonModule,
     MatIconModule,
@@ -36,19 +36,21 @@ import { YoutubeListDialogComponent } from './youtube-list-dialog';
           </button>
         </mat-toolbar>
         <mat-nav-list>
-          <mat-list-item
-            *ngFor="let entry of store.lists()"
-            [activated]="entry.list.id === store.selectedListId()"
-            (click)="store.selectList(entry.list.id)">
-            <span matListItemTitle class="truncate">{{ entry.list.name }}</span>
-            <span matListItemLine class="list-meta">{{ entry.downloadedVideos }}/{{ entry.totalVideos }} videos</span>
-          </mat-list-item>
+          @for (entry of store.lists(); track entry.list.id) {
+            <mat-list-item
+              [activated]="entry.list.id === store.selectedListId()"
+              (click)="store.selectList(entry.list.id)">
+              <span matListItemTitle class="truncate">{{ entry.list.name }}</span>
+              <span matListItemLine class="list-meta">{{ entry.downloadedVideos }}/{{ entry.totalVideos }} videos</span>
+            </mat-list-item>
+          }
         </mat-nav-list>
       </mat-sidenav>
 
       <mat-sidenav-content class="yt-content">
         <mat-toolbar class="content-toolbar">
-          <input type="text" class="toolbar-search" #searchInput (keyup)="store.setSearchQuery(searchInput.value)" placeholder="Search videos..." />
+          <input type="text" class="toolbar-search" placeholder="Search videos..."
+                 (input)="onSearch($event)" [value]="store.searchQuery()" />
           <span class="spacer"></span>
           <button mat-button (click)="store.setRemovedOnly(!store.removedOnly())" [class.active-filter]="store.removedOnly()">
             <mat-icon>{{ store.removedOnly() ? 'visibility_off' : 'visibility' }}</mat-icon>
@@ -59,31 +61,39 @@ import { YoutubeListDialogComponent } from './youtube-list-dialog';
           </button>
         </mat-toolbar>
 
-        <mat-progress-bar *ngIf="store.loadingVideos()" mode="indeterminate"></mat-progress-bar>
+        @if (store.loadingVideos()) {
+          <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        }
 
         <div class="video-list">
-          <div *ngFor="let video of store.videos()" class="video-row" (click)="openVideo(video.youtubeUrl)">
-            <img
-              class="thumb"
-              [src]="video.thumbnailPath || ''"
-              [alt]="video.title || 'Untitled'"
-              (error)="$any($event.target).style.display='none'"
-            />
-            <div class="video-info">
-              <span class="video-title" [class.removed]="video.removedFromYoutube">{{ video.title || '(untitled)' }}</span>
-              <span class="video-meta">
-                {{ video.downloadedAt | date:'mediumDate' }}
-                <span *ngIf="video.removedFromYoutube" class="removed-badge">REMOVED</span>
-              </span>
+          @for (video of store.videos(); track video.id) {
+            <div class="video-row" (click)="openVideo(video.youtubeUrl)">
+              <img
+                class="thumb"
+                [src]="video.thumbnailPath || ''"
+                [alt]="video.title || 'Untitled'"
+                (error)="$any($event.target).style.display='none'"
+              />
+              <div class="video-info">
+                <span class="video-title" [class.removed]="video.removedFromYoutube">{{ video.title || '(untitled)' }}</span>
+                <span class="video-meta">
+                  {{ video.downloadedAt | date:'mediumDate' }}
+                  @if (video.removedFromYoutube) {
+                    <span class="removed-badge">REMOVED</span>
+                  }
+                </span>
+              </div>
+              <mat-icon class="play-icon">play_circle_outline</mat-icon>
             </div>
-            <mat-icon class="play-icon">play_circle_outline</mat-icon>
-          </div>
+          }
         </div>
 
-        <div *ngIf="!store.loadingVideos() && store.videos().length === 0" class="empty-state">
-          <mat-icon>movie_filter</mat-icon>
-          <p>No videos found</p>
-        </div>
+        @if (!store.loadingVideos() && store.videos().length === 0) {
+          <div class="empty-state">
+            <mat-icon>movie_filter</mat-icon>
+            <p>No videos found</p>
+          </div>
+        }
       </mat-sidenav-content>
     </mat-sidenav-container>
   `,
@@ -164,9 +174,18 @@ import { YoutubeListDialogComponent } from './youtube-list-dialog';
 export class YoutubeComponent implements OnInit {
   readonly store = inject(YoutubeStore);
   private dialog = inject(MatDialog);
+  private searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
   ngOnInit() {
     this.store.loadLists();
+  }
+
+  onSearch(event: any) {
+    const query = (event.target as HTMLInputElement).value;
+    if (this.searchTimeout) clearTimeout(this.searchTimeout);
+    this.searchTimeout = setTimeout(() => {
+      this.store.setSearchQuery(query);
+    }, 300);
   }
 
   openAddDialog() {
