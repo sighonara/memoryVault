@@ -208,12 +208,12 @@ git commit -m "feat: add viewMode/sortOrder preference fields to User entity"
 
 ---
 
-### Task 5: Update FeedItem Entity with starredAt
+### Task 5: Update FeedItem Entity with starredAt ✓
 
 **Files:**
 - Modify: `src/main/kotlin/org/sightech/memoryvault/feed/entity/FeedItem.kt`
 
-- [ ] **Step 1: Add starredAt field**
+- [x] **Step 1: Add starredAt field**
 
 Add this field to the `FeedItem` class constructor, after `readAt`:
 
@@ -222,7 +222,7 @@ Add this field to the `FeedItem` class constructor, after `readAt`:
     var starredAt: Instant? = null,
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/feed/entity/FeedItem.kt
