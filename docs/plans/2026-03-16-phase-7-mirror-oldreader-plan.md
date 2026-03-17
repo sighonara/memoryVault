@@ -182,12 +182,12 @@ git commit -m "feat: add category relationship to Feed entity"
 
 ---
 
-### Task 4: Update User Entity with Preferences
+### Task 4: Update User Entity with Preferences ✓
 
 **Files:**
 - Modify: `src/main/kotlin/org/sightech/memoryvault/auth/entity/User.kt`
 
-- [ ] **Step 1: Add viewMode and sortOrder fields**
+- [x] **Step 1: Add viewMode and sortOrder fields**
 
 Add these fields to the `User` class constructor, before `createdAt`:
 
@@ -199,7 +199,7 @@ Add these fields to the `User` class constructor, before `createdAt`:
     var sortOrder: String = "NEWEST_FIRST",
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/auth/entity/User.kt

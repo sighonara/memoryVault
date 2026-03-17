@@ -39,6 +39,9 @@ class FeedItem(
     @Column(name = "read_at")
     var readAt: Instant? = null,
 
+    @Column(name = "starred_at")
+    var starredAt: Instant? = null,
+
     val createdAt: Instant = Instant.now(),
 
     @ManyToMany
