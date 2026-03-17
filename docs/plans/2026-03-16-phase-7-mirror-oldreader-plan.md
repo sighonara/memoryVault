@@ -14,12 +14,12 @@
 
 ## Chunk 1: Database Migration + FeedCategory Entity + Repository
 
-### Task 1: Create V6 Migration
+### Task 1: Create V6 Migration ✓
 
 **Files:**
 - Create: `src/main/resources/db/migration/V6__feed_categories_and_preferences.sql`
 
-- [ ] **Step 1: Write the migration file**
+- [x] **Step 1: Write the migration file**
 
 ```sql
 -- Feed categories (single-level, no hierarchy)
@@ -83,13 +83,13 @@ CREATE TABLE user_auth_providers (
 );
 ```
 
-- [ ] **Step 2: Verify migration applies**
+- [x] **Step 2: Verify migration applies**
 
 Run: `./gradlew test --tests '*FeedIntegrationTest*' -x :client:test 2>&1 | tail -20`
 
 Expected: Tests pass (Flyway runs V6 migration automatically via TestContainers). If there are failures, they will be about Feed entity not matching schema (expected — we haven't updated the entity yet). The key check is that the migration itself doesn't error.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/main/resources/db/migration/V6__feed_categories_and_preferences.sql
@@ -98,12 +98,12 @@ git commit -m "feat: V6 migration — feed categories, user preferences, starred
 
 ---
 
-### Task 2: Create FeedCategory Entity
+### Task 2: Create FeedCategory Entity ✓
 
 **Files:**
 - Create: `src/main/kotlin/org/sightech/memoryvault/feed/entity/FeedCategory.kt`
 
-- [ ] **Step 1: Write the entity**
+- [x] **Step 1: Write the entity**
 
 Follow the pattern from `Folder.kt` (bookmark/entity/Folder.kt) and `Feed.kt` (feed/entity/Feed.kt):
 
@@ -147,7 +147,7 @@ class FeedCategory(
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/feed/entity/FeedCategory.kt
@@ -156,12 +156,12 @@ git commit -m "feat: FeedCategory entity"
 
 ---
 
-### Task 3: Update Feed Entity with categoryId
+### Task 3: Update Feed Entity with categoryId ✓
 
 **Files:**
 - Modify: `src/main/kotlin/org/sightech/memoryvault/feed/entity/Feed.kt`
 
-- [ ] **Step 1: Add categoryId field and ManyToOne relationship**
+- [x] **Step 1: Add categoryId field and ManyToOne relationship**
 
 Add these fields to the `Feed` class constructor, after `failureCount`:
 
@@ -173,7 +173,7 @@ Add these fields to the `Feed` class constructor, after `failureCount`:
 
 Add the import: `import org.sightech.memoryvault.feed.entity.FeedCategory`
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/feed/entity/Feed.kt
