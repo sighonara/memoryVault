@@ -34,6 +34,10 @@ class Feed(
     @Column(name = "failure_count", nullable = false)
     var failureCount: Int = 0,
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", nullable = false)
+    var category: FeedCategory? = null,
+
     val createdAt: Instant = Instant.now(),
 
     var updatedAt: Instant = Instant.now(),
