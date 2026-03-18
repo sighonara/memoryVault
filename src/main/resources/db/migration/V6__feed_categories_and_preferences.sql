@@ -7,7 +7,7 @@ CREATE TABLE feed_categories (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     deleted_at TIMESTAMPTZ,
-    version INT NOT NULL DEFAULT 0
+    version BIGINT NOT NULL DEFAULT 0
 );
 CREATE INDEX idx_feed_categories_user_name ON feed_categories(user_id, name);
 
@@ -40,7 +40,7 @@ CREATE TABLE api_keys (
     last_used_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     deleted_at TIMESTAMPTZ,
-    version INT NOT NULL DEFAULT 0
+    version BIGINT NOT NULL DEFAULT 0
 );
 
 -- OAuth stub
@@ -54,6 +54,6 @@ CREATE TABLE user_auth_providers (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     deleted_at TIMESTAMPTZ,
-    version INT NOT NULL DEFAULT 0,
+    version BIGINT NOT NULL DEFAULT 0,
     UNIQUE(provider, external_id)
 );
