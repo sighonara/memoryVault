@@ -231,12 +231,12 @@ git commit -m "feat: add starredAt stub field to FeedItem entity"
 
 ---
 
-### Task 6: Create FeedCategoryRepository
+### Task 6: Create FeedCategoryRepository ✓
 
 **Files:**
 - Create: `src/main/kotlin/org/sightech/memoryvault/feed/repository/FeedCategoryRepository.kt`
 
-- [ ] **Step 1: Write the repository**
+- [x] **Step 1: Write the repository**
 
 Follow the pattern from `FeedRepository.kt`:
 
@@ -264,7 +264,7 @@ interface FeedCategoryRepository : JpaRepository<FeedCategory, UUID> {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/feed/repository/FeedCategoryRepository.kt
