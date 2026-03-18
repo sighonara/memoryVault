@@ -273,12 +273,12 @@ git commit -m "feat: FeedCategoryRepository"
 
 ---
 
-### Task 7: Update FeedRepository with Category Queries
+### Task 7: Update FeedRepository with Category Queries ✓
 
 **Files:**
 - Modify: `src/main/kotlin/org/sightech/memoryvault/feed/repository/FeedRepository.kt`
 
-- [ ] **Step 1: Add category-related queries**
+- [x] **Step 1: Add category-related queries**
 
 Add these methods to `FeedRepository`:
 
@@ -297,7 +297,7 @@ import org.springframework.data.jpa.repository.Modifying
 import java.time.Instant
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/feed/repository/FeedRepository.kt
@@ -306,15 +306,15 @@ git commit -m "feat: add category queries to FeedRepository"
 
 ---
 
-### Task 8: Verify Entity/Migration Alignment
+### Task 8: Verify Entity/Migration Alignment ✓
 
-- [ ] **Step 1: Run all backend tests**
+- [x] **Step 1: Run all backend tests**
 
 Run: `./gradlew test -x :client:test 2>&1 | tail -30`
 
 Expected: All tests pass. The migration creates the tables, entities map to them correctly, Hibernate validation (ddl-auto=validate) succeeds.
 
-- [ ] **Step 2: If tests fail due to Feed entity requiring category**
+- [x] **Step 2: If tests fail due to Feed entity requiring category**
 
 Existing tests create `Feed` objects without a `category` field. Update `FeedServiceTest.kt` to supply a mock FeedCategory:
 
@@ -328,7 +328,7 @@ Update each `Feed(...)` constructor call to include `category = defaultCategory`
 val feed = Feed(userId = userId, url = "https://example.com/rss", category = defaultCategory)
 ```
 
-- [ ] **Step 3: Commit if changes were needed**
+- [x] **Step 3: Commit if changes were needed**
 
 ```bash
 git add -A
