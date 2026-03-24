@@ -603,7 +603,7 @@ git commit -m "test: FeedCategoryService unit tests"
 **Files:**
 - Modify: `src/main/kotlin/org/sightech/memoryvault/feed/service/FeedService.kt`
 
-- [ ] **Step 1: Add FeedCategoryService dependency and update addFeed**
+- [x] **Step 1: Add FeedCategoryService dependency and update addFeed**
 
 Update the constructor to inject `FeedCategoryService`:
 
@@ -660,7 +660,7 @@ Add `moveFeedToCategory` method:
     }
 ```
 
-- [ ] **Step 2: Update FeedServiceTest for new dependency**
+- [x] **Step 2: Update FeedServiceTest for new dependency**
 
 In `FeedServiceTest.kt`, add the mock and update constructor:
 
@@ -675,13 +675,13 @@ Update `addFeed` test to mock category lookup:
 every { feedCategoryService.getSubscribedCategory() } returns defaultCategory
 ```
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 Run: `./gradlew test --tests '*FeedServiceTest*' -x :client:test 2>&1 | tail -20`
 
 Expected: All tests pass.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/feed/service/FeedService.kt src/test/kotlin/org/sightech/memoryvault/feed/service/FeedServiceTest.kt
