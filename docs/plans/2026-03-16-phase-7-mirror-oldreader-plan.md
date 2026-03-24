@@ -339,12 +339,12 @@ git commit -m "fix: update existing tests for Feed.category field"
 
 ## Chunk 2: FeedCategoryService + FeedService Updates
 
-### Task 9: Create FeedCategoryService
+### Task 9: Create FeedCategoryService ✓
 
 **Files:**
 - Create: `src/main/kotlin/org/sightech/memoryvault/feed/service/FeedCategoryService.kt`
 
-- [ ] **Step 1: Write the service**
+- [x] **Step 1: Write the service**
 
 ```kotlin
 package org.sightech.memoryvault.feed.service
@@ -449,7 +449,7 @@ class FeedCategoryService(
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/feed/service/FeedCategoryService.kt
@@ -458,12 +458,12 @@ git commit -m "feat: FeedCategoryService with CRUD, reorder, and delete-with-mov
 
 ---
 
-### Task 10: Write FeedCategoryService Unit Tests
+### Task 10: Write FeedCategoryService Unit Tests ✓
 
 **Files:**
 - Create: `src/test/kotlin/org/sightech/memoryvault/feed/service/FeedCategoryServiceTest.kt`
 
-- [ ] **Step 1: Write the test class**
+- [x] **Step 1: Write the test class**
 
 Follow the pattern from `FeedServiceTest.kt`:
 
@@ -583,13 +583,13 @@ class FeedCategoryServiceTest {
 }
 ```
 
-- [ ] **Step 2: Run tests**
+- [x] **Step 2: Run tests**
 
 Run: `./gradlew test --tests '*FeedCategoryServiceTest*' -x :client:test 2>&1 | tail -20`
 
 Expected: All tests pass.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/test/kotlin/org/sightech/memoryvault/feed/service/FeedCategoryServiceTest.kt
