@@ -696,7 +696,7 @@ git commit -m "feat: update FeedService with category support"
 - Modify: `src/main/kotlin/org/sightech/memoryvault/feed/service/FeedItemService.kt`
 - Modify: `src/main/kotlin/org/sightech/memoryvault/feed/repository/FeedItemRepository.kt`
 
-- [ ] **Step 1: Add sort direction to FeedItemRepository queries**
+- [x] **Step 1: Add sort direction to FeedItemRepository queries**
 
 In `FeedItemRepository.kt`, add ASC variants of the existing queries:
 
@@ -724,7 +724,7 @@ Also add queries for fetching items across multiple feeds (for category view):
     fun findUnreadByFeedIdsAndUserIdAsc(feedIds: List<UUID>, userId: UUID): List<FeedItem>
 ```
 
-- [ ] **Step 2: Update FeedItemService.getItems with sortOrder parameter**
+- [x] **Step 2: Update FeedItemService.getItems with sortOrder parameter**
 
 ```kotlin
     fun getItems(feedId: UUID, limit: Int?, unreadOnly: Boolean, sortOrder: String = "NEWEST_FIRST"): List<FeedItem> {
@@ -741,7 +741,7 @@ Also add queries for fetching items across multiple feeds (for category view):
     }
 ```
 
-- [ ] **Step 3: Add getItemsByFeedIds method for category/all-items view**
+- [x] **Step 3: Add getItemsByFeedIds method for category/all-items view**
 
 ```kotlin
     fun getItemsByFeedIds(feedIds: List<UUID>, limit: Int?, unreadOnly: Boolean, sortOrder: String = "NEWEST_FIRST"): List<FeedItem> {
@@ -759,7 +759,7 @@ Also add queries for fetching items across multiple feeds (for category view):
     }
 ```
 
-- [ ] **Step 4: Add markCategoryRead method**
+- [x] **Step 4: Add markCategoryRead method**
 
 ```kotlin
     @Transactional
@@ -783,7 +783,7 @@ class FeedItemService(
 ) {
 ```
 
-- [ ] **Step 5: Add starred item stubs (commented out)**
+- [x] **Step 5: Add starred item stubs (commented out)**
 
 Add at the end of `FeedItemService`:
 
@@ -804,13 +804,13 @@ Add at the end of `FeedItemService`:
     // }
 ```
 
-- [ ] **Step 6: Run tests**
+- [x] **Step 6: Run tests**
 
 Run: `./gradlew test --tests '*FeedItemService*' -x :client:test 2>&1 | tail -20`
 
 Expected: Tests pass. Existing tests may need updating for the new `FeedRepository` constructor parameter — add a mock if needed.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/feed/service/FeedItemService.kt src/main/kotlin/org/sightech/memoryvault/feed/repository/FeedItemRepository.kt

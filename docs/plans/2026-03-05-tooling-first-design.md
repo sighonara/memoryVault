@@ -237,6 +237,9 @@ WebSocket support for live UI updates — new feed items, sync job progress, dow
 ### Phase 9 — Infrastructure
 Terraform, GitHub Actions CI/CD, production AWS deployment (EC2, RDS, S3, Lambda, EventBridge). AWS Cognito auth swap (CurrentUser abstraction is already in place), CloudWatch log retrieval (LocalLogService/CloudWatchLogService interface is stubbed), AWS cost tracking (AwsCostRecord entity defined but not implemented).
 
+### Phase 10 — Cross-Platform Video Backup
+Archived YouTube videos are automatically backed up to a configurable secondary video platform (Rumble, Vimeo, etc.). If the video doesn't already exist on the target platform, MemoryVault uploads it. Ensures resilience against YouTube takedowns/deletions.
+
 ---
 
 ## Notes
@@ -246,3 +249,4 @@ Terraform, GitHub Actions CI/CD, production AWS deployment (EC2, RDS, S3, Lambda
 - **Scheduled bookmark ingest** — cron-based automatic ingestion if the user's bookmark file is accessible on the same machine. Deferred from Phase 6.
 - `color` on `Tag` is nullable; can be dropped in a migration if a better theming approach is chosen later.
 - Multi-tenancy (`userId` foreign keys) is in from the start. SaaS path remains open if the web UI proves compelling enough.
+- **Cross-platform video backup** — archived YouTube videos should also be backed up to a configurable secondary video platform (Rumble, Vimeo, etc.). If the video doesn't already exist on the target platform, MemoryVault should upload it automatically. Ensures resilience against YouTube takedowns/deletions.
