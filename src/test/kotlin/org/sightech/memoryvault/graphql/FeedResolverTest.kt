@@ -33,19 +33,19 @@ class FeedResolverTest {
     @Test
     fun `feedItems query delegates to service`() {
         val feedId = UUID.randomUUID()
-        every { feedItemService.getItems(feedId, 10, true) } returns emptyList()
+        every { feedItemService.getItems(feedId, 10, true, "NEWEST_FIRST") } returns emptyList()
 
-        val result = resolver.feedItems(feedId, 10, true)
+        val result = resolver.feedItems(feedId, 10, true, null)
         assertEquals(0, result.size)
-        verify { feedItemService.getItems(feedId, 10, true) }
+        verify { feedItemService.getItems(feedId, 10, true, "NEWEST_FIRST") }
     }
 
     @Test
     fun `addFeed mutation delegates to service`() {
         val feed = Feed(userId = UUID.randomUUID(), url = "https://example.com/rss")
-        coEvery { feedService.addFeed("https://example.com/rss") } returns feed
+        coEvery { feedService.addFeed("https://example.com/rss", null) } returns feed
 
-        val result = resolver.addFeed("https://example.com/rss")
+        val result = resolver.addFeed("https://example.com/rss", null)
         assertEquals("https://example.com/rss", result.url)
     }
 }
