@@ -6,6 +6,7 @@ type Feed {
     siteUrl: String
     lastFetchedAt: Instant
     failureCount: Int!
+    categoryId: UUID
 }
 
 type FeedWithUnread {
@@ -23,7 +24,31 @@ type FeedItem {
     imageUrl: String
     publishedAt: Instant
     readAt: Instant
+    starredAt: Instant
     tags: [Tag!]!
+}
+
+type FeedCategory {
+    id: UUID!
+    name: String!
+    sortOrder: Int!
+}
+
+type FeedCategoryWithFeeds {
+    category: FeedCategory!
+    feeds: [FeedWithUnread!]!
+    totalUnread: Int!
+}
+
+type ImportResult {
+    feedsAdded: Int!
+    feedsSkipped: Int!
+    categoriesCreated: Int!
+}
+
+type UserPreferences {
+    viewMode: String!
+    sortOrder: String!
 }
 
 type FeedRefreshResult {
