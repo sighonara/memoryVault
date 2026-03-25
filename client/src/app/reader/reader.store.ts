@@ -16,6 +16,7 @@ import {
   AddCategoryDocument,
   RenameCategoryDocument,
   DeleteCategoryDocument,
+  ReorderCategoriesDocument,
   MoveFeedToCategoryDocument,
   ImportFeedsDocument,
   ExportFeedsDocument,
@@ -233,6 +234,12 @@ export const ReaderStore = signalStore(
 
       moveFeedToCategory: (feedId: string, categoryId: string) => {
         apollo.mutate({ mutation: MoveFeedToCategoryDocument, variables: { feedId, categoryId } }).subscribe(() => {
+          loadCategories();
+        });
+      },
+
+      reorderCategories: (categoryIds: string[]) => {
+        apollo.mutate({ mutation: ReorderCategoriesDocument, variables: { categoryIds } }).subscribe(() => {
           loadCategories();
         });
       },
