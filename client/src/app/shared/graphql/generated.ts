@@ -40,6 +40,7 @@ export type CommitResult = {
 
 export type Feed = {
   __typename?: 'Feed';
+  categoryId?: Maybe<Scalars['UUID']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   failureCount: Scalars['Int']['output'];
   id: Scalars['UUID']['output'];
@@ -47,6 +48,20 @@ export type Feed = {
   siteUrl?: Maybe<Scalars['String']['output']>;
   title?: Maybe<Scalars['String']['output']>;
   url: Scalars['String']['output'];
+};
+
+export type FeedCategory = {
+  __typename?: 'FeedCategory';
+  id: Scalars['UUID']['output'];
+  name: Scalars['String']['output'];
+  sortOrder: Scalars['Int']['output'];
+};
+
+export type FeedCategoryWithFeeds = {
+  __typename?: 'FeedCategoryWithFeeds';
+  category: FeedCategory;
+  feeds: Array<FeedWithUnread>;
+  totalUnread: Scalars['Int']['output'];
 };
 
 export type FeedItem = {
@@ -58,6 +73,7 @@ export type FeedItem = {
   imageUrl?: Maybe<Scalars['String']['output']>;
   publishedAt?: Maybe<Scalars['Instant']['output']>;
   readAt?: Maybe<Scalars['Instant']['output']>;
+  starredAt?: Maybe<Scalars['Instant']['output']>;
   tags: Array<Tag>;
   title?: Maybe<Scalars['String']['output']>;
   url?: Maybe<Scalars['String']['output']>;
@@ -85,6 +101,13 @@ export type Folder = {
   name: Scalars['String']['output'];
   parentId?: Maybe<Scalars['UUID']['output']>;
   sortOrder: Scalars['Int']['output'];
+};
+
+export type ImportResult = {
+  __typename?: 'ImportResult';
+  categoriesCreated: Scalars['Int']['output'];
+  feedsAdded: Scalars['Int']['output'];
+  feedsSkipped: Scalars['Int']['output'];
 };
 
 export enum IngestAction {
@@ -162,26 +185,34 @@ export type LoginResponse = {
 export type Mutation = {
   __typename?: 'Mutation';
   addBookmark: Bookmark;
+  addCategory: FeedCategory;
   addFeed: Feed;
   addYoutubeList: YoutubeListAddResult;
   commitIngest: CommitResult;
   createFolder: Folder;
   deleteBookmark?: Maybe<Bookmark>;
+  deleteCategory: Scalars['Boolean']['output'];
   deleteFeed?: Maybe<Feed>;
   deleteFolder: Scalars['Boolean']['output'];
   deleteYoutubeList?: Maybe<YoutubeList>;
+  importFeeds: ImportResult;
   ingestBookmarks: IngestPreview;
   login: LoginResponse;
+  markCategoryRead: Scalars['Int']['output'];
   markFeedRead: Scalars['Int']['output'];
   markItemRead?: Maybe<FeedItem>;
   markItemUnread?: Maybe<FeedItem>;
   moveBookmark: Bookmark;
+  moveFeedToCategory?: Maybe<Feed>;
   moveFolder: Folder;
   refreshFeed: Array<FeedRefreshResult>;
   refreshYoutubeList: Array<SyncResult>;
+  renameCategory?: Maybe<FeedCategory>;
   renameFolder: Folder;
   reorderBookmarks: Array<Bookmark>;
+  reorderCategories: Array<FeedCategory>;
   tagBookmark?: Maybe<Bookmark>;
+  updateUserPreferences: UserPreferences;
 };
 
 
@@ -193,7 +224,13 @@ export type MutationAddBookmarkArgs = {
 };
 
 
+export type MutationAddCategoryArgs = {
+  name: Scalars['String']['input'];
+};
+
+
 export type MutationAddFeedArgs = {
+  categoryId?: InputMaybe<Scalars['UUID']['input']>;
   url: Scalars['String']['input'];
 };
 
@@ -220,6 +257,11 @@ export type MutationDeleteBookmarkArgs = {
 };
 
 
+export type MutationDeleteCategoryArgs = {
+  categoryId: Scalars['UUID']['input'];
+};
+
+
 export type MutationDeleteFeedArgs = {
   feedId: Scalars['UUID']['input'];
 };
@@ -235,6 +277,11 @@ export type MutationDeleteYoutubeListArgs = {
 };
 
 
+export type MutationImportFeedsArgs = {
+  opml: Scalars['String']['input'];
+};
+
+
 export type MutationIngestBookmarksArgs = {
   input: IngestInput;
 };
@@ -243,6 +290,11 @@ export type MutationIngestBookmarksArgs = {
 export type MutationLoginArgs = {
   email: Scalars['String']['input'];
   password: Scalars['String']['input'];
+};
+
+
+export type MutationMarkCategoryReadArgs = {
+  categoryId: Scalars['UUID']['input'];
 };
 
 
@@ -267,6 +319,12 @@ export type MutationMoveBookmarkArgs = {
 };
 
 
+export type MutationMoveFeedToCategoryArgs = {
+  categoryId: Scalars['UUID']['input'];
+  feedId: Scalars['UUID']['input'];
+};
+
+
 export type MutationMoveFolderArgs = {
   id: Scalars['UUID']['input'];
   newParentId?: InputMaybe<Scalars['UUID']['input']>;
@@ -283,6 +341,12 @@ export type MutationRefreshYoutubeListArgs = {
 };
 
 
+export type MutationRenameCategoryArgs = {
+  categoryId: Scalars['UUID']['input'];
+  name: Scalars['String']['input'];
+};
+
+
 export type MutationRenameFolderArgs = {
   id: Scalars['UUID']['input'];
   name: Scalars['String']['input'];
@@ -295,16 +359,31 @@ export type MutationReorderBookmarksArgs = {
 };
 
 
+export type MutationReorderCategoriesArgs = {
+  categoryIds: Array<Scalars['UUID']['input']>;
+};
+
+
 export type MutationTagBookmarkArgs = {
   id: Scalars['UUID']['input'];
   tags: Array<Scalars['String']['input']>;
+};
+
+
+export type MutationUpdateUserPreferencesArgs = {
+  sortOrder?: InputMaybe<Scalars['String']['input']>;
+  viewMode?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type Query = {
   __typename?: 'Query';
   bookmarks: Array<Bookmark>;
   exportBookmarks: Scalars['String']['output'];
+  exportFeeds: Scalars['String']['output'];
+  feedCategories: Array<FeedCategoryWithFeeds>;
   feedItems: Array<FeedItem>;
+  feedItemsAll: Array<FeedItem>;
+  feedItemsByCategory: Array<FeedItem>;
   feeds: Array<FeedWithUnread>;
   folder?: Maybe<Folder>;
   folders: Array<Folder>;
@@ -313,6 +392,7 @@ export type Query = {
   pendingIngests: Array<IngestPreview>;
   search: Array<SearchResult>;
   stats: SystemStats;
+  userPreferences: UserPreferences;
   videoStatus?: Maybe<Video>;
   videos: Array<Video>;
   youtubeLists: Array<YoutubeListWithStats>;
@@ -328,6 +408,22 @@ export type QueryBookmarksArgs = {
 export type QueryFeedItemsArgs = {
   feedId: Scalars['UUID']['input'];
   limit?: InputMaybe<Scalars['Int']['input']>;
+  sortOrder?: InputMaybe<Scalars['String']['input']>;
+  unreadOnly?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+export type QueryFeedItemsAllArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  sortOrder?: InputMaybe<Scalars['String']['input']>;
+  unreadOnly?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+export type QueryFeedItemsByCategoryArgs = {
+  categoryId: Scalars['UUID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  sortOrder?: InputMaybe<Scalars['String']['input']>;
   unreadOnly?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
@@ -420,6 +516,12 @@ export type Tag = {
   color?: Maybe<Scalars['String']['output']>;
   id: Scalars['UUID']['output'];
   name: Scalars['String']['output'];
+};
+
+export type UserPreferences = {
+  __typename?: 'UserPreferences';
+  sortOrder: Scalars['String']['output'];
+  viewMode: Scalars['String']['output'];
 };
 
 export type Video = {
@@ -573,16 +675,51 @@ export type GetPendingIngestsQuery = { __typename?: 'Query', pendingIngests: Arr
 export type GetFeedsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetFeedsQuery = { __typename?: 'Query', feeds: Array<{ __typename?: 'FeedWithUnread', unreadCount: number, feed: { __typename?: 'Feed', id: any, url: string, title?: string | null, siteUrl?: string | null } }> };
+export type GetFeedsQuery = { __typename?: 'Query', feeds: Array<{ __typename?: 'FeedWithUnread', unreadCount: number, feed: { __typename?: 'Feed', id: any, url: string, title?: string | null, siteUrl?: string | null, categoryId?: any | null } }> };
+
+export type GetFeedCategoriesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetFeedCategoriesQuery = { __typename?: 'Query', feedCategories: Array<{ __typename?: 'FeedCategoryWithFeeds', totalUnread: number, category: { __typename?: 'FeedCategory', id: any, name: string, sortOrder: number }, feeds: Array<{ __typename?: 'FeedWithUnread', unreadCount: number, feed: { __typename?: 'Feed', id: any, url: string, title?: string | null, siteUrl?: string | null, categoryId?: any | null } }> }> };
 
 export type GetFeedItemsQueryVariables = Exact<{
   feedId: Scalars['UUID']['input'];
   limit?: InputMaybe<Scalars['Int']['input']>;
   unreadOnly?: InputMaybe<Scalars['Boolean']['input']>;
+  sortOrder?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
 export type GetFeedItemsQuery = { __typename?: 'Query', feedItems: Array<{ __typename?: 'FeedItem', id: any, feedId: any, title?: string | null, url?: string | null, content?: string | null, author?: string | null, publishedAt?: any | null, readAt?: any | null }> };
+
+export type GetFeedItemsByCategoryQueryVariables = Exact<{
+  categoryId: Scalars['UUID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  unreadOnly?: InputMaybe<Scalars['Boolean']['input']>;
+  sortOrder?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type GetFeedItemsByCategoryQuery = { __typename?: 'Query', feedItemsByCategory: Array<{ __typename?: 'FeedItem', id: any, feedId: any, title?: string | null, url?: string | null, content?: string | null, author?: string | null, publishedAt?: any | null, readAt?: any | null }> };
+
+export type GetAllFeedItemsQueryVariables = Exact<{
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  unreadOnly?: InputMaybe<Scalars['Boolean']['input']>;
+  sortOrder?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type GetAllFeedItemsQuery = { __typename?: 'Query', feedItemsAll: Array<{ __typename?: 'FeedItem', id: any, feedId: any, title?: string | null, url?: string | null, content?: string | null, author?: string | null, publishedAt?: any | null, readAt?: any | null }> };
+
+export type GetUserPreferencesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetUserPreferencesQuery = { __typename?: 'Query', userPreferences: { __typename?: 'UserPreferences', viewMode: string, sortOrder: string } };
+
+export type ExportFeedsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type ExportFeedsQuery = { __typename?: 'Query', exportFeeds: string };
 
 export type MarkItemReadMutationVariables = Exact<{
   itemId: Scalars['UUID']['input'];
@@ -590,6 +727,94 @@ export type MarkItemReadMutationVariables = Exact<{
 
 
 export type MarkItemReadMutation = { __typename?: 'Mutation', markItemRead?: { __typename?: 'FeedItem', id: any, readAt?: any | null } | null };
+
+export type MarkItemUnreadMutationVariables = Exact<{
+  itemId: Scalars['UUID']['input'];
+}>;
+
+
+export type MarkItemUnreadMutation = { __typename?: 'Mutation', markItemUnread?: { __typename?: 'FeedItem', id: any, readAt?: any | null } | null };
+
+export type MarkFeedReadMutationVariables = Exact<{
+  feedId: Scalars['UUID']['input'];
+}>;
+
+
+export type MarkFeedReadMutation = { __typename?: 'Mutation', markFeedRead: number };
+
+export type MarkCategoryReadMutationVariables = Exact<{
+  categoryId: Scalars['UUID']['input'];
+}>;
+
+
+export type MarkCategoryReadMutation = { __typename?: 'Mutation', markCategoryRead: number };
+
+export type AddFeedMutationVariables = Exact<{
+  url: Scalars['String']['input'];
+  categoryId?: InputMaybe<Scalars['UUID']['input']>;
+}>;
+
+
+export type AddFeedMutation = { __typename?: 'Mutation', addFeed: { __typename?: 'Feed', id: any, url: string, title?: string | null, categoryId?: any | null } };
+
+export type DeleteFeedMutationVariables = Exact<{
+  feedId: Scalars['UUID']['input'];
+}>;
+
+
+export type DeleteFeedMutation = { __typename?: 'Mutation', deleteFeed?: { __typename?: 'Feed', id: any } | null };
+
+export type AddCategoryMutationVariables = Exact<{
+  name: Scalars['String']['input'];
+}>;
+
+
+export type AddCategoryMutation = { __typename?: 'Mutation', addCategory: { __typename?: 'FeedCategory', id: any, name: string, sortOrder: number } };
+
+export type RenameCategoryMutationVariables = Exact<{
+  categoryId: Scalars['UUID']['input'];
+  name: Scalars['String']['input'];
+}>;
+
+
+export type RenameCategoryMutation = { __typename?: 'Mutation', renameCategory?: { __typename?: 'FeedCategory', id: any, name: string } | null };
+
+export type DeleteCategoryMutationVariables = Exact<{
+  categoryId: Scalars['UUID']['input'];
+}>;
+
+
+export type DeleteCategoryMutation = { __typename?: 'Mutation', deleteCategory: boolean };
+
+export type ReorderCategoriesMutationVariables = Exact<{
+  categoryIds: Array<Scalars['UUID']['input']> | Scalars['UUID']['input'];
+}>;
+
+
+export type ReorderCategoriesMutation = { __typename?: 'Mutation', reorderCategories: Array<{ __typename?: 'FeedCategory', id: any, sortOrder: number }> };
+
+export type MoveFeedToCategoryMutationVariables = Exact<{
+  feedId: Scalars['UUID']['input'];
+  categoryId: Scalars['UUID']['input'];
+}>;
+
+
+export type MoveFeedToCategoryMutation = { __typename?: 'Mutation', moveFeedToCategory?: { __typename?: 'Feed', id: any, categoryId?: any | null } | null };
+
+export type ImportFeedsMutationVariables = Exact<{
+  opml: Scalars['String']['input'];
+}>;
+
+
+export type ImportFeedsMutation = { __typename?: 'Mutation', importFeeds: { __typename?: 'ImportResult', feedsAdded: number, feedsSkipped: number, categoriesCreated: number } };
+
+export type UpdateUserPreferencesMutationVariables = Exact<{
+  viewMode?: InputMaybe<Scalars['String']['input']>;
+  sortOrder?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type UpdateUserPreferencesMutation = { __typename?: 'Mutation', updateUserPreferences: { __typename?: 'UserPreferences', viewMode: string, sortOrder: string } };
 
 export type SearchQueryVariables = Exact<{
   query: Scalars['String']['input'];
@@ -961,6 +1186,7 @@ export const GetFeedsDocument = gql`
       url
       title
       siteUrl
+      categoryId
     }
     unreadCount
   }
@@ -977,9 +1203,47 @@ export const GetFeedsDocument = gql`
       super(apollo);
     }
   }
+export const GetFeedCategoriesDocument = gql`
+    query GetFeedCategories {
+  feedCategories {
+    category {
+      id
+      name
+      sortOrder
+    }
+    feeds {
+      feed {
+        id
+        url
+        title
+        siteUrl
+        categoryId
+      }
+      unreadCount
+    }
+    totalUnread
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class GetFeedCategoriesGQL extends Apollo.Query<GetFeedCategoriesQuery, GetFeedCategoriesQueryVariables> {
+    document = GetFeedCategoriesDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
 export const GetFeedItemsDocument = gql`
-    query GetFeedItems($feedId: UUID!, $limit: Int, $unreadOnly: Boolean) {
-  feedItems(feedId: $feedId, limit: $limit, unreadOnly: $unreadOnly) {
+    query GetFeedItems($feedId: UUID!, $limit: Int, $unreadOnly: Boolean, $sortOrder: String) {
+  feedItems(
+    feedId: $feedId
+    limit: $limit
+    unreadOnly: $unreadOnly
+    sortOrder: $sortOrder
+  ) {
     id
     feedId
     title
@@ -1002,6 +1266,96 @@ export const GetFeedItemsDocument = gql`
       super(apollo);
     }
   }
+export const GetFeedItemsByCategoryDocument = gql`
+    query GetFeedItemsByCategory($categoryId: UUID!, $limit: Int, $unreadOnly: Boolean, $sortOrder: String) {
+  feedItemsByCategory(
+    categoryId: $categoryId
+    limit: $limit
+    unreadOnly: $unreadOnly
+    sortOrder: $sortOrder
+  ) {
+    id
+    feedId
+    title
+    url
+    content
+    author
+    publishedAt
+    readAt
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class GetFeedItemsByCategoryGQL extends Apollo.Query<GetFeedItemsByCategoryQuery, GetFeedItemsByCategoryQueryVariables> {
+    document = GetFeedItemsByCategoryDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const GetAllFeedItemsDocument = gql`
+    query GetAllFeedItems($limit: Int, $unreadOnly: Boolean, $sortOrder: String) {
+  feedItemsAll(limit: $limit, unreadOnly: $unreadOnly, sortOrder: $sortOrder) {
+    id
+    feedId
+    title
+    url
+    content
+    author
+    publishedAt
+    readAt
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class GetAllFeedItemsGQL extends Apollo.Query<GetAllFeedItemsQuery, GetAllFeedItemsQueryVariables> {
+    document = GetAllFeedItemsDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const GetUserPreferencesDocument = gql`
+    query GetUserPreferences {
+  userPreferences {
+    viewMode
+    sortOrder
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class GetUserPreferencesGQL extends Apollo.Query<GetUserPreferencesQuery, GetUserPreferencesQueryVariables> {
+    document = GetUserPreferencesDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const ExportFeedsDocument = gql`
+    query ExportFeeds {
+  exportFeeds
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class ExportFeedsGQL extends Apollo.Query<ExportFeedsQuery, ExportFeedsQueryVariables> {
+    document = ExportFeedsDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
 export const MarkItemReadDocument = gql`
     mutation MarkItemRead($itemId: UUID!) {
   markItemRead(itemId: $itemId) {
@@ -1016,6 +1370,228 @@ export const MarkItemReadDocument = gql`
   })
   export class MarkItemReadGQL extends Apollo.Mutation<MarkItemReadMutation, MarkItemReadMutationVariables> {
     document = MarkItemReadDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const MarkItemUnreadDocument = gql`
+    mutation MarkItemUnread($itemId: UUID!) {
+  markItemUnread(itemId: $itemId) {
+    id
+    readAt
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class MarkItemUnreadGQL extends Apollo.Mutation<MarkItemUnreadMutation, MarkItemUnreadMutationVariables> {
+    document = MarkItemUnreadDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const MarkFeedReadDocument = gql`
+    mutation MarkFeedRead($feedId: UUID!) {
+  markFeedRead(feedId: $feedId)
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class MarkFeedReadGQL extends Apollo.Mutation<MarkFeedReadMutation, MarkFeedReadMutationVariables> {
+    document = MarkFeedReadDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const MarkCategoryReadDocument = gql`
+    mutation MarkCategoryRead($categoryId: UUID!) {
+  markCategoryRead(categoryId: $categoryId)
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class MarkCategoryReadGQL extends Apollo.Mutation<MarkCategoryReadMutation, MarkCategoryReadMutationVariables> {
+    document = MarkCategoryReadDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const AddFeedDocument = gql`
+    mutation AddFeed($url: String!, $categoryId: UUID) {
+  addFeed(url: $url, categoryId: $categoryId) {
+    id
+    url
+    title
+    categoryId
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class AddFeedGQL extends Apollo.Mutation<AddFeedMutation, AddFeedMutationVariables> {
+    document = AddFeedDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const DeleteFeedDocument = gql`
+    mutation DeleteFeed($feedId: UUID!) {
+  deleteFeed(feedId: $feedId) {
+    id
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class DeleteFeedGQL extends Apollo.Mutation<DeleteFeedMutation, DeleteFeedMutationVariables> {
+    document = DeleteFeedDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const AddCategoryDocument = gql`
+    mutation AddCategory($name: String!) {
+  addCategory(name: $name) {
+    id
+    name
+    sortOrder
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class AddCategoryGQL extends Apollo.Mutation<AddCategoryMutation, AddCategoryMutationVariables> {
+    document = AddCategoryDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const RenameCategoryDocument = gql`
+    mutation RenameCategory($categoryId: UUID!, $name: String!) {
+  renameCategory(categoryId: $categoryId, name: $name) {
+    id
+    name
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class RenameCategoryGQL extends Apollo.Mutation<RenameCategoryMutation, RenameCategoryMutationVariables> {
+    document = RenameCategoryDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const DeleteCategoryDocument = gql`
+    mutation DeleteCategory($categoryId: UUID!) {
+  deleteCategory(categoryId: $categoryId)
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class DeleteCategoryGQL extends Apollo.Mutation<DeleteCategoryMutation, DeleteCategoryMutationVariables> {
+    document = DeleteCategoryDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const ReorderCategoriesDocument = gql`
+    mutation ReorderCategories($categoryIds: [UUID!]!) {
+  reorderCategories(categoryIds: $categoryIds) {
+    id
+    sortOrder
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class ReorderCategoriesGQL extends Apollo.Mutation<ReorderCategoriesMutation, ReorderCategoriesMutationVariables> {
+    document = ReorderCategoriesDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const MoveFeedToCategoryDocument = gql`
+    mutation MoveFeedToCategory($feedId: UUID!, $categoryId: UUID!) {
+  moveFeedToCategory(feedId: $feedId, categoryId: $categoryId) {
+    id
+    categoryId
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class MoveFeedToCategoryGQL extends Apollo.Mutation<MoveFeedToCategoryMutation, MoveFeedToCategoryMutationVariables> {
+    document = MoveFeedToCategoryDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const ImportFeedsDocument = gql`
+    mutation ImportFeeds($opml: String!) {
+  importFeeds(opml: $opml) {
+    feedsAdded
+    feedsSkipped
+    categoriesCreated
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class ImportFeedsGQL extends Apollo.Mutation<ImportFeedsMutation, ImportFeedsMutationVariables> {
+    document = ImportFeedsDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const UpdateUserPreferencesDocument = gql`
+    mutation UpdateUserPreferences($viewMode: String, $sortOrder: String) {
+  updateUserPreferences(viewMode: $viewMode, sortOrder: $sortOrder) {
+    viewMode
+    sortOrder
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class UpdateUserPreferencesGQL extends Apollo.Mutation<UpdateUserPreferencesMutation, UpdateUserPreferencesMutationVariables> {
+    document = UpdateUserPreferencesDocument;
     
     constructor(apollo: Apollo.Apollo) {
       super(apollo);

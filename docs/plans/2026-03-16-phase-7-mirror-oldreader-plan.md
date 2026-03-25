@@ -826,7 +826,7 @@ git commit -m "feat: FeedItemService with sort order, multi-feed queries, markCa
 **Files:**
 - Create: `src/main/kotlin/org/sightech/memoryvault/feed/service/OpmlService.kt`
 
-- [ ] **Step 1: Write the OPML service**
+- [x] **Step 1: Write the OPML service**
 
 ```kotlin
 package org.sightech.memoryvault.feed.service
@@ -975,7 +975,7 @@ class OpmlService(
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/feed/service/OpmlService.kt
@@ -989,7 +989,7 @@ git commit -m "feat: OpmlService for OPML import/export"
 **Files:**
 - Create: `src/test/kotlin/org/sightech/memoryvault/feed/service/OpmlServiceTest.kt`
 
-- [ ] **Step 1: Write tests**
+- [x] **Step 1: Write tests**
 
 ```kotlin
 package org.sightech.memoryvault.feed.service
@@ -1102,13 +1102,13 @@ class OpmlServiceTest {
 }
 ```
 
-- [ ] **Step 2: Run tests**
+- [x] **Step 2: Run tests**
 
 Run: `./gradlew test --tests '*OpmlServiceTest*' -x :client:test 2>&1 | tail -20`
 
 Expected: All tests pass.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/test/kotlin/org/sightech/memoryvault/feed/service/OpmlServiceTest.kt
@@ -1125,7 +1125,7 @@ git commit -m "test: OpmlService unit tests"
 - Modify: `src/main/resources/graphql/feeds.graphqls`
 - Modify: `src/main/resources/graphql/schema.graphqls`
 
-- [ ] **Step 1: Add types to feeds.graphqls**
+- [x] **Step 1: Add types to feeds.graphqls**
 
 Append to `feeds.graphqls`:
 
@@ -1185,7 +1185,7 @@ type FeedItem {
 }
 ```
 
-- [ ] **Step 2: Add queries and mutations to schema.graphqls**
+- [x] **Step 2: Add queries and mutations to schema.graphqls**
 
 Add to the `Query` type:
 ```graphql
@@ -1220,7 +1220,7 @@ Update existing `addFeed` mutation:
     addFeed(url: String!, categoryId: UUID): Feed!
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/main/resources/graphql/feeds.graphqls src/main/resources/graphql/schema.graphqls
@@ -1234,7 +1234,7 @@ git commit -m "feat: GraphQL schema for feed categories, preferences, OPML, star
 **Files:**
 - Create: `src/main/kotlin/org/sightech/memoryvault/graphql/FeedCategoryResolver.kt`
 
-- [ ] **Step 1: Write the resolver**
+- [x] **Step 1: Write the resolver**
 
 ```kotlin
 package org.sightech.memoryvault.graphql
@@ -1362,7 +1362,7 @@ class FeedCategoryResolver(
 }
 ```
 
-- [ ] **Step 2: Check if UserRepository exists, create if needed**
+- [x] **Step 2: Check if UserRepository exists, create if needed**
 
 Look for `src/main/kotlin/org/sightech/memoryvault/auth/repository/UserRepository.kt`. If it doesn't exist, create it:
 
@@ -1378,7 +1378,7 @@ interface UserRepository : JpaRepository<User, UUID> {
 }
 ```
 
-- [ ] **Step 3: Update existing FeedResolver.addFeed to accept categoryId**
+- [x] **Step 3: Update existing FeedResolver.addFeed to accept categoryId**
 
 In `src/main/kotlin/org/sightech/memoryvault/graphql/FeedResolver.kt`, update the `addFeed` mutation:
 
@@ -1403,7 +1403,7 @@ Also update the `feedItems` query to accept `sortOrder`:
     }
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/graphql/FeedCategoryResolver.kt src/main/kotlin/org/sightech/memoryvault/graphql/FeedResolver.kt
@@ -1418,7 +1418,7 @@ git commit -m "feat: FeedCategoryResolver + update FeedResolver for categories a
 - Modify: `src/main/kotlin/org/sightech/memoryvault/mcp/FeedTools.kt`
 - Create: `src/main/kotlin/org/sightech/memoryvault/mcp/FeedCategoryTools.kt`
 
-- [ ] **Step 1: Update FeedTools**
+- [x] **Step 1: Update FeedTools**
 
 Update `addFeed` to accept optional categoryId:
 
@@ -1484,7 +1484,7 @@ Add starred stubs (commented out):
     // }
 ```
 
-- [ ] **Step 2: Create FeedCategoryTools**
+- [x] **Step 2: Create FeedCategoryTools**
 
 ```kotlin
 package org.sightech.memoryvault.mcp
@@ -1555,7 +1555,7 @@ class FeedCategoryTools(
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/mcp/FeedTools.kt src/main/kotlin/org/sightech/memoryvault/mcp/FeedCategoryTools.kt
@@ -1574,7 +1574,7 @@ git commit -m "feat: FeedCategoryTools MCP + update FeedTools with category/OPML
 - Create: `src/main/kotlin/org/sightech/memoryvault/auth/service/ApiKeyService.kt`
 - Create: `src/main/kotlin/org/sightech/memoryvault/auth/service/OAuthService.kt`
 
-- [ ] **Step 1: Create ApiKey entity stub**
+- [x] **Step 1: Create ApiKey entity stub**
 
 ```kotlin
 package org.sightech.memoryvault.auth.entity
@@ -1615,7 +1615,7 @@ package org.sightech.memoryvault.auth.entity
 // )
 ```
 
-- [ ] **Step 2: Create UserAuthProvider entity stub**
+- [x] **Step 2: Create UserAuthProvider entity stub**
 
 ```kotlin
 package org.sightech.memoryvault.auth.entity
@@ -1663,7 +1663,7 @@ package org.sightech.memoryvault.auth.entity
 // )
 ```
 
-- [ ] **Step 3: Create ApiKeyService stub**
+- [x] **Step 3: Create ApiKeyService stub**
 
 ```kotlin
 package org.sightech.memoryvault.auth.service
@@ -1684,7 +1684,7 @@ package org.sightech.memoryvault.auth.service
 // }
 ```
 
-- [ ] **Step 4: Create OAuthService stub**
+- [x] **Step 4: Create OAuthService stub**
 
 ```kotlin
 package org.sightech.memoryvault.auth.service
@@ -1705,7 +1705,7 @@ package org.sightech.memoryvault.auth.service
 // }
 ```
 
-- [ ] **Step 5: Add commented-out OAuth properties to application.properties**
+- [x] **Step 5: Add commented-out OAuth properties to application.properties**
 
 Append to `src/main/resources/application.properties`:
 
@@ -1719,7 +1719,7 @@ Append to `src/main/resources/application.properties`:
 # spring.security.oauth2.client.registration.github.client-secret=YOUR_GITHUB_CLIENT_SECRET
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/auth/entity/ApiKey.kt src/main/kotlin/org/sightech/memoryvault/auth/entity/UserAuthProvider.kt src/main/kotlin/org/sightech/memoryvault/auth/service/ApiKeyService.kt src/main/kotlin/org/sightech/memoryvault/auth/service/OAuthService.kt src/main/resources/application.properties

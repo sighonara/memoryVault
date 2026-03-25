@@ -5,13 +5,35 @@ query GetFeeds {
       url
       title
       siteUrl
+      categoryId
     }
     unreadCount
   }
 }
 
-query GetFeedItems($feedId: UUID!, $limit: Int, $unreadOnly: Boolean) {
-  feedItems(feedId: $feedId, limit: $limit, unreadOnly: $unreadOnly) {
+query GetFeedCategories {
+  feedCategories {
+    category {
+      id
+      name
+      sortOrder
+    }
+    feeds {
+      feed {
+        id
+        url
+        title
+        siteUrl
+        categoryId
+      }
+      unreadCount
+    }
+    totalUnread
+  }
+}
+
+query GetFeedItems($feedId: UUID!, $limit: Int, $unreadOnly: Boolean, $sortOrder: String) {
+  feedItems(feedId: $feedId, limit: $limit, unreadOnly: $unreadOnly, sortOrder: $sortOrder) {
     id
     feedId
     title
@@ -23,9 +45,124 @@ query GetFeedItems($feedId: UUID!, $limit: Int, $unreadOnly: Boolean) {
   }
 }
 
+query GetFeedItemsByCategory($categoryId: UUID!, $limit: Int, $unreadOnly: Boolean, $sortOrder: String) {
+  feedItemsByCategory(categoryId: $categoryId, limit: $limit, unreadOnly: $unreadOnly, sortOrder: $sortOrder) {
+    id
+    feedId
+    title
+    url
+    content
+    author
+    publishedAt
+    readAt
+  }
+}
+
+query GetAllFeedItems($limit: Int, $unreadOnly: Boolean, $sortOrder: String) {
+  feedItemsAll(limit: $limit, unreadOnly: $unreadOnly, sortOrder: $sortOrder) {
+    id
+    feedId
+    title
+    url
+    content
+    author
+    publishedAt
+    readAt
+  }
+}
+
+query GetUserPreferences {
+  userPreferences {
+    viewMode
+    sortOrder
+  }
+}
+
+query ExportFeeds {
+  exportFeeds
+}
+
 mutation MarkItemRead($itemId: UUID!) {
   markItemRead(itemId: $itemId) {
     id
     readAt
+  }
+}
+
+mutation MarkItemUnread($itemId: UUID!) {
+  markItemUnread(itemId: $itemId) {
+    id
+    readAt
+  }
+}
+
+mutation MarkFeedRead($feedId: UUID!) {
+  markFeedRead(feedId: $feedId)
+}
+
+mutation MarkCategoryRead($categoryId: UUID!) {
+  markCategoryRead(categoryId: $categoryId)
+}
+
+mutation AddFeed($url: String!, $categoryId: UUID) {
+  addFeed(url: $url, categoryId: $categoryId) {
+    id
+    url
+    title
+    categoryId
+  }
+}
+
+mutation DeleteFeed($feedId: UUID!) {
+  deleteFeed(feedId: $feedId) {
+    id
+  }
+}
+
+mutation AddCategory($name: String!) {
+  addCategory(name: $name) {
+    id
+    name
+    sortOrder
+  }
+}
+
+mutation RenameCategory($categoryId: UUID!, $name: String!) {
+  renameCategory(categoryId: $categoryId, name: $name) {
+    id
+    name
+  }
+}
+
+mutation DeleteCategory($categoryId: UUID!) {
+  deleteCategory(categoryId: $categoryId)
+}
+
+mutation ReorderCategories($categoryIds: [UUID!]!) {
+  reorderCategories(categoryIds: $categoryIds) {
+    id
+    sortOrder
+  }
+}
+
+mutation MoveFeedToCategory($feedId: UUID!, $categoryId: UUID!) {
+  moveFeedToCategory(feedId: $feedId, categoryId: $categoryId) {
+    id
+    categoryId
+  }
+}
+
+mutation ImportFeeds($opml: String!) {
+  importFeeds(opml: $opml) {
+    feedsAdded
+    feedsSkipped
+    categoriesCreated
+  }
+}
+
+mutation UpdateUserPreferences($viewMode: String, $sortOrder: String) {
+  updateUserPreferences(viewMode: $viewMode, sortOrder: $sortOrder) {
+    viewMode
+    sortOrder
   }
 }
