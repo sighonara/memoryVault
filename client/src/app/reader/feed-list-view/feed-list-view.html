@@ -1,0 +1,43 @@
+<div class="article-list">
+  <mat-accordion multi>
+    @for (item of store.items(); track item.id) {
+      <mat-expansion-panel
+        class="article-panel"
+        [class.read]="!!item.readAt"
+        [attr.data-item-id]="item.id"
+        [attr.data-read]="!!item.readAt"
+        (opened)="onPanelOpened(item.id, !!item.readAt)"
+      >
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            {{ item.title }}
+          </mat-panel-title>
+          <mat-panel-description>
+            {{ item.author }} - {{ item.publishedAt | date:'short' }}
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <div class="article-content">
+          <div [innerHTML]="item.content"></div>
+          <mat-divider></mat-divider>
+          <div class="article-footer">
+            <button mat-button (click)="toggleReadStatus(item.id, !!item.readAt, $event)">
+              <mat-icon>{{ item.readAt ? 'mark_email_unread' : 'mark_email_read' }}</mat-icon>
+              {{ item.readAt ? 'Mark Unread' : 'Mark Read' }}
+            </button>
+            <a mat-button color="primary" [href]="item.url" target="_blank">
+              <mat-icon>open_in_new</mat-icon> View Original
+            </a>
+          </div>
+        </div>
+      </mat-expansion-panel>
+    }
+  </mat-accordion>
+
+  @if (store.items().length === 0 && !store.loadingItems()) {
+    <div class="empty-state">
+      <mat-icon>done_all</mat-icon>
+      <p>No articles to read!</p>
+    </div>
+  }
+</div>
