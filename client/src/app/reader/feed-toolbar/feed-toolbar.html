@@ -1,0 +1,16 @@
+<mat-toolbar>
+  <span class="title">{{ store.selectedTitle() }}</span>
+  <span class="spacer"></span>
+  <button mat-icon-button (click)="toggleViewMode()" [matTooltip]="store.viewMode() === 'LIST' ? 'Full view' : 'List view'">
+    <mat-icon>{{ store.viewMode() === 'LIST' ? 'view_agenda' : 'view_list' }}</mat-icon>
+  </button>
+  <button mat-icon-button (click)="toggleSortOrder()" [matTooltip]="store.sortOrder() === 'NEWEST_FIRST' ? 'Oldest first' : 'Newest first'">
+    <mat-icon>{{ store.sortOrder() === 'NEWEST_FIRST' ? 'arrow_downward' : 'arrow_upward' }}</mat-icon>
+  </button>
+  <button mat-button (click)="store.setUnreadOnly(!store.unreadOnly())">
+    {{ store.unreadOnly() ? 'Show All' : 'Show Unread' }}
+  </button>
+  <button mat-icon-button (click)="store.refreshItems()" matTooltip="Refresh">
+    <mat-icon>refresh</mat-icon>
+  </button>
+</mat-toolbar>
