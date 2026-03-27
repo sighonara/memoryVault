@@ -228,14 +228,17 @@ JWT authentication (jjwt, BCrypt), Spring for GraphQL (schema-first), Angular 21
 ### Phase 6 — Bookmark Management
 Folder hierarchy (adjacency list with cycle detection), full bookmark manager UI (two-panel tree + list), browser bookmark ingestion via CLI commands generated in the UI (Chrome, Brave, Firefox, Safari), conflict resolution with preview/commit flow, Netscape HTML export with folder structure, pending ingest notification banner. See `docs/plans/2026-03-11-phase-6-bookmark-management.md`.
 
-### Phase 7 — Mirror OldReader functionality
-Import feeds. Export feeds. Support (or stubs for) OAuth from social media logins. Supporting 3rd party integrations (unclear about what all these are). Other (need to research)?
+### Phase 7 — Mirror OldReader Functionality
+Feed categories (single-level with "Subscribed" default), OPML import/export, full feed management UI (add/delete/move feeds, create/rename/delete/reorder categories), reader enhancements (list/full view toggle, newest/oldest sort, scroll-mark-as-read, manual read/unread, mark-category-read, "All Items" view), user preferences persisted on User entity. Stubs for starred articles, API keys, and OAuth (tables + commented-out code). See `docs/plans/2026-03-16-phase-7-mirror-oldreader-design.md`.
 
 ### Phase 8 — Real-Time Updates
 WebSocket support for live UI updates — new feed items, sync job progress, download status changes pushed to the Angular client without polling.
 
 ### Phase 9 — Infrastructure
 Terraform, GitHub Actions CI/CD, production AWS deployment (EC2, RDS, S3, Lambda, EventBridge). AWS Cognito auth swap (CurrentUser abstraction is already in place), CloudWatch log retrieval (LocalLogService/CloudWatchLogService interface is stubbed), AWS cost tracking (AwsCostRecord entity defined but not implemented).
+
+### Phase 10 — Cross-Platform Video Backup
+Archived YouTube videos are automatically backed up to a configurable secondary video platform (Rumble, Vimeo, etc.). If the video doesn't already exist on the target platform, MemoryVault uploads it. Ensures resilience against YouTube takedowns/deletions.
 
 ---
 
@@ -246,3 +249,4 @@ Terraform, GitHub Actions CI/CD, production AWS deployment (EC2, RDS, S3, Lambda
 - **Scheduled bookmark ingest** — cron-based automatic ingestion if the user's bookmark file is accessible on the same machine. Deferred from Phase 6.
 - `color` on `Tag` is nullable; can be dropped in a migration if a better theming approach is chosen later.
 - Multi-tenancy (`userId` foreign keys) is in from the start. SaaS path remains open if the web UI proves compelling enough.
+- **Cross-platform video backup** — archived YouTube videos should also be backed up to a configurable secondary video platform (Rumble, Vimeo, etc.). If the video doesn't already exist on the target platform, MemoryVault should upload it automatically. Ensures resilience against YouTube takedowns/deletions.

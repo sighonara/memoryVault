@@ -28,9 +28,9 @@ class BookmarkResolverTest {
     @Test
     fun `addBookmark mutation delegates to service`() {
         val bookmark = Bookmark(userId = UUID.randomUUID(), url = "https://example.com", title = "Example")
-        every { bookmarkService.create(any(), any(), any()) } returns bookmark
+        every { bookmarkService.create(any(), any(), any(), any()) } returns bookmark
 
-        val result = resolver.addBookmark("https://example.com", "Example", null)
+        val result = resolver.addBookmark("https://example.com", "Example", null, null)
         assertEquals("https://example.com", result.url)
         assertEquals("Example", result.title)
     }

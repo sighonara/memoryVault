@@ -10,7 +10,14 @@ type Query {
 
     # Feeds
     feeds: [FeedWithUnread!]!
-    feedItems(feedId: UUID!, limit: Int, unreadOnly: Boolean): [FeedItem!]!
+    feedItems(feedId: UUID!, limit: Int, unreadOnly: Boolean, sortOrder: String): [FeedItem!]!
+
+    # Feed categories
+    feedCategories: [FeedCategoryWithFeeds!]!
+    feedItemsByCategory(categoryId: UUID!, limit: Int, unreadOnly: Boolean, sortOrder: String): [FeedItem!]!
+    feedItemsAll(limit: Int, unreadOnly: Boolean, sortOrder: String): [FeedItem!]!
+    exportFeeds: String!
+    userPreferences: UserPreferences!
 
     # YouTube
     youtubeLists: [YoutubeListWithStats!]!
@@ -47,12 +54,22 @@ type Mutation {
     commitIngest(previewId: UUID!, resolutions: [IngestResolutionInput!]!): CommitResult!
 
     # Feeds
-    addFeed(url: String!): Feed!
+    addFeed(url: String!, categoryId: UUID): Feed!
     deleteFeed(feedId: UUID!): Feed
     markItemRead(itemId: UUID!): FeedItem
     markItemUnread(itemId: UUID!): FeedItem
     markFeedRead(feedId: UUID!): Int!
     refreshFeed(feedId: UUID): [FeedRefreshResult!]!
+
+    # Feed categories
+    addCategory(name: String!): FeedCategory!
+    renameCategory(categoryId: UUID!, name: String!): FeedCategory
+    deleteCategory(categoryId: UUID!): Boolean!
+    reorderCategories(categoryIds: [UUID!]!): [FeedCategory!]!
+    moveFeedToCategory(feedId: UUID!, categoryId: UUID!): Feed
+    markCategoryRead(categoryId: UUID!): Int!
+    importFeeds(opml: String!): ImportResult!
+    updateUserPreferences(viewMode: String, sortOrder: String): UserPreferences!
 
     # YouTube
     addYoutubeList(url: String!): YoutubeListAddResult!

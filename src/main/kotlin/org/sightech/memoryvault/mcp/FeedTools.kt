@@ -4,6 +4,7 @@ import kotlinx.coroutines.runBlocking
 import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.feed.service.FeedItemService
 import org.sightech.memoryvault.feed.service.FeedService
+import org.sightech.memoryvault.feed.service.OpmlService
 import org.springframework.ai.tool.annotation.Tool
 import org.springframework.stereotype.Component
 import java.util.UUID
@@ -11,12 +12,14 @@ import java.util.UUID
 @Component
 class FeedTools(
     private val feedService: FeedService,
-    private val feedItemService: FeedItemService
+    private val feedItemService: FeedItemService,
+    private val opmlService: OpmlService
 ) {
 
-    @Tool(description = "Subscribe to an RSS feed. Use when the user wants to add, follow, or subscribe to an RSS or Atom feed by URL.")
-    fun addFeed(url: String): String {
-        val feed = runBlocking { feedService.addFeed(url) }
+    @Tool(description = "Subscribe to an RSS feed. Use when the user wants to add, follow, or subscribe to an RSS or Atom feed by URL. Optionally assign to a category.")
+    fun addFeed(url: String, categoryId: String?): String {
+        val catUuid = categoryId?.let { UUID.fromString(it) }
+        val feed = runBlocking { feedService.addFeed(url, catUuid) }
         return "Subscribed to feed: \"${feed.title ?: feed.url}\" (${feed.url}) — id: ${feed.id}"
     }
 
@@ -31,9 +34,9 @@ class FeedTools(
         return "${feeds.size} feed(s):\n${lines.joinToString("\n")}"
     }
 
-    @Tool(description = "Browse items from an RSS feed. Use when the user wants to read or see articles from a specific feed. Set unreadOnly to true to see only unread items.")
-    fun getFeedItems(feedId: String, limit: Int?, unreadOnly: Boolean?): String {
-        val items = feedItemService.getItems(UUID.fromString(feedId), limit, unreadOnly ?: false)
+    @Tool(description = "Browse items from an RSS feed. Use when the user wants to read or see articles from a specific feed. Set unreadOnly to true to see only unread items. sortOrder can be NEWEST_FIRST or OLDEST_FIRST.")
+    fun getFeedItems(feedId: String, limit: Int?, unreadOnly: Boolean?, sortOrder: String?): String {
+        val items = feedItemService.getItems(UUID.fromString(feedId), limit, unreadOnly ?: false, sortOrder ?: "NEWEST_FIRST")
         if (items.isEmpty()) return "No items found."
         
         val lines = items.map { item ->
@@ -76,4 +79,30 @@ class FeedTools(
         }
         return "Refreshed ${results.size} feed(s):\n${lines.joinToString("\n")}"
     }
+
+    @Tool(description = "Export all feed subscriptions as OPML 2.0 XML. Use when the user wants to back up or migrate their feeds.")
+    fun exportFeeds(): String {
+        return opmlService.exportOpml()
+    }
+
+    @Tool(description = "Import feed subscriptions from OPML XML content. Use when the user wants to bulk-import feeds from another RSS reader. Automatically creates categories and skips duplicates.")
+    fun importFeeds(opmlContent: String): String {
+        val result = runBlocking { opmlService.importOpml(opmlContent) }
+        return "Import complete: ${result.feedsAdded} feed(s) added, ${result.feedsSkipped} skipped (duplicate), ${result.categoriesCreated} new category/categories created."
+    }
+
+    // TODO: Phase 7 stub — starred articles
+    // @Tool(description = "Star a feed item to save it for later reading.")
+    // fun starItem(itemId: String): String {
+    //     val item = feedItemService.starItem(UUID.fromString(itemId))
+    //         ?: return "Feed item not found."
+    //     return "Starred: \"${item.title ?: "(no title)"}\""
+    // }
+
+    // @Tool(description = "Remove star from a feed item.")
+    // fun unstarItem(itemId: String): String {
+    //     val item = feedItemService.unstarItem(UUID.fromString(itemId))
+    //         ?: return "Feed item not found."
+    //     return "Unstarred: \"${item.title ?: "(no title)"}\""
+    // }
 }

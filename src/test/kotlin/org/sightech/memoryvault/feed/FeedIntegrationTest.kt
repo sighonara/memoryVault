@@ -2,6 +2,8 @@ package org.sightech.memoryvault.feed
 
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
+import org.sightech.memoryvault.feed.entity.FeedCategory
+import org.sightech.memoryvault.feed.repository.FeedCategoryRepository
 import org.sightech.memoryvault.feed.repository.FeedRepository
 import org.sightech.memoryvault.feed.service.FeedItemService
 import org.sightech.memoryvault.feed.service.FeedService
@@ -46,14 +48,19 @@ class FeedIntegrationTest {
     @Autowired lateinit var feedItemService: FeedItemService
     @Autowired lateinit var rssFetchService: RssFetchService
     @Autowired lateinit var feedRepository: FeedRepository
+    @Autowired lateinit var feedCategoryRepository: FeedCategoryRepository
 
     private val sampleXml = this::class.java.classLoader.getResource("fixtures/sample-rss.xml")!!.readText()
     private val userId = UUID.fromString("00000000-0000-0000-0000-000000000001")
 
+    private fun defaultCategory(): FeedCategory =
+        feedCategoryRepository.findActiveByUserIdAndNameIgnoreCase(userId, FeedCategory.SUBSCRIBED_NAME)
+            ?: feedCategoryRepository.save(FeedCategory(userId = userId, name = FeedCategory.SUBSCRIBED_NAME))
+
     @Test
     fun `create feed and fetch items from XML`() {
         val feed = feedRepository.save(
-            org.sightech.memoryvault.feed.entity.Feed(userId = userId, url = "https://test-feed.com/rss")
+            org.sightech.memoryvault.feed.entity.Feed(userId = userId, url = "https://test-feed.com/rss", category = defaultCategory())
         )
 
         val newCount = runBlocking { rssFetchService.fetchAndStoreFromXml(feed, sampleXml) }
@@ -67,7 +74,7 @@ class FeedIntegrationTest {
     @Test
     fun `deduplication prevents duplicate items`() {
         val feed = feedRepository.save(
-            org.sightech.memoryvault.feed.entity.Feed(userId = userId, url = "https://dedup-test.com/rss")
+            org.sightech.memoryvault.feed.entity.Feed(userId = userId, url = "https://dedup-test.com/rss", category = defaultCategory())
         )
 
         val first = runBlocking { rssFetchService.fetchAndStoreFromXml(feed, sampleXml) }
@@ -83,7 +90,7 @@ class FeedIntegrationTest {
     @Test
     fun `mark item read and unread`() {
         val feed = feedRepository.save(
-            org.sightech.memoryvault.feed.entity.Feed(userId = userId, url = "https://read-test.com/rss")
+            org.sightech.memoryvault.feed.entity.Feed(userId = userId, url = "https://read-test.com/rss", category = defaultCategory())
         )
         runBlocking { rssFetchService.fetchAndStoreFromXml(feed, sampleXml) }
 
@@ -103,7 +110,7 @@ class FeedIntegrationTest {
     @Test
     fun `mark all items in feed as read`() {
         val feed = feedRepository.save(
-            org.sightech.memoryvault.feed.entity.Feed(userId = userId, url = "https://markall-test.com/rss")
+            org.sightech.memoryvault.feed.entity.Feed(userId = userId, url = "https://markall-test.com/rss", category = defaultCategory())
         )
         runBlocking { rssFetchService.fetchAndStoreFromXml(feed, sampleXml) }
 
@@ -117,7 +124,7 @@ class FeedIntegrationTest {
     @Test
     fun `list feeds returns unread counts`() {
         val feed = feedRepository.save(
-            org.sightech.memoryvault.feed.entity.Feed(userId = userId, url = "https://list-test.com/rss")
+            org.sightech.memoryvault.feed.entity.Feed(userId = userId, url = "https://list-test.com/rss", category = defaultCategory())
         )
         runBlocking { rssFetchService.fetchAndStoreFromXml(feed, sampleXml) }
 
@@ -130,7 +137,7 @@ class FeedIntegrationTest {
     @Test
     fun `soft delete feed`() {
         val feed = feedRepository.save(
-            org.sightech.memoryvault.feed.entity.Feed(userId = userId, url = "https://delete-test.com/rss")
+            org.sightech.memoryvault.feed.entity.Feed(userId = userId, url = "https://delete-test.com/rss", category = defaultCategory())
         )
 
         val deleted = feedService.deleteFeed(feed.id)
@@ -143,7 +150,7 @@ class FeedIntegrationTest {
     @Test
     fun `feed metadata updated after fetch`() {
         val feed = feedRepository.save(
-            org.sightech.memoryvault.feed.entity.Feed(userId = userId, url = "https://meta-test.com/rss")
+            org.sightech.memoryvault.feed.entity.Feed(userId = userId, url = "https://meta-test.com/rss", category = defaultCategory())
         )
         runBlocking { rssFetchService.fetchAndStoreFromXml(feed, sampleXml) }
 

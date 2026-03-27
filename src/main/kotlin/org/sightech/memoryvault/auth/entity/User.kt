@@ -23,6 +23,12 @@ class User(
     @Column(nullable = false, length = 20)
     val role: UserRole = UserRole.OWNER,
 
+    @Column(name = "view_mode", nullable = false, length = 10)
+    var viewMode: String = "LIST",
+
+    @Column(name = "sort_order", nullable = false, length = 20)
+    var sortOrder: String = "NEWEST_FIRST",
+
     @Column(name = "created_at", nullable = false)
     val createdAt: Instant = Instant.now(),
 

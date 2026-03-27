@@ -28,14 +28,15 @@ class FeedResolver(
     fun feedItems(
         @Argument feedId: UUID,
         @Argument limit: Int?,
-        @Argument unreadOnly: Boolean?
+        @Argument unreadOnly: Boolean?,
+        @Argument sortOrder: String?
     ): List<FeedItem> {
-        return feedItemService.getItems(feedId, limit, unreadOnly ?: false)
+        return feedItemService.getItems(feedId, limit, unreadOnly ?: false, sortOrder ?: "NEWEST_FIRST")
     }
 
     @MutationMapping
-    fun addFeed(@Argument url: String): Feed {
-        return runBlocking { feedService.addFeed(url) }
+    fun addFeed(@Argument url: String, @Argument categoryId: UUID?): Feed {
+        return runBlocking { feedService.addFeed(url, categoryId) }
     }
 
     @MutationMapping

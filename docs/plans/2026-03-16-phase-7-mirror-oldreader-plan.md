@@ -14,12 +14,12 @@
 
 ## Chunk 1: Database Migration + FeedCategory Entity + Repository
 
-### Task 1: Create V6 Migration
+### Task 1: Create V6 Migration ✓
 
 **Files:**
 - Create: `src/main/resources/db/migration/V6__feed_categories_and_preferences.sql`
 
-- [ ] **Step 1: Write the migration file**
+- [x] **Step 1: Write the migration file**
 
 ```sql
 -- Feed categories (single-level, no hierarchy)
@@ -83,13 +83,13 @@ CREATE TABLE user_auth_providers (
 );
 ```
 
-- [ ] **Step 2: Verify migration applies**
+- [x] **Step 2: Verify migration applies**
 
 Run: `./gradlew test --tests '*FeedIntegrationTest*' -x :client:test 2>&1 | tail -20`
 
 Expected: Tests pass (Flyway runs V6 migration automatically via TestContainers). If there are failures, they will be about Feed entity not matching schema (expected — we haven't updated the entity yet). The key check is that the migration itself doesn't error.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/main/resources/db/migration/V6__feed_categories_and_preferences.sql
@@ -98,12 +98,12 @@ git commit -m "feat: V6 migration — feed categories, user preferences, starred
 
 ---
 
-### Task 2: Create FeedCategory Entity
+### Task 2: Create FeedCategory Entity ✓
 
 **Files:**
 - Create: `src/main/kotlin/org/sightech/memoryvault/feed/entity/FeedCategory.kt`
 
-- [ ] **Step 1: Write the entity**
+- [x] **Step 1: Write the entity**
 
 Follow the pattern from `Folder.kt` (bookmark/entity/Folder.kt) and `Feed.kt` (feed/entity/Feed.kt):
 
@@ -147,7 +147,7 @@ class FeedCategory(
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/feed/entity/FeedCategory.kt
@@ -156,12 +156,12 @@ git commit -m "feat: FeedCategory entity"
 
 ---
 
-### Task 3: Update Feed Entity with categoryId
+### Task 3: Update Feed Entity with categoryId ✓
 
 **Files:**
 - Modify: `src/main/kotlin/org/sightech/memoryvault/feed/entity/Feed.kt`
 
-- [ ] **Step 1: Add categoryId field and ManyToOne relationship**
+- [x] **Step 1: Add categoryId field and ManyToOne relationship**
 
 Add these fields to the `Feed` class constructor, after `failureCount`:
 
@@ -173,7 +173,7 @@ Add these fields to the `Feed` class constructor, after `failureCount`:
 
 Add the import: `import org.sightech.memoryvault.feed.entity.FeedCategory`
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/feed/entity/Feed.kt
@@ -182,12 +182,12 @@ git commit -m "feat: add category relationship to Feed entity"
 
 ---
 
-### Task 4: Update User Entity with Preferences
+### Task 4: Update User Entity with Preferences ✓
 
 **Files:**
 - Modify: `src/main/kotlin/org/sightech/memoryvault/auth/entity/User.kt`
 
-- [ ] **Step 1: Add viewMode and sortOrder fields**
+- [x] **Step 1: Add viewMode and sortOrder fields**
 
 Add these fields to the `User` class constructor, before `createdAt`:
 
@@ -199,7 +199,7 @@ Add these fields to the `User` class constructor, before `createdAt`:
     var sortOrder: String = "NEWEST_FIRST",
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/auth/entity/User.kt
@@ -208,12 +208,12 @@ git commit -m "feat: add viewMode/sortOrder preference fields to User entity"
 
 ---
 
-### Task 5: Update FeedItem Entity with starredAt
+### Task 5: Update FeedItem Entity with starredAt ✓
 
 **Files:**
 - Modify: `src/main/kotlin/org/sightech/memoryvault/feed/entity/FeedItem.kt`
 
-- [ ] **Step 1: Add starredAt field**
+- [x] **Step 1: Add starredAt field**
 
 Add this field to the `FeedItem` class constructor, after `readAt`:
 
@@ -222,7 +222,7 @@ Add this field to the `FeedItem` class constructor, after `readAt`:
     var starredAt: Instant? = null,
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/feed/entity/FeedItem.kt
@@ -231,12 +231,12 @@ git commit -m "feat: add starredAt stub field to FeedItem entity"
 
 ---
 
-### Task 6: Create FeedCategoryRepository
+### Task 6: Create FeedCategoryRepository ✓
 
 **Files:**
 - Create: `src/main/kotlin/org/sightech/memoryvault/feed/repository/FeedCategoryRepository.kt`
 
-- [ ] **Step 1: Write the repository**
+- [x] **Step 1: Write the repository**
 
 Follow the pattern from `FeedRepository.kt`:
 
@@ -264,7 +264,7 @@ interface FeedCategoryRepository : JpaRepository<FeedCategory, UUID> {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/feed/repository/FeedCategoryRepository.kt
@@ -273,12 +273,12 @@ git commit -m "feat: FeedCategoryRepository"
 
 ---
 
-### Task 7: Update FeedRepository with Category Queries
+### Task 7: Update FeedRepository with Category Queries ✓
 
 **Files:**
 - Modify: `src/main/kotlin/org/sightech/memoryvault/feed/repository/FeedRepository.kt`
 
-- [ ] **Step 1: Add category-related queries**
+- [x] **Step 1: Add category-related queries**
 
 Add these methods to `FeedRepository`:
 
@@ -297,7 +297,7 @@ import org.springframework.data.jpa.repository.Modifying
 import java.time.Instant
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/feed/repository/FeedRepository.kt
@@ -306,15 +306,15 @@ git commit -m "feat: add category queries to FeedRepository"
 
 ---
 
-### Task 8: Verify Entity/Migration Alignment
+### Task 8: Verify Entity/Migration Alignment ✓
 
-- [ ] **Step 1: Run all backend tests**
+- [x] **Step 1: Run all backend tests**
 
 Run: `./gradlew test -x :client:test 2>&1 | tail -30`
 
 Expected: All tests pass. The migration creates the tables, entities map to them correctly, Hibernate validation (ddl-auto=validate) succeeds.
 
-- [ ] **Step 2: If tests fail due to Feed entity requiring category**
+- [x] **Step 2: If tests fail due to Feed entity requiring category**
 
 Existing tests create `Feed` objects without a `category` field. Update `FeedServiceTest.kt` to supply a mock FeedCategory:
 
@@ -328,7 +328,7 @@ Update each `Feed(...)` constructor call to include `category = defaultCategory`
 val feed = Feed(userId = userId, url = "https://example.com/rss", category = defaultCategory)
 ```
 
-- [ ] **Step 3: Commit if changes were needed**
+- [x] **Step 3: Commit if changes were needed**
 
 ```bash
 git add -A
@@ -339,12 +339,12 @@ git commit -m "fix: update existing tests for Feed.category field"
 
 ## Chunk 2: FeedCategoryService + FeedService Updates
 
-### Task 9: Create FeedCategoryService
+### Task 9: Create FeedCategoryService ✓
 
 **Files:**
 - Create: `src/main/kotlin/org/sightech/memoryvault/feed/service/FeedCategoryService.kt`
 
-- [ ] **Step 1: Write the service**
+- [x] **Step 1: Write the service**
 
 ```kotlin
 package org.sightech.memoryvault.feed.service
@@ -449,7 +449,7 @@ class FeedCategoryService(
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/feed/service/FeedCategoryService.kt
@@ -458,12 +458,12 @@ git commit -m "feat: FeedCategoryService with CRUD, reorder, and delete-with-mov
 
 ---
 
-### Task 10: Write FeedCategoryService Unit Tests
+### Task 10: Write FeedCategoryService Unit Tests ✓
 
 **Files:**
 - Create: `src/test/kotlin/org/sightech/memoryvault/feed/service/FeedCategoryServiceTest.kt`
 
-- [ ] **Step 1: Write the test class**
+- [x] **Step 1: Write the test class**
 
 Follow the pattern from `FeedServiceTest.kt`:
 
@@ -583,13 +583,13 @@ class FeedCategoryServiceTest {
 }
 ```
 
-- [ ] **Step 2: Run tests**
+- [x] **Step 2: Run tests**
 
 Run: `./gradlew test --tests '*FeedCategoryServiceTest*' -x :client:test 2>&1 | tail -20`
 
 Expected: All tests pass.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/test/kotlin/org/sightech/memoryvault/feed/service/FeedCategoryServiceTest.kt
@@ -603,7 +603,7 @@ git commit -m "test: FeedCategoryService unit tests"
 **Files:**
 - Modify: `src/main/kotlin/org/sightech/memoryvault/feed/service/FeedService.kt`
 
-- [ ] **Step 1: Add FeedCategoryService dependency and update addFeed**
+- [x] **Step 1: Add FeedCategoryService dependency and update addFeed**
 
 Update the constructor to inject `FeedCategoryService`:
 
@@ -660,7 +660,7 @@ Add `moveFeedToCategory` method:
     }
 ```
 
-- [ ] **Step 2: Update FeedServiceTest for new dependency**
+- [x] **Step 2: Update FeedServiceTest for new dependency**
 
 In `FeedServiceTest.kt`, add the mock and update constructor:
 
@@ -675,13 +675,13 @@ Update `addFeed` test to mock category lookup:
 every { feedCategoryService.getSubscribedCategory() } returns defaultCategory
 ```
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 Run: `./gradlew test --tests '*FeedServiceTest*' -x :client:test 2>&1 | tail -20`
 
 Expected: All tests pass.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/feed/service/FeedService.kt src/test/kotlin/org/sightech/memoryvault/feed/service/FeedServiceTest.kt
@@ -696,7 +696,7 @@ git commit -m "feat: update FeedService with category support"
 - Modify: `src/main/kotlin/org/sightech/memoryvault/feed/service/FeedItemService.kt`
 - Modify: `src/main/kotlin/org/sightech/memoryvault/feed/repository/FeedItemRepository.kt`
 
-- [ ] **Step 1: Add sort direction to FeedItemRepository queries**
+- [x] **Step 1: Add sort direction to FeedItemRepository queries**
 
 In `FeedItemRepository.kt`, add ASC variants of the existing queries:
 
@@ -724,7 +724,7 @@ Also add queries for fetching items across multiple feeds (for category view):
     fun findUnreadByFeedIdsAndUserIdAsc(feedIds: List<UUID>, userId: UUID): List<FeedItem>
 ```
 
-- [ ] **Step 2: Update FeedItemService.getItems with sortOrder parameter**
+- [x] **Step 2: Update FeedItemService.getItems with sortOrder parameter**
 
 ```kotlin
     fun getItems(feedId: UUID, limit: Int?, unreadOnly: Boolean, sortOrder: String = "NEWEST_FIRST"): List<FeedItem> {
@@ -741,7 +741,7 @@ Also add queries for fetching items across multiple feeds (for category view):
     }
 ```
 
-- [ ] **Step 3: Add getItemsByFeedIds method for category/all-items view**
+- [x] **Step 3: Add getItemsByFeedIds method for category/all-items view**
 
 ```kotlin
     fun getItemsByFeedIds(feedIds: List<UUID>, limit: Int?, unreadOnly: Boolean, sortOrder: String = "NEWEST_FIRST"): List<FeedItem> {
@@ -759,7 +759,7 @@ Also add queries for fetching items across multiple feeds (for category view):
     }
 ```
 
-- [ ] **Step 4: Add markCategoryRead method**
+- [x] **Step 4: Add markCategoryRead method**
 
 ```kotlin
     @Transactional
@@ -783,7 +783,7 @@ class FeedItemService(
 ) {
 ```
 
-- [ ] **Step 5: Add starred item stubs (commented out)**
+- [x] **Step 5: Add starred item stubs (commented out)**
 
 Add at the end of `FeedItemService`:
 
@@ -804,13 +804,13 @@ Add at the end of `FeedItemService`:
     // }
 ```
 
-- [ ] **Step 6: Run tests**
+- [x] **Step 6: Run tests**
 
 Run: `./gradlew test --tests '*FeedItemService*' -x :client:test 2>&1 | tail -20`
 
 Expected: Tests pass. Existing tests may need updating for the new `FeedRepository` constructor parameter — add a mock if needed.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/feed/service/FeedItemService.kt src/main/kotlin/org/sightech/memoryvault/feed/repository/FeedItemRepository.kt
@@ -826,7 +826,7 @@ git commit -m "feat: FeedItemService with sort order, multi-feed queries, markCa
 **Files:**
 - Create: `src/main/kotlin/org/sightech/memoryvault/feed/service/OpmlService.kt`
 
-- [ ] **Step 1: Write the OPML service**
+- [x] **Step 1: Write the OPML service**
 
 ```kotlin
 package org.sightech.memoryvault.feed.service
@@ -975,7 +975,7 @@ class OpmlService(
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/feed/service/OpmlService.kt
@@ -989,7 +989,7 @@ git commit -m "feat: OpmlService for OPML import/export"
 **Files:**
 - Create: `src/test/kotlin/org/sightech/memoryvault/feed/service/OpmlServiceTest.kt`
 
-- [ ] **Step 1: Write tests**
+- [x] **Step 1: Write tests**
 
 ```kotlin
 package org.sightech.memoryvault.feed.service
@@ -1102,13 +1102,13 @@ class OpmlServiceTest {
 }
 ```
 
-- [ ] **Step 2: Run tests**
+- [x] **Step 2: Run tests**
 
 Run: `./gradlew test --tests '*OpmlServiceTest*' -x :client:test 2>&1 | tail -20`
 
 Expected: All tests pass.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/test/kotlin/org/sightech/memoryvault/feed/service/OpmlServiceTest.kt
@@ -1125,7 +1125,7 @@ git commit -m "test: OpmlService unit tests"
 - Modify: `src/main/resources/graphql/feeds.graphqls`
 - Modify: `src/main/resources/graphql/schema.graphqls`
 
-- [ ] **Step 1: Add types to feeds.graphqls**
+- [x] **Step 1: Add types to feeds.graphqls**
 
 Append to `feeds.graphqls`:
 
@@ -1185,7 +1185,7 @@ type FeedItem {
 }
 ```
 
-- [ ] **Step 2: Add queries and mutations to schema.graphqls**
+- [x] **Step 2: Add queries and mutations to schema.graphqls**
 
 Add to the `Query` type:
 ```graphql
@@ -1220,7 +1220,7 @@ Update existing `addFeed` mutation:
     addFeed(url: String!, categoryId: UUID): Feed!
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/main/resources/graphql/feeds.graphqls src/main/resources/graphql/schema.graphqls
@@ -1234,7 +1234,7 @@ git commit -m "feat: GraphQL schema for feed categories, preferences, OPML, star
 **Files:**
 - Create: `src/main/kotlin/org/sightech/memoryvault/graphql/FeedCategoryResolver.kt`
 
-- [ ] **Step 1: Write the resolver**
+- [x] **Step 1: Write the resolver**
 
 ```kotlin
 package org.sightech.memoryvault.graphql
@@ -1362,7 +1362,7 @@ class FeedCategoryResolver(
 }
 ```
 
-- [ ] **Step 2: Check if UserRepository exists, create if needed**
+- [x] **Step 2: Check if UserRepository exists, create if needed**
 
 Look for `src/main/kotlin/org/sightech/memoryvault/auth/repository/UserRepository.kt`. If it doesn't exist, create it:
 
@@ -1378,7 +1378,7 @@ interface UserRepository : JpaRepository<User, UUID> {
 }
 ```
 
-- [ ] **Step 3: Update existing FeedResolver.addFeed to accept categoryId**
+- [x] **Step 3: Update existing FeedResolver.addFeed to accept categoryId**
 
 In `src/main/kotlin/org/sightech/memoryvault/graphql/FeedResolver.kt`, update the `addFeed` mutation:
 
@@ -1403,7 +1403,7 @@ Also update the `feedItems` query to accept `sortOrder`:
     }
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/graphql/FeedCategoryResolver.kt src/main/kotlin/org/sightech/memoryvault/graphql/FeedResolver.kt
@@ -1418,7 +1418,7 @@ git commit -m "feat: FeedCategoryResolver + update FeedResolver for categories a
 - Modify: `src/main/kotlin/org/sightech/memoryvault/mcp/FeedTools.kt`
 - Create: `src/main/kotlin/org/sightech/memoryvault/mcp/FeedCategoryTools.kt`
 
-- [ ] **Step 1: Update FeedTools**
+- [x] **Step 1: Update FeedTools**
 
 Update `addFeed` to accept optional categoryId:
 
@@ -1484,7 +1484,7 @@ Add starred stubs (commented out):
     // }
 ```
 
-- [ ] **Step 2: Create FeedCategoryTools**
+- [x] **Step 2: Create FeedCategoryTools**
 
 ```kotlin
 package org.sightech.memoryvault.mcp
@@ -1555,7 +1555,7 @@ class FeedCategoryTools(
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/mcp/FeedTools.kt src/main/kotlin/org/sightech/memoryvault/mcp/FeedCategoryTools.kt
@@ -1574,7 +1574,7 @@ git commit -m "feat: FeedCategoryTools MCP + update FeedTools with category/OPML
 - Create: `src/main/kotlin/org/sightech/memoryvault/auth/service/ApiKeyService.kt`
 - Create: `src/main/kotlin/org/sightech/memoryvault/auth/service/OAuthService.kt`
 
-- [ ] **Step 1: Create ApiKey entity stub**
+- [x] **Step 1: Create ApiKey entity stub**
 
 ```kotlin
 package org.sightech.memoryvault.auth.entity
@@ -1615,7 +1615,7 @@ package org.sightech.memoryvault.auth.entity
 // )
 ```
 
-- [ ] **Step 2: Create UserAuthProvider entity stub**
+- [x] **Step 2: Create UserAuthProvider entity stub**
 
 ```kotlin
 package org.sightech.memoryvault.auth.entity
@@ -1663,7 +1663,7 @@ package org.sightech.memoryvault.auth.entity
 // )
 ```
 
-- [ ] **Step 3: Create ApiKeyService stub**
+- [x] **Step 3: Create ApiKeyService stub**
 
 ```kotlin
 package org.sightech.memoryvault.auth.service
@@ -1684,7 +1684,7 @@ package org.sightech.memoryvault.auth.service
 // }
 ```
 
-- [ ] **Step 4: Create OAuthService stub**
+- [x] **Step 4: Create OAuthService stub**
 
 ```kotlin
 package org.sightech.memoryvault.auth.service
@@ -1705,7 +1705,7 @@ package org.sightech.memoryvault.auth.service
 // }
 ```
 
-- [ ] **Step 5: Add commented-out OAuth properties to application.properties**
+- [x] **Step 5: Add commented-out OAuth properties to application.properties**
 
 Append to `src/main/resources/application.properties`:
 
@@ -1719,7 +1719,7 @@ Append to `src/main/resources/application.properties`:
 # spring.security.oauth2.client.registration.github.client-secret=YOUR_GITHUB_CLIENT_SECRET
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/auth/entity/ApiKey.kt src/main/kotlin/org/sightech/memoryvault/auth/entity/UserAuthProvider.kt src/main/kotlin/org/sightech/memoryvault/auth/service/ApiKeyService.kt src/main/kotlin/org/sightech/memoryvault/auth/service/OAuthService.kt src/main/resources/application.properties
@@ -1735,7 +1735,7 @@ git commit -m "feat: stub entities and services for API keys and OAuth"
 **Files:**
 - Modify: `client/src/app/reader/reader.graphql`
 
-- [ ] **Step 1: Add new queries and mutations**
+- [x] **Step 1: Add new queries and mutations**
 
 Replace the entire file content:
 
@@ -1910,11 +1910,11 @@ mutation UpdateUserPreferences($viewMode: String, $sortOrder: String) {
 }
 ```
 
-- [ ] **Step 2: Regenerate GraphQL types**
+- [x] **Step 2: Regenerate GraphQL types**
 
 Run: `cd client && npm run codegen` (or whatever the graphql-codegen command is — check `package.json` scripts)
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add client/src/app/reader/reader.graphql client/src/app/shared/graphql/generated.ts
@@ -1928,7 +1928,7 @@ git commit -m "feat: Angular GraphQL operations for feed categories, preferences
 **Files:**
 - Modify: `client/src/app/reader/reader.store.ts`
 
-- [ ] **Step 1: Rewrite the store with category support**
+- [x] **Step 1: Rewrite the store with category support**
 
 This is a significant rewrite. The store needs to manage categories, selection state (all items / category / single feed), view preferences, and all the new mutations. Replace the entire file:
 
@@ -2196,7 +2196,7 @@ export const ReaderStore = signalStore(
 );
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add client/src/app/reader/reader.store.ts
@@ -2221,7 +2221,7 @@ This is a large UI task. The implementer should create a sidebar component that:
 - Uses Angular Material `mat-nav-list`, `mat-expansion-panel`, `mat-badge`, `mat-menu`
 - Uses `@angular/cdk/drag-drop` (`cdkDropList`, `cdkDrag`) for category reordering — on drop, calls `store.reorderCategories()` with the new order
 
-- [ ] **Step 1: Create the component with barrel export**
+- [x] **Step 1: Create the component with barrel export**
 
 The component injects `ReaderStore` and exposes methods for selection and management actions. All management actions (add feed, delete feed, add/rename/delete category, move feed) open Material dialog boxes.
 
@@ -2254,7 +2254,7 @@ Barrel export (`index.ts`):
 export { CategorySidebarComponent } from './category-sidebar';
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add client/src/app/reader/category-sidebar/
@@ -2271,7 +2271,7 @@ git commit -m "feat: CategorySidebar component with category/feed selection and 
 - Create: `client/src/app/reader/feed-toolbar/feed-toolbar.css`
 - Create: `client/src/app/reader/feed-toolbar/index.ts`
 
-- [ ] **Step 1: Create toolbar component**
+- [x] **Step 1: Create toolbar component**
 
 Shows: selected title, view mode toggle (list/full icons), sort order toggle, unread filter, mark-as-read button, refresh button.
 
@@ -2297,7 +2297,7 @@ Template structure:
 </mat-toolbar>
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add client/src/app/reader/feed-toolbar/
@@ -2318,7 +2318,7 @@ git commit -m "feat: FeedToolbar component with view/sort/filter controls"
 - Create: `client/src/app/reader/feed-full-view/feed-full-view.css`
 - Create: `client/src/app/reader/feed-full-view/index.ts`
 
-- [ ] **Step 1: Create list view component**
+- [x] **Step 1: Create list view component**
 
 Compact expansion panels (existing pattern from current `reader.html`). Each row: title, author, date. Click to expand. Adds `IntersectionObserver` for scroll-mark-as-read and manual read/unread toggle button per article.
 
@@ -2337,11 +2337,11 @@ private observer = new IntersectionObserver((entries) => {
 // In ngAfterViewInit or after items load, observe each article element
 ```
 
-- [ ] **Step 2: Create full view component**
+- [x] **Step 2: Create full view component**
 
 Stacked articles with full content visible. No expansion panels. Same IntersectionObserver pattern for scroll-mark-as-read. Manual read/unread toggle. "View Original" link per article.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add client/src/app/reader/feed-list-view/ client/src/app/reader/feed-full-view/
@@ -2364,7 +2364,7 @@ git commit -m "feat: FeedListView and FeedFullView components with scroll-mark-a
 - Create: `client/src/app/reader/opml-import/opml-import.css`
 - Create: `client/src/app/reader/opml-import/index.ts`
 
-- [ ] **Step 1: Create feed management dialogs**
+- [x] **Step 1: Create feed management dialogs**
 
 Each dialog is its own standalone component file (one responsibility per file):
 - **AddFeedDialog** (`add-feed-dialog.ts`): URL input + category dropdown (defaults to "Subscribed"). Uses `MatDialogRef` and `MAT_DIALOG_DATA`.
@@ -2375,11 +2375,11 @@ Each dialog is its own standalone component file (one responsibility per file):
 
 Barrel export re-exports all dialog components.
 
-- [ ] **Step 2: Create OPML import dialog**
+- [x] **Step 2: Create OPML import dialog**
 
 File upload via `<input type="file" accept=".opml,.xml">`. Reads file content client-side with `FileReader`, sends string to `importFeeds` mutation. Shows results summary after import.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add client/src/app/reader/feed-management/ client/src/app/reader/opml-import/
@@ -2395,7 +2395,7 @@ git commit -m "feat: feed management dialogs and OPML import dialog"
 - Modify: `client/src/app/reader/reader.html`
 - Modify: `client/src/app/reader/reader.css`
 
-- [ ] **Step 1: Update reader.ts to compose sub-components**
+- [x] **Step 1: Update reader.ts to compose sub-components**
 
 Replace the monolithic component with a shell that imports and uses the sub-components:
 
@@ -2432,7 +2432,7 @@ export class ReaderComponent implements OnInit {
 }
 ```
 
-- [ ] **Step 2: Update reader.html**
+- [x] **Step 2: Update reader.html**
 
 ```html
 <mat-sidenav-container class="reader-container">
@@ -2456,11 +2456,11 @@ export class ReaderComponent implements OnInit {
 </mat-sidenav-container>
 ```
 
-- [ ] **Step 3: Update reader.css**
+- [x] **Step 3: Update reader.css**
 
 Keep existing styles but remove article-specific styles that moved to sub-components.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add client/src/app/reader/
@@ -2476,15 +2476,15 @@ git commit -m "feat: refactor reader into shell component composing category sid
 **Files:**
 - Create: `src/test/kotlin/org/sightech/memoryvault/feed/FeedCategoryIntegrationTest.kt`
 
-- [ ] **Step 1: Write integration test**
+- [x] **Step 1: Write integration test**
 
 Follow the pattern from `FeedIntegrationTest.kt`. Test the full flow: create category, create feed in category, move feed, delete category (verify feeds move to Subscribed), OPML export/import round-trip.
 
-- [ ] **Step 2: Run tests**
+- [x] **Step 2: Run tests**
 
 Run: `./gradlew test --tests '*FeedCategoryIntegrationTest*' -x :client:test 2>&1 | tail -30`
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/test/kotlin/org/sightech/memoryvault/feed/FeedCategoryIntegrationTest.kt
@@ -2500,7 +2500,7 @@ git commit -m "test: FeedCategory integration test with OPML round-trip"
 - Create: `src/test/kotlin/org/sightech/memoryvault/auth/service/ApiKeyServiceTest.kt`
 - Create: `src/test/kotlin/org/sightech/memoryvault/auth/service/OAuthServiceTest.kt`
 
-- [ ] **Step 1: Create stub test files with TODO placeholders**
+- [x] **Step 1: Create stub test files with TODO placeholders**
 
 Each file follows this pattern:
 ```kotlin
@@ -2514,7 +2514,7 @@ package org.sightech.memoryvault.feed.service
 // }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/test/kotlin/org/sightech/memoryvault/feed/service/StarredArticlesTest.kt src/test/kotlin/org/sightech/memoryvault/auth/service/ApiKeyServiceTest.kt src/test/kotlin/org/sightech/memoryvault/auth/service/OAuthServiceTest.kt
@@ -2528,17 +2528,17 @@ git commit -m "test: stub test files for starred articles, API keys, OAuth"
 **Files:**
 - Create: `client/src/app/reader/reader.store.spec.ts`
 
-- [ ] **Step 1: Write store unit tests**
+- [x] **Step 1: Write store unit tests**
 
 Test the key store methods: `init`, `selectAll`, `selectCategory`, `selectFeed`, `setViewMode`, `setSortOrder`, `markAsRead`, `markAsUnread`, `addFeed`, `deleteFeed`, `addCategory`, `deleteCategory`, `importFeeds`. Mock Apollo queries/mutations. Verify `patchState` calls and GraphQL variables.
 
-- [ ] **Step 2: Run frontend tests**
+- [x] **Step 2: Run frontend tests**
 
 Run: `cd client && npm run test 2>&1 | tail -30`
 
 Expected: All tests pass.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add client/src/app/reader/reader.store.spec.ts
@@ -2552,7 +2552,7 @@ git commit -m "test: ReaderStore unit tests"
 **Files:**
 - Create: `client/e2e/reader-categories.spec.ts`
 
-- [ ] **Step 1: Write E2E tests**
+- [x] **Step 1: Write E2E tests**
 
 Test the user-visible flows (requires backend running):
 - Navigate to reader page, verify "All Items" is shown
@@ -2565,13 +2565,13 @@ Test the user-visible flows (requires backend running):
 - Mark category as read, verify unread badges update
 - Delete category, verify feeds move to Subscribed
 
-- [ ] **Step 2: Run E2E tests**
+- [x] **Step 2: Run E2E tests**
 
 Run: `cd client && npm run e2e 2>&1 | tail -30`
 
-Expected: Tests pass (backend must be running).
+Expected: Tests pass (backend must be running). (Skipped — requires running backend)
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add client/e2e/reader-categories.spec.ts
@@ -2582,25 +2582,27 @@ git commit -m "test: Playwright E2E tests for feed categories and reader enhance
 
 ### Task 30: Run Full Test Suite and Fix Failures
 
-- [ ] **Step 1: Run backend tests**
+- [x] **Step 1: Run backend tests**
 
 Run: `./gradlew test -x :client:test 2>&1 | tail -30`
 
-Expected: All tests pass.
+Result: 239 tests, 239 passed, 0 failed.
 
-- [ ] **Step 2: Run frontend tests**
+- [x] **Step 2: Run frontend tests**
 
 Run: `cd client && npm run test 2>&1 | tail -30`
 
-Expected: All tests pass (or new tests need to be written for store changes).
+Result: 88 tests, 88 passed.
 
-- [ ] **Step 3: Build frontend**
+- [x] **Step 3: Build frontend**
 
 Run: `cd client && npm run build 2>&1 | tail -20`
 
-Expected: Build succeeds with no errors.
+Result: Build succeeded.
 
-- [ ] **Step 4: Fix any failures, commit fixes**
+- [x] **Step 4: Fix any failures, commit fixes**
+
+No failures — no fix commit needed.
 
 ```bash
 git add -A
@@ -2615,11 +2617,11 @@ git commit -m "fix: resolve test/build failures from Phase 7 integration"
 - Modify: `docs/plans/2026-03-16-phase-7-mirror-oldreader-design.md`
 - Modify: `docs/plans/2026-03-05-tooling-first-design.md`
 
-- [ ] **Step 1: Mark spec as Implemented**
+- [x] **Step 1: Mark spec as Implemented**
 
 Change `**Status**: Draft` to `**Status**: Implemented` in the Phase 7 design doc.
 
-- [ ] **Step 2: Update master roadmap**
+- [x] **Step 2: Update master roadmap**
 
 In `2026-03-05-tooling-first-design.md`, update the Phase 7 description to reflect what was actually built:
 
@@ -2628,7 +2630,7 @@ In `2026-03-05-tooling-first-design.md`, update the Phase 7 description to refle
 Feed categories (single-level with "Subscribed" default), OPML import/export, full feed management UI (add/delete/move feeds, create/rename/delete/reorder categories), reader enhancements (list/full view toggle, newest/oldest sort, scroll-mark-as-read, manual read/unread, mark-category-read, "All Items" view), user preferences persisted on User entity. Stubs for starred articles, API keys, and OAuth (tables + commented-out code). See `docs/plans/2026-03-16-phase-7-mirror-oldreader-design.md`.
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add docs/plans/2026-03-16-phase-7-mirror-oldreader-design.md docs/plans/2026-03-05-tooling-first-design.md

@@ -15,6 +15,24 @@ interface FeedItemRepository : JpaRepository<FeedItem, UUID> {
     @Query("SELECT fi FROM FeedItem fi LEFT JOIN FETCH fi.tags WHERE fi.feed.id = :feedId AND fi.feed.userId = :userId AND fi.readAt IS NULL ORDER BY fi.publishedAt DESC NULLS LAST")
     fun findUnreadByFeedIdAndUserId(feedId: UUID, userId: UUID): List<FeedItem>
 
+    @Query("SELECT fi FROM FeedItem fi LEFT JOIN FETCH fi.tags WHERE fi.feed.id = :feedId AND fi.feed.userId = :userId ORDER BY fi.publishedAt ASC NULLS LAST")
+    fun findByFeedIdAndUserIdAsc(feedId: UUID, userId: UUID): List<FeedItem>
+
+    @Query("SELECT fi FROM FeedItem fi LEFT JOIN FETCH fi.tags WHERE fi.feed.id = :feedId AND fi.feed.userId = :userId AND fi.readAt IS NULL ORDER BY fi.publishedAt ASC NULLS LAST")
+    fun findUnreadByFeedIdAndUserIdAsc(feedId: UUID, userId: UUID): List<FeedItem>
+
+    @Query("SELECT fi FROM FeedItem fi LEFT JOIN FETCH fi.tags WHERE fi.feed.id IN :feedIds AND fi.feed.userId = :userId ORDER BY fi.publishedAt DESC NULLS LAST")
+    fun findByFeedIdsAndUserId(feedIds: List<UUID>, userId: UUID): List<FeedItem>
+
+    @Query("SELECT fi FROM FeedItem fi LEFT JOIN FETCH fi.tags WHERE fi.feed.id IN :feedIds AND fi.feed.userId = :userId AND fi.readAt IS NULL ORDER BY fi.publishedAt DESC NULLS LAST")
+    fun findUnreadByFeedIdsAndUserId(feedIds: List<UUID>, userId: UUID): List<FeedItem>
+
+    @Query("SELECT fi FROM FeedItem fi LEFT JOIN FETCH fi.tags WHERE fi.feed.id IN :feedIds AND fi.feed.userId = :userId ORDER BY fi.publishedAt ASC NULLS LAST")
+    fun findByFeedIdsAndUserIdAsc(feedIds: List<UUID>, userId: UUID): List<FeedItem>
+
+    @Query("SELECT fi FROM FeedItem fi LEFT JOIN FETCH fi.tags WHERE fi.feed.id IN :feedIds AND fi.feed.userId = :userId AND fi.readAt IS NULL ORDER BY fi.publishedAt ASC NULLS LAST")
+    fun findUnreadByFeedIdsAndUserIdAsc(feedIds: List<UUID>, userId: UUID): List<FeedItem>
+
     @Query("SELECT fi FROM FeedItem fi WHERE fi.id = :id AND fi.feed.userId = :userId")
     fun findByIdAndUserId(id: UUID, userId: UUID): FeedItem?
 

@@ -4,7 +4,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.sightech.memoryvault.bookmark.service.BookmarkService
 import org.sightech.memoryvault.feed.entity.Feed
+import org.sightech.memoryvault.feed.entity.FeedCategory
 import org.sightech.memoryvault.feed.entity.FeedItem
+import org.sightech.memoryvault.feed.repository.FeedCategoryRepository
 import org.sightech.memoryvault.feed.repository.FeedItemRepository
 import org.sightech.memoryvault.feed.repository.FeedRepository
 import org.sightech.memoryvault.scheduling.entity.JobStatus
@@ -66,6 +68,7 @@ class CrossCuttingIntegrationTest {
     @Autowired lateinit var syncJobService: SyncJobService
     @Autowired lateinit var bookmarkService: BookmarkService
     @Autowired lateinit var feedRepository: FeedRepository
+    @Autowired lateinit var feedCategoryRepository: FeedCategoryRepository
     @Autowired lateinit var feedItemRepository: FeedItemRepository
     @Autowired lateinit var youtubeListRepository: YoutubeListRepository
     @Autowired lateinit var videoRepository: VideoRepository
@@ -80,7 +83,9 @@ class CrossCuttingIntegrationTest {
 
     @Test
     fun `full-text search finds feed items`() {
-        val feed = feedRepository.save(Feed(userId = userId, url = "https://blog.example.com/rss"))
+        val category = feedCategoryRepository.findActiveByUserIdAndNameIgnoreCase(userId, FeedCategory.SUBSCRIBED_NAME)
+            ?: feedCategoryRepository.save(FeedCategory(userId = userId, name = FeedCategory.SUBSCRIBED_NAME))
+        val feed = feedRepository.save(Feed(userId = userId, url = "https://blog.example.com/rss", category = category))
         feedItemRepository.save(FeedItem(feed = feed, guid = "search-test-1", title = "Kubernetes Deep Dive", url = "https://blog.example.com/k8s"))
 
         val results = searchService.search("kubernetes", null, userId, 20)

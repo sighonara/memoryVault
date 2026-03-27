@@ -1,0 +1,118 @@
+<mat-toolbar color="accent" class="sidebar-header">
+  Feeds
+  <span class="spacer"></span>
+  <button mat-icon-button [matMenuTriggerFor]="sidebarMenu" class="sidebar-menu-btn">
+    <mat-icon>more_vert</mat-icon>
+  </button>
+  <mat-menu #sidebarMenu="matMenu">
+    <button mat-menu-item (click)="openAddFeedDialog()">
+      <mat-icon>add</mat-icon> Add Feed
+    </button>
+    <button mat-menu-item (click)="openAddCategoryDialog()">
+      <mat-icon>create_new_folder</mat-icon> Add Category
+    </button>
+  </mat-menu>
+</mat-toolbar>
+
+<mat-nav-list>
+  @if (store.loadingCategories()) {
+    <div class="spinner-container">
+      <mat-spinner diameter="30"></mat-spinner>
+    </div>
+  }
+
+  <!-- All Items -->
+  <mat-list-item
+    (click)="store.selectAll()"
+    [class.selected]="store.selectedType() === 'all'"
+  >
+    <span matListItemTitle>All Items</span>
+    <span matListItemMeta>
+      @if (store.totalUnread() > 0) {
+        <span
+          matBadge="{{ store.totalUnread() }}"
+          matBadgeColor="warn"
+          matBadgeOverlap="false"
+        ></span>
+      }
+    </span>
+  </mat-list-item>
+
+  <!-- Categories -->
+  <div cdkDropList (cdkDropListDropped)="onCategoryDrop($event)">
+    @for (cat of store.categories(); track cat.category.id) {
+      @if (cat.category.name !== 'Subscribed' || cat.feeds.length > 0) {
+        <mat-expansion-panel cdkDrag class="category-panel">
+          <mat-expansion-panel-header
+            (click)="store.selectCategory(cat.category.id); $event.stopPropagation()"
+            [class.selected]="store.selectedType() === 'category' && store.selectedId() === cat.category.id"
+          >
+            <mat-panel-title>
+              {{ cat.category.name }}
+            </mat-panel-title>
+            <mat-panel-description>
+              @if (cat.totalUnread > 0) {
+                <span
+                  matBadge="{{ cat.totalUnread }}"
+                  matBadgeColor="warn"
+                  matBadgeOverlap="false"
+                ></span>
+              }
+              <button mat-icon-button [matMenuTriggerFor]="catMenu" (click)="$event.stopPropagation()" class="category-menu-btn">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #catMenu="matMenu">
+                <button mat-menu-item (click)="openAddFeedDialog(cat.category.id)">
+                  <mat-icon>add</mat-icon> Add Feed
+                </button>
+                <button mat-menu-item (click)="store.markCategoryRead(cat.category.id)">
+                  <mat-icon>done_all</mat-icon> Mark All Read
+                </button>
+                @if (cat.category.name !== 'Subscribed') {
+                  <button mat-menu-item (click)="openRenameCategoryDialog(cat.category.id, cat.category.name)">
+                    <mat-icon>edit</mat-icon> Rename
+                  </button>
+                  <button mat-menu-item (click)="openDeleteCategoryDialog(cat.category.id, cat.category.name)">
+                    <mat-icon>delete</mat-icon> Delete
+                  </button>
+                }
+              </mat-menu>
+            </mat-panel-description>
+          </mat-expansion-panel-header>
+
+          @for (f of cat.feeds; track f.feed.id) {
+            <mat-list-item
+              (click)="store.selectFeed(f.feed.id)"
+              [class.selected]="store.selectedType() === 'feed' && store.selectedId() === f.feed.id"
+            >
+              <span matListItemTitle>{{ f.feed.title || f.feed.url }}</span>
+              <span matListItemMeta>
+                @if (f.unreadCount > 0) {
+                  <span
+                    matBadge="{{ f.unreadCount }}"
+                    matBadgeColor="warn"
+                    matBadgeOverlap="false"
+                  ></span>
+                }
+                <button mat-icon-button [matMenuTriggerFor]="feedMenu" (click)="$event.stopPropagation()" class="feed-menu-btn">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+                <mat-menu #feedMenu="matMenu">
+                  <button mat-menu-item (click)="store.markFeedRead(f.feed.id)">
+                    <mat-icon>done_all</mat-icon> Mark All Read
+                  </button>
+                  <button mat-menu-item (click)="openMoveFeedDialog(f.feed.id)">
+                    <mat-icon>drive_file_move</mat-icon> Move to Category
+                  </button>
+                  <button mat-menu-item (click)="openDeleteFeedDialog(f.feed.id, f.feed.title || f.feed.url)">
+                    <mat-icon>delete</mat-icon> Delete
+                  </button>
+                </mat-menu>
+              </span>
+            </mat-list-item>
+          }
+        </mat-expansion-panel>
+      }
+    }
+  </div>
+</mat-nav-list>

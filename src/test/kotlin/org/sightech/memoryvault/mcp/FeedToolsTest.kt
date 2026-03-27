@@ -7,6 +7,7 @@ import org.sightech.memoryvault.feed.entity.Feed
 import org.sightech.memoryvault.feed.entity.FeedItem
 import org.sightech.memoryvault.feed.service.FeedItemService
 import org.sightech.memoryvault.feed.service.FeedService
+import org.sightech.memoryvault.feed.service.OpmlService
 import java.util.UUID
 import kotlin.test.assertContains
 
@@ -14,15 +15,16 @@ class FeedToolsTest {
 
     private val feedService = mockk<FeedService>()
     private val feedItemService = mockk<FeedItemService>()
-    private val tools = FeedTools(feedService, feedItemService)
+    private val opmlService = mockk<OpmlService>()
+    private val tools = FeedTools(feedService, feedItemService, opmlService)
     private val userId = UUID.fromString("00000000-0000-0000-0000-000000000001")
 
     @Test
     fun `addFeed returns confirmation`() {
         val feed = Feed(userId = userId, url = "https://example.com/rss").apply { title = "Example Feed" }
-        coEvery { feedService.addFeed(eq("https://example.com/rss")) } returns feed
+        coEvery { feedService.addFeed(eq("https://example.com/rss"), isNull()) } returns feed
 
-        val result = runBlocking { tools.addFeed("https://example.com/rss") }
+        val result = runBlocking { tools.addFeed("https://example.com/rss", null) }
 
         assertContains(result, "Example Feed")
         assertContains(result, "https://example.com/rss")
@@ -52,9 +54,9 @@ class FeedToolsTest {
     fun `getFeedItems returns formatted items`() {
         val feed = Feed(userId = userId, url = "https://example.com/rss")
         val item = FeedItem(feed = feed, guid = "1", title = "Post Title", url = "https://example.com/post")
-        every { feedItemService.getItems(any(), any(), any()) } returns listOf(item)
+        every { feedItemService.getItems(any(), any(), any(), any()) } returns listOf(item)
 
-        val result = tools.getFeedItems(feed.id.toString(), null, null)
+        val result = tools.getFeedItems(feed.id.toString(), null, null, null)
 
         assertContains(result, "Post Title")
     }
