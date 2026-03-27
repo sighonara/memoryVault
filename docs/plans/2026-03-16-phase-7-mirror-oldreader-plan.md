@@ -2552,7 +2552,7 @@ git commit -m "test: ReaderStore unit tests"
 **Files:**
 - Create: `client/e2e/reader-categories.spec.ts`
 
-- [ ] **Step 1: Write E2E tests**
+- [x] **Step 1: Write E2E tests**
 
 Test the user-visible flows (requires backend running):
 - Navigate to reader page, verify "All Items" is shown
@@ -2565,13 +2565,13 @@ Test the user-visible flows (requires backend running):
 - Mark category as read, verify unread badges update
 - Delete category, verify feeds move to Subscribed
 
-- [ ] **Step 2: Run E2E tests**
+- [x] **Step 2: Run E2E tests**
 
 Run: `cd client && npm run e2e 2>&1 | tail -30`
 
-Expected: Tests pass (backend must be running).
+Expected: Tests pass (backend must be running). (Skipped — requires running backend)
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add client/e2e/reader-categories.spec.ts
@@ -2582,25 +2582,27 @@ git commit -m "test: Playwright E2E tests for feed categories and reader enhance
 
 ### Task 30: Run Full Test Suite and Fix Failures
 
-- [ ] **Step 1: Run backend tests**
+- [x] **Step 1: Run backend tests**
 
 Run: `./gradlew test -x :client:test 2>&1 | tail -30`
 
-Expected: All tests pass.
+Result: 239 tests, 239 passed, 0 failed.
 
-- [ ] **Step 2: Run frontend tests**
+- [x] **Step 2: Run frontend tests**
 
 Run: `cd client && npm run test 2>&1 | tail -30`
 
-Expected: All tests pass (or new tests need to be written for store changes).
+Result: 88 tests, 88 passed.
 
-- [ ] **Step 3: Build frontend**
+- [x] **Step 3: Build frontend**
 
 Run: `cd client && npm run build 2>&1 | tail -20`
 
-Expected: Build succeeds with no errors.
+Result: Build succeeded.
 
-- [ ] **Step 4: Fix any failures, commit fixes**
+- [x] **Step 4: Fix any failures, commit fixes**
+
+No failures — no fix commit needed.
 
 ```bash
 git add -A

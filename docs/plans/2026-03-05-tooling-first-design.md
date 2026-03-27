@@ -228,8 +228,8 @@ JWT authentication (jjwt, BCrypt), Spring for GraphQL (schema-first), Angular 21
 ### Phase 6 — Bookmark Management
 Folder hierarchy (adjacency list with cycle detection), full bookmark manager UI (two-panel tree + list), browser bookmark ingestion via CLI commands generated in the UI (Chrome, Brave, Firefox, Safari), conflict resolution with preview/commit flow, Netscape HTML export with folder structure, pending ingest notification banner. See `docs/plans/2026-03-11-phase-6-bookmark-management.md`.
 
-### Phase 7 — Mirror OldReader functionality
-Import feeds. Export feeds. Support (or stubs for) OAuth from social media logins. Supporting 3rd party integrations (unclear about what all these are). Other (need to research)?
+### Phase 7 — Mirror OldReader Functionality
+Feed categories (single-level with "Subscribed" default), OPML import/export, full feed management UI (add/delete/move feeds, create/rename/delete/reorder categories), reader enhancements (list/full view toggle, newest/oldest sort, scroll-mark-as-read, manual read/unread, mark-category-read, "All Items" view), user preferences persisted on User entity. Stubs for starred articles, API keys, and OAuth (tables + commented-out code). See `docs/plans/2026-03-16-phase-7-mirror-oldreader-design.md`.
 
 ### Phase 8 — Real-Time Updates
 WebSocket support for live UI updates — new feed items, sync job progress, download status changes pushed to the Angular client without polling.
