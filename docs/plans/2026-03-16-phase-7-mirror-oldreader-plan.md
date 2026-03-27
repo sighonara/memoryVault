@@ -2500,7 +2500,7 @@ git commit -m "test: FeedCategory integration test with OPML round-trip"
 - Create: `src/test/kotlin/org/sightech/memoryvault/auth/service/ApiKeyServiceTest.kt`
 - Create: `src/test/kotlin/org/sightech/memoryvault/auth/service/OAuthServiceTest.kt`
 
-- [ ] **Step 1: Create stub test files with TODO placeholders**
+- [x] **Step 1: Create stub test files with TODO placeholders**
 
 Each file follows this pattern:
 ```kotlin
@@ -2514,7 +2514,7 @@ package org.sightech.memoryvault.feed.service
 // }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/test/kotlin/org/sightech/memoryvault/feed/service/StarredArticlesTest.kt src/test/kotlin/org/sightech/memoryvault/auth/service/ApiKeyServiceTest.kt src/test/kotlin/org/sightech/memoryvault/auth/service/OAuthServiceTest.kt
@@ -2528,17 +2528,17 @@ git commit -m "test: stub test files for starred articles, API keys, OAuth"
 **Files:**
 - Create: `client/src/app/reader/reader.store.spec.ts`
 
-- [ ] **Step 1: Write store unit tests**
+- [x] **Step 1: Write store unit tests**
 
 Test the key store methods: `init`, `selectAll`, `selectCategory`, `selectFeed`, `setViewMode`, `setSortOrder`, `markAsRead`, `markAsUnread`, `addFeed`, `deleteFeed`, `addCategory`, `deleteCategory`, `importFeeds`. Mock Apollo queries/mutations. Verify `patchState` calls and GraphQL variables.
 
-- [ ] **Step 2: Run frontend tests**
+- [x] **Step 2: Run frontend tests**
 
 Run: `cd client && npm run test 2>&1 | tail -30`
 
 Expected: All tests pass.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add client/src/app/reader/reader.store.spec.ts
