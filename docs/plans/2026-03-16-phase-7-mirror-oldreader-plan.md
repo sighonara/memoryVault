@@ -2476,15 +2476,15 @@ git commit -m "feat: refactor reader into shell component composing category sid
 **Files:**
 - Create: `src/test/kotlin/org/sightech/memoryvault/feed/FeedCategoryIntegrationTest.kt`
 
-- [ ] **Step 1: Write integration test**
+- [x] **Step 1: Write integration test**
 
 Follow the pattern from `FeedIntegrationTest.kt`. Test the full flow: create category, create feed in category, move feed, delete category (verify feeds move to Subscribed), OPML export/import round-trip.
 
-- [ ] **Step 2: Run tests**
+- [x] **Step 2: Run tests**
 
 Run: `./gradlew test --tests '*FeedCategoryIntegrationTest*' -x :client:test 2>&1 | tail -30`
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/test/kotlin/org/sightech/memoryvault/feed/FeedCategoryIntegrationTest.kt
