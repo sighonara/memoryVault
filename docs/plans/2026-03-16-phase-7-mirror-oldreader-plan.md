@@ -1735,7 +1735,7 @@ git commit -m "feat: stub entities and services for API keys and OAuth"
 **Files:**
 - Modify: `client/src/app/reader/reader.graphql`
 
-- [ ] **Step 1: Add new queries and mutations**
+- [x] **Step 1: Add new queries and mutations**
 
 Replace the entire file content:
 
@@ -1910,11 +1910,11 @@ mutation UpdateUserPreferences($viewMode: String, $sortOrder: String) {
 }
 ```
 
-- [ ] **Step 2: Regenerate GraphQL types**
+- [x] **Step 2: Regenerate GraphQL types**
 
 Run: `cd client && npm run codegen` (or whatever the graphql-codegen command is — check `package.json` scripts)
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add client/src/app/reader/reader.graphql client/src/app/shared/graphql/generated.ts
@@ -1928,7 +1928,7 @@ git commit -m "feat: Angular GraphQL operations for feed categories, preferences
 **Files:**
 - Modify: `client/src/app/reader/reader.store.ts`
 
-- [ ] **Step 1: Rewrite the store with category support**
+- [x] **Step 1: Rewrite the store with category support**
 
 This is a significant rewrite. The store needs to manage categories, selection state (all items / category / single feed), view preferences, and all the new mutations. Replace the entire file:
 
@@ -2196,7 +2196,7 @@ export const ReaderStore = signalStore(
 );
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add client/src/app/reader/reader.store.ts
@@ -2221,7 +2221,7 @@ This is a large UI task. The implementer should create a sidebar component that:
 - Uses Angular Material `mat-nav-list`, `mat-expansion-panel`, `mat-badge`, `mat-menu`
 - Uses `@angular/cdk/drag-drop` (`cdkDropList`, `cdkDrag`) for category reordering — on drop, calls `store.reorderCategories()` with the new order
 
-- [ ] **Step 1: Create the component with barrel export**
+- [x] **Step 1: Create the component with barrel export**
 
 The component injects `ReaderStore` and exposes methods for selection and management actions. All management actions (add feed, delete feed, add/rename/delete category, move feed) open Material dialog boxes.
 
@@ -2254,7 +2254,7 @@ Barrel export (`index.ts`):
 export { CategorySidebarComponent } from './category-sidebar';
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add client/src/app/reader/category-sidebar/
@@ -2271,7 +2271,7 @@ git commit -m "feat: CategorySidebar component with category/feed selection and 
 - Create: `client/src/app/reader/feed-toolbar/feed-toolbar.css`
 - Create: `client/src/app/reader/feed-toolbar/index.ts`
 
-- [ ] **Step 1: Create toolbar component**
+- [x] **Step 1: Create toolbar component**
 
 Shows: selected title, view mode toggle (list/full icons), sort order toggle, unread filter, mark-as-read button, refresh button.
 
@@ -2297,7 +2297,7 @@ Template structure:
 </mat-toolbar>
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add client/src/app/reader/feed-toolbar/
@@ -2318,7 +2318,7 @@ git commit -m "feat: FeedToolbar component with view/sort/filter controls"
 - Create: `client/src/app/reader/feed-full-view/feed-full-view.css`
 - Create: `client/src/app/reader/feed-full-view/index.ts`
 
-- [ ] **Step 1: Create list view component**
+- [x] **Step 1: Create list view component**
 
 Compact expansion panels (existing pattern from current `reader.html`). Each row: title, author, date. Click to expand. Adds `IntersectionObserver` for scroll-mark-as-read and manual read/unread toggle button per article.
 
@@ -2337,11 +2337,11 @@ private observer = new IntersectionObserver((entries) => {
 // In ngAfterViewInit or after items load, observe each article element
 ```
 
-- [ ] **Step 2: Create full view component**
+- [x] **Step 2: Create full view component**
 
 Stacked articles with full content visible. No expansion panels. Same IntersectionObserver pattern for scroll-mark-as-read. Manual read/unread toggle. "View Original" link per article.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add client/src/app/reader/feed-list-view/ client/src/app/reader/feed-full-view/
@@ -2364,7 +2364,7 @@ git commit -m "feat: FeedListView and FeedFullView components with scroll-mark-a
 - Create: `client/src/app/reader/opml-import/opml-import.css`
 - Create: `client/src/app/reader/opml-import/index.ts`
 
-- [ ] **Step 1: Create feed management dialogs**
+- [x] **Step 1: Create feed management dialogs**
 
 Each dialog is its own standalone component file (one responsibility per file):
 - **AddFeedDialog** (`add-feed-dialog.ts`): URL input + category dropdown (defaults to "Subscribed"). Uses `MatDialogRef` and `MAT_DIALOG_DATA`.
@@ -2375,11 +2375,11 @@ Each dialog is its own standalone component file (one responsibility per file):
 
 Barrel export re-exports all dialog components.
 
-- [ ] **Step 2: Create OPML import dialog**
+- [x] **Step 2: Create OPML import dialog**
 
 File upload via `<input type="file" accept=".opml,.xml">`. Reads file content client-side with `FileReader`, sends string to `importFeeds` mutation. Shows results summary after import.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add client/src/app/reader/feed-management/ client/src/app/reader/opml-import/
@@ -2395,7 +2395,7 @@ git commit -m "feat: feed management dialogs and OPML import dialog"
 - Modify: `client/src/app/reader/reader.html`
 - Modify: `client/src/app/reader/reader.css`
 
-- [ ] **Step 1: Update reader.ts to compose sub-components**
+- [x] **Step 1: Update reader.ts to compose sub-components**
 
 Replace the monolithic component with a shell that imports and uses the sub-components:
 
@@ -2432,7 +2432,7 @@ export class ReaderComponent implements OnInit {
 }
 ```
 
-- [ ] **Step 2: Update reader.html**
+- [x] **Step 2: Update reader.html**
 
 ```html
 <mat-sidenav-container class="reader-container">
@@ -2456,11 +2456,11 @@ export class ReaderComponent implements OnInit {
 </mat-sidenav-container>
 ```
 
-- [ ] **Step 3: Update reader.css**
+- [x] **Step 3: Update reader.css**
 
 Keep existing styles but remove article-specific styles that moved to sub-components.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add client/src/app/reader/
