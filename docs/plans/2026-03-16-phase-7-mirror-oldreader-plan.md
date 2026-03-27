@@ -2617,11 +2617,11 @@ git commit -m "fix: resolve test/build failures from Phase 7 integration"
 - Modify: `docs/plans/2026-03-16-phase-7-mirror-oldreader-design.md`
 - Modify: `docs/plans/2026-03-05-tooling-first-design.md`
 
-- [ ] **Step 1: Mark spec as Implemented**
+- [x] **Step 1: Mark spec as Implemented**
 
 Change `**Status**: Draft` to `**Status**: Implemented` in the Phase 7 design doc.
 
-- [ ] **Step 2: Update master roadmap**
+- [x] **Step 2: Update master roadmap**
 
 In `2026-03-05-tooling-first-design.md`, update the Phase 7 description to reflect what was actually built:
 
@@ -2630,7 +2630,7 @@ In `2026-03-05-tooling-first-design.md`, update the Phase 7 description to refle
 Feed categories (single-level with "Subscribed" default), OPML import/export, full feed management UI (add/delete/move feeds, create/rename/delete/reorder categories), reader enhancements (list/full view toggle, newest/oldest sort, scroll-mark-as-read, manual read/unread, mark-category-read, "All Items" view), user preferences persisted on User entity. Stubs for starred articles, API keys, and OAuth (tables + commented-out code). See `docs/plans/2026-03-16-phase-7-mirror-oldreader-design.md`.
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add docs/plans/2026-03-16-phase-7-mirror-oldreader-design.md docs/plans/2026-03-05-tooling-first-design.md
