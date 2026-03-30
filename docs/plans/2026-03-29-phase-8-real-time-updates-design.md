@@ -43,7 +43,7 @@ Add `spring-boot-starter-websocket` to `build.gradle.kts`.
 - Simple in-memory STOMP broker on prefix `/topic`
 - Application destination prefix `/app` (reserved for future client→server messages)
 - WebSocket endpoint at `/ws` with SockJS fallback
-- Allowed origins: `http://localhost:4200` (matches existing CORS config)
+- Allowed origins: read from `memoryvault.cors.allowed-origins` property (`http://localhost:4200` in dev, production domain in prod)
 
 ### JWT Authentication on Connect
 
@@ -142,7 +142,7 @@ Add `@stomp/rx-stomp` — RxJS-native STOMP client with built-in auto-reconnect.
 
 `core/services/websocket.service.ts`:
 - Connects on login, disconnects on logout
-- STOMP connection to `ws://localhost:8080/ws` with JWT in STOMP headers
+- STOMP connection to the WebSocket endpoint from `environment.wsUrl` (`ws://localhost:8080/ws` in dev, `wss://yourdomain.com/ws` in prod) with JWT in STOMP headers
 - Exposes `on(topic: string): Observable<StompMessage>` for topic subscriptions
 - Auto-reconnect with exponential backoff (rx-stomp built-in)
 - Reads `userId` from decoded JWT to construct user-scoped topic paths
