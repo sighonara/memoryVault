@@ -468,7 +468,7 @@ git commit -m "feat: add VaultEvent domain events for real-time updates"
 - Modify: `src/main/resources/application-prod.properties`
 - Test: `src/test/kotlin/org/sightech/memoryvault/config/WebSocketAuthInterceptorTest.kt`
 
-- [ ] **Step 1: Add WebSocket dependency to `build.gradle.kts`**
+- [x] **Step 1: Add WebSocket dependency to `build.gradle.kts`**
 
 In the `dependencies` block, after the `spring-boot-starter-graphql` line, add:
 
@@ -476,7 +476,7 @@ In the `dependencies` block, after the `spring-boot-starter-graphql` line, add:
 implementation("org.springframework.boot:spring-boot-starter-websocket")
 ```
 
-- [ ] **Step 2: Add WebSocket config properties**
+- [x] **Step 2: Add WebSocket config properties**
 
 Append to `src/main/resources/application.properties`:
 
@@ -508,7 +508,7 @@ memoryvault.websocket.heartbeat-interval-ms=10000
 memoryvault.websocket.relay-executor-pool-size=2
 ```
 
-- [ ] **Step 3: Write the auth interceptor test**
+- [x] **Step 3: Write the auth interceptor test**
 
 Create `src/test/kotlin/org/sightech/memoryvault/config/WebSocketAuthInterceptorTest.kt`:
 
@@ -590,12 +590,12 @@ class WebSocketAuthInterceptorTest {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it fails**
+- [x] **Step 4: Run test to verify it fails**
 
 Run: `./gradlew test --tests "org.sightech.memoryvault.config.WebSocketAuthInterceptorTest"`
 Expected: FAIL — `WebSocketAuthInterceptor` doesn't exist.
 
-- [ ] **Step 5: Create `WebSocketAuthInterceptor.kt`**
+- [x] **Step 5: Create `WebSocketAuthInterceptor.kt`**
 
 Create `src/main/kotlin/org/sightech/memoryvault/config/WebSocketAuthInterceptor.kt`:
 
@@ -647,12 +647,12 @@ class WebSocketAuthInterceptor(private val jwtService: JwtService) : ChannelInte
 }
 ```
 
-- [ ] **Step 6: Run test to verify it passes**
+- [x] **Step 6: Run test to verify it passes**
 
 Run: `./gradlew test --tests "org.sightech.memoryvault.config.WebSocketAuthInterceptorTest"`
 Expected: PASS — all 4 tests green.
 
-- [ ] **Step 7: Create `WebSocketConfig.kt`**
+- [x] **Step 7: Create `WebSocketConfig.kt`**
 
 Create `src/main/kotlin/org/sightech/memoryvault/config/WebSocketConfig.kt`:
 
@@ -708,7 +708,7 @@ class WebSocketConfig(
 }
 ```
 
-- [ ] **Step 8: Update SecurityConfig to permit `/ws/**`**
+- [x] **Step 8: Update SecurityConfig to permit `/ws/**`**
 
 In the `securityFilterChain` method, add `/ws/**` to the permitted paths:
 
@@ -723,12 +723,12 @@ In the `securityFilterChain` method, add `/ws/**` to the permitted paths:
 }
 ```
 
-- [ ] **Step 9: Run all tests**
+- [x] **Step 9: Run all tests**
 
 Run: `./gradlew test`
 Expected: All tests pass including the new interceptor tests.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```
 git add build.gradle.kts src/main/resources/application.properties src/main/resources/application-dev.properties src/main/resources/application-prod.properties src/main/kotlin/org/sightech/memoryvault/config/WebSocketConfig.kt src/main/kotlin/org/sightech/memoryvault/config/WebSocketAuthInterceptor.kt src/main/kotlin/org/sightech/memoryvault/config/SecurityConfig.kt src/test/kotlin/org/sightech/memoryvault/config/WebSocketAuthInterceptorTest.kt
