@@ -232,7 +232,7 @@ Folder hierarchy (adjacency list with cycle detection), full bookmark manager UI
 Feed categories (single-level with "Subscribed" default), OPML import/export, full feed management UI (add/delete/move feeds, create/rename/delete/reorder categories), reader enhancements (list/full view toggle, newest/oldest sort, scroll-mark-as-read, manual read/unread, mark-category-read, "All Items" view), user preferences persisted on User entity. Stubs for starred articles, API keys, and OAuth (tables + commented-out code). See `docs/plans/2026-03-16-phase-7-mirror-oldreader-design.md`.
 
 ### Phase 8 — Real-Time Updates
-WebSocket support for live UI updates — new feed items, sync job progress, download status changes pushed to the Angular client without polling.
+WebSocket + STOMP with lightweight signals (client refetches on signal). Spring ApplicationEvents → WebSocketEventRelay → STOMP broker → Angular client. Five event types: feed sync completion, job status changes, video download status, bookmark ingest ready, cross-tab content sync. JWT auth on STOMP CONNECT. Simple in-memory broker now, external broker (Amazon MQ) on AWS later. See `docs/plans/2026-03-29-phase-8-real-time-updates-design.md`.
 
 ### Phase 9 — Infrastructure
 Terraform, GitHub Actions CI/CD, production AWS deployment (EC2, RDS, S3, Lambda, EventBridge). AWS Cognito auth swap (CurrentUser abstraction is already in place), CloudWatch log retrieval (LocalLogService/CloudWatchLogService interface is stubbed), AWS cost tracking (AwsCostRecord entity defined but not implemented).
