@@ -37,7 +37,10 @@ class WebSocketAuthInterceptor(private val jwtService: JwtService) : ChannelInte
             return null
         }
 
-        val userId = claims["userId"]!!
+        val userId = claims["userId"] ?: run {
+            log.warn("WebSocket CONNECT rejected: userId claim missing from validated token")
+            return null
+        }
         accessor.user = Principal { userId }
         accessor.setLeaveMutable(false)
         log.info("WebSocket CONNECT accepted userId={}", userId)
