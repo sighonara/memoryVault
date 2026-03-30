@@ -9,12 +9,12 @@ Add WebSocket support to MemoryVault so the Angular UI receives live signals whe
 
 ## Decisions
 
-| Decision          | Choice                            | Rationale                                                                                      |
-|-------------------|-----------------------------------|------------------------------------------------------------------------------------------------|
-| Signal model      | Lightweight signals (no payloads) | Client refetches via existing queries; server stays simple                                     |
-| Transport         | WebSocket + STOMP (simple broker) | Decouples from app server; swappable to external broker (Amazon MQ, Redis) on AWS              |
-| Auth              | JWT validated on STOMP CONNECT    | Reuses existing JwtService; prevents unauthenticated connections                               |
-| Internal eventing | Spring ApplicationEvents          | Services stay decoupled from WebSocket; same event shape works when services move to Lambda    |
+| Decision          | Choice                                 | Rationale                                                                                    |
+|-------------------|----------------------------------------|----------------------------------------------------------------------------------------------|
+| Signal model      | Lightweight signals (no payloads)      | Client refetches via existing queries; server stays simple                                   |
+| Transport         | WebSocket + STOMP (simple broker)      | Decouples from app server; swappable to external broker (Amazon MQ, Redis) on AWS            |
+| Auth              | JWT validated on STOMP CONNECT         | Reuses existing JwtService; prevents unauthenticated connections                             |
+| Internal eventing | Spring ApplicationEvents               | Services stay decoupled from WebSocket; same event shape works when services move to Lambda  |
 | Threading         | `@Async` relay with dedicated executor | Isolates relay failures from sync services; mirrors AWS architecture (decoupled consumption) |
 | Error handling    | Best-effort signals, catch-and-swallow | Missed signal = stale until next signal or manual refresh; never break a sync job            |
 
@@ -95,13 +95,13 @@ VaultEvent (sealed interface)
 
 ### Publishing Points
 
-| Service | Event Published | Trigger |
-|---------|----------------|---------|
-| `FeedSyncService` / `RssFetchService` | `FeedSyncCompleted` | After sync completes |
-| `SyncJobService` | `JobStatusChanged` | On `recordStart`, `recordSuccess`, `recordFailure` |
-| `VideoSyncService` | `VideoDownloadCompleted` | After each video download attempt |
-| `IngestService` | `IngestReady` | After ingest preview is stored |
-| `BookmarkService`, `FeedItemService`, `VideoService`, `FolderService`, `CategoryService` | `ContentMutated` | On create, update, delete mutations |
+| Service                                                                                  | Event Published          | Trigger                                            |
+|------------------------------------------------------------------------------------------|--------------------------|----------------------------------------------------|
+| `FeedSyncService` / `RssFetchService`                                                    | `FeedSyncCompleted`      | After sync completes                               |
+| `SyncJobService`                                                                         | `JobStatusChanged`       | On `recordStart`, `recordSuccess`, `recordFailure` |
+| `VideoSyncService`                                                                       | `VideoDownloadCompleted` | After each video download attempt                  |
+| `IngestService`                                                                          | `IngestReady`            | After ingest preview is stored                     |
+| `BookmarkService`, `FeedItemService`, `VideoService`, `FolderService`, `CategoryService` | `ContentMutated`         | On create, update, delete mutations                |
 
 Services inject `ApplicationEventPublisher` and call `publishEvent()` at the end of their operations.
 
@@ -203,14 +203,14 @@ Single smoke test proving the full chain:
 
 Per project conventions, all new classes get `private val log = LoggerFactory.getLogger(javaClass)`.
 
-| Component | Level | What |
-|-----------|-------|------|
-| `WebSocketAuthInterceptor` | INFO | Successful WebSocket connect (userId) |
-| `WebSocketAuthInterceptor` | WARN | Auth failure — invalid/missing JWT (remote address) |
-| `WebSocketAuthInterceptor` | INFO | WebSocket disconnect (userId, session duration) |
-| `WebSocketEventRelay` | DEBUG | Event received and signal sent (eventType, userId, topic) |
-| `WebSocketEventRelay` | WARN | Failed to relay signal (eventType, userId, error message) |
-| Domain services | DEBUG | Event published (eventType, userId, relevant IDs) |
+| Component                  | Level  | What                                                      |
+|----------------------------|--------|-----------------------------------------------------------|
+| `WebSocketAuthInterceptor` | INFO   | Successful WebSocket connect (userId)                     |
+| `WebSocketAuthInterceptor` | WARN   | Auth failure — invalid/missing JWT (remote address)       |
+| `WebSocketAuthInterceptor` | INFO   | WebSocket disconnect (userId, session duration)           |
+| `WebSocketEventRelay`      | DEBUG  | Event received and signal sent (eventType, userId, topic) |
+| `WebSocketEventRelay`      | WARN   | Failed to relay signal (eventType, userId, error message) |
+| Domain services            | DEBUG  | Event published (eventType, userId, relevant IDs)         |
 
 DEBUG for relay signals keeps logs quiet under normal operation; bump to INFO via Logback config when debugging WebSocket issues.
 
@@ -306,17 +306,95 @@ No rate limiting needed on the server side. Client-side debounce (500ms) in the 
 
 ---
 
+## Configuration
+
+### Step 0: Establish Profile-Aware Config (Pre-Requisite)
+
+Before adding Phase 8 config, split existing hardcoded dev values into proper Spring profiles. This is a foundational step that benefits all phases.
+
+**Current state**: `application.properties` has everything (dev DB, dev CORS, dev JWT secret). Only `application-test.properties` exists for TestContainers.
+
+**Target state**: Three-tier config:
+- `application.properties` — shared defaults and non-environment-specific settings
+- `application-dev.properties` — local development overrides (active by default when no profile set)
+- `application-prod.properties` — production overrides (activated via `SPRING_PROFILES_ACTIVE=prod`)
+
+**Settings to migrate from `application.properties`:**
+
+| Setting | Dev Value | Prod Value |
+|---------|-----------|------------|
+| `spring.datasource.url` | `jdbc:postgresql://localhost:5433/memoryvault` | RDS endpoint |
+| `memoryvault.cors.allowed-origins` | `http://localhost:4200` | `https://yourdomain.com` |
+| `memoryvault.jwt.secret` | Dev secret | Environment variable / Secrets Manager |
+| `spring.graphql.graphiql.enabled` | `true` | `false` |
+
+**SecurityConfig update**: Read CORS origins from `memoryvault.cors.allowed-origins` property instead of hardcoded string.
+
+**Angular environment files**: Create `environment.ts` (dev) and `environment.prod.ts` with `apiUrl` and `wsUrl`. Angular CLI handles the file swap at build time.
+
+### Phase 8 Configuration
+
+With profiles in place, add WebSocket-specific properties:
+
+**Backend (`application.properties` — shared defaults):**
+```properties
+# WebSocket
+memoryvault.websocket.heartbeat-interval-ms=10000
+memoryvault.websocket.relay-executor-pool-size=4
+```
+
+**Backend (`application-dev.properties`):**
+```properties
+memoryvault.websocket.allowed-origins=${memoryvault.cors.allowed-origins}
+memoryvault.websocket.broker-type=simple
+```
+
+**Backend (`application-prod.properties`):**
+```properties
+memoryvault.websocket.allowed-origins=${memoryvault.cors.allowed-origins}
+memoryvault.websocket.broker-type=external
+memoryvault.websocket.broker-host=<amazon-mq-endpoint>
+memoryvault.websocket.broker-port=61613
+memoryvault.websocket.broker-username=<from-secrets-manager>
+memoryvault.websocket.broker-password=<from-secrets-manager>
+```
+
+**Frontend (`environment.ts` — dev):**
+```typescript
+export const environment = {
+  production: false,
+  apiUrl: 'http://localhost:8080',
+  wsUrl: 'ws://localhost:8080/ws',
+};
+```
+
+**Frontend (`environment.prod.ts`):**
+```typescript
+export const environment = {
+  production: true,
+  apiUrl: 'https://yourdomain.com',
+  wsUrl: 'wss://yourdomain.com/ws',
+};
+```
+
+**Frontend constant (hardcoded, not per-environment):**
+- Debounce window: 500ms (in each store's subscription setup)
+
+`WebSocketConfig.kt` reads all values from injected `@ConfigurationProperties` — no hardcoded strings.
+
+---
+
 ## Cross-Cutting Concerns Checklist
 
-| Concern | Status | Section |
-|---------|--------|---------|
-| Auth / security | Addressed | JWT Authentication on Connect |
-| Error handling | Addressed | Error Handling |
-| Threading / concurrency | Addressed | Threading |
-| Logging / observability | Addressed | Logging |
-| Connection lifecycle (heartbeats, expiry, reconnect, shutdown) | Addressed | Connection Lifecycle |
-| Resource limits (connections, message rate) | Addressed | Resource Limits |
-| Configuration (what's tunable) | Addressed | Inline in each section (heartbeat interval, executor pool size, debounce window, CORS origins) |
+| Concern                                                        | Status    | Section                                                                                        |
+|----------------------------------------------------------------|-----------|------------------------------------------------------------------------------------------------|
+| Auth / security                                                | Addressed | JWT Authentication on Connect                                                                  |
+| Error handling                                                 | Addressed | Error Handling                                                                                 |
+| Threading / concurrency                                        | Addressed | Threading                                                                                      |
+| Logging / observability                                        | Addressed | Logging                                                                                        |
+| Connection lifecycle (heartbeats, expiry, reconnect, shutdown) | Addressed | Connection Lifecycle                                                                           |
+| Resource limits (connections, message rate)                    | Addressed | Resource Limits                                                                                |
+| Configuration (dev/prod profiles, tunables)                    | Addressed | Configuration                                                                                  |
 
 ---
 
@@ -338,6 +416,10 @@ The architecture is designed for a clean AWS transition:
 ## Files Changed/Created
 
 ### New Files
+- `src/main/resources/application-dev.properties` — dev profile config
+- `src/main/resources/application-prod.properties` — prod profile config (placeholder values)
+- `client/src/environments/environment.ts` — dev environment (apiUrl, wsUrl)
+- `client/src/environments/environment.prod.ts` — prod environment
 - `src/.../config/WebSocketConfig.kt` — STOMP broker and endpoint config
 - `src/.../config/WebSocketAuthInterceptor.kt` — JWT validation on CONNECT
 - `src/.../websocket/VaultEvent.kt` — sealed interface + data classes + enums
@@ -347,9 +429,10 @@ The architecture is designed for a clean AWS transition:
 - Unit tests for relay, interceptor, WebSocketService, store subscriptions
 
 ### Modified Files
+- `src/main/resources/application.properties` — extract env-specific values to profile files, add shared WebSocket defaults
 - `build.gradle.kts` — add `spring-boot-starter-websocket`
 - `client/package.json` — add `@stomp/rx-stomp`
-- `src/.../config/SecurityConfig.kt` — permit `/ws/**`
+- `src/.../config/SecurityConfig.kt` — permit `/ws/**`, read CORS origins from config property
 - `src/.../scheduling/SyncJobService.kt` — publish `JobStatusChanged`
 - `src/.../feed/service/FeedSyncService.kt` (or `RssFetchService`) — publish `FeedSyncCompleted`
 - `src/.../youtube/service/VideoSyncService.kt` — publish `VideoDownloadCompleted`
