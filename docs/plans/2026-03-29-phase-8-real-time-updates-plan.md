@@ -60,7 +60,7 @@
 - Create: `src/main/resources/application-prod.properties`
 - Modify: `src/main/kotlin/org/sightech/memoryvault/config/SecurityConfig.kt`
 
-- [ ] **Step 1: Create `application-dev.properties`**
+- [x] **Step 1: Create `application-dev.properties`**
 
 ```properties
 # Dev profile — active by default (no SPRING_PROFILES_ACTIVE set)
@@ -80,7 +80,7 @@ memoryvault.jwt.secret=dev-secret-key-change-in-production-must-be-at-least-256-
 spring.graphql.graphiql.enabled=true
 ```
 
-- [ ] **Step 2: Create `application-prod.properties`**
+- [x] **Step 2: Create `application-prod.properties`**
 
 ```properties
 # Prod profile — activate with SPRING_PROFILES_ACTIVE=prod
@@ -100,7 +100,7 @@ memoryvault.jwt.secret=${JWT_SECRET}
 spring.graphql.graphiql.enabled=false
 ```
 
-- [ ] **Step 3: Update `application.properties` to contain only shared settings**
+- [x] **Step 3: Update `application.properties` to contain only shared settings**
 
 Remove the env-specific values that are now in dev/prod profiles. Keep:
 
@@ -152,7 +152,7 @@ spring.graphql.schema.printer.enabled=true
 # spring.security.oauth2.client.registration.github.client-secret=YOUR_GITHUB_CLIENT_SECRET
 ```
 
-- [ ] **Step 4: Update SecurityConfig to read CORS from config**
+- [x] **Step 4: Update SecurityConfig to read CORS from config**
 
 Replace the hardcoded `http://localhost:4200` in `SecurityConfig.kt` with a `@Value` injection:
 
@@ -180,7 +180,7 @@ class SecurityConfig(
 }
 ```
 
-- [ ] **Step 5: Add CORS property to `application-test.properties`**
+- [x] **Step 5: Add CORS property to `application-test.properties`**
 
 Append to `src/main/resources/application-test.properties`:
 
@@ -190,12 +190,12 @@ memoryvault.cors.allowed-origins=http://localhost
 
 This ensures the `@Value("${memoryvault.cors.allowed-origins}")` in `SecurityConfig` resolves during tests, even though the test profile doesn't load `application-dev.properties`.
 
-- [ ] **Step 6: Run all tests to verify the config split didn't break anything**
+- [x] **Step 6: Run all tests to verify the config split didn't break anything**
 
 Run: `./gradlew test`
 Expected: All existing tests pass. `application-test.properties` continues to override test-specific values (JWT secret). The `spring.profiles.default=dev` ensures `application-dev.properties` is loaded when no profile is active.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```
 git add src/main/resources/application.properties src/main/resources/application-dev.properties src/main/resources/application-prod.properties src/main/resources/application-test.properties src/main/kotlin/org/sightech/memoryvault/config/SecurityConfig.kt
