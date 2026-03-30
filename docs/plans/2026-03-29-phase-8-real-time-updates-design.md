@@ -321,12 +321,12 @@ Before adding Phase 8 config, split existing hardcoded dev values into proper Sp
 
 **Settings to migrate from `application.properties`:**
 
-| Setting | Dev Value | Prod Value |
-|---------|-----------|------------|
-| `spring.datasource.url` | `jdbc:postgresql://localhost:5433/memoryvault` | RDS endpoint |
-| `memoryvault.cors.allowed-origins` | `http://localhost:4200` | `https://yourdomain.com` |
-| `memoryvault.jwt.secret` | Dev secret | Environment variable / Secrets Manager |
-| `spring.graphql.graphiql.enabled` | `true` | `false` |
+| Setting                            | Dev Value                                      | Prod Value                             |
+|------------------------------------|------------------------------------------------|----------------------------------------|
+| `spring.datasource.url`            | `jdbc:postgresql://localhost:5433/memoryvault` | RDS endpoint                           |
+| `memoryvault.cors.allowed-origins` | `http://localhost:4200`                        | `https://yourdomain.com`               |
+| `memoryvault.jwt.secret`           | Dev secret                                     | Environment variable / Secrets Manager |
+| `spring.graphql.graphiql.enabled`  | `true`                                         | `false`                                |
 
 **SecurityConfig update**: Read CORS origins from `memoryvault.cors.allowed-origins` property instead of hardcoded string.
 
