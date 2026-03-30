@@ -250,3 +250,4 @@ Archived YouTube videos are automatically backed up to a configurable secondary 
 - `color` on `Tag` is nullable; can be dropped in a migration if a better theming approach is chosen later.
 - Multi-tenancy (`userId` foreign keys) is in from the start. SaaS path remains open if the web UI proves compelling enough.
 - **Cross-platform video backup** — archived YouTube videos should also be backed up to a configurable secondary video platform (Rumble, Vimeo, etc.). If the video doesn't already exist on the target platform, MemoryVault should upload it automatically. Ensures resilience against YouTube takedowns/deletions.
+- **Retroactive cross-cutting concerns audit (Phases 1–7)** — Phase 8 design review revealed that earlier phases were not systematically checked for error handling, connection lifecycle, resource limits, and other cross-cutting concerns. A future audit pass should verify these are adequate across all phases.

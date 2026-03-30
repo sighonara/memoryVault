@@ -256,6 +256,70 @@ DEBUG for relay signals keeps logs quiet under normal operation; bump to INFO vi
 
 ---
 
+## Connection Lifecycle
+
+### STOMP Heartbeats
+
+Configure server and client heartbeats to detect dead connections:
+- Server sends heartbeat every 10s, expects client heartbeat every 10s
+- Configured in `WebSocketConfig` via `configureMessageBroker`: `setHeartbeatValue(longArrayOf(10000, 10000))`
+- rx-stomp client configured to match: `heartbeatIncoming: 10000, heartbeatOutgoing: 10000`
+- If no heartbeat received within the timeout window, Spring closes the session and cleans up resources
+
+### JWT Expiry Mid-Session
+
+WebSocket connections are long-lived and may outlive the JWT used at CONNECT time. Policy: **validate once at connect, do not re-validate mid-session.** Rationale:
+- Signals are lightweight and contain no sensitive data (just event types and IDs)
+- The JWT expiry (24h per current config) is long enough that sessions rarely outlive it
+- If the JWT expires, the next HTTP request (GraphQL refetch triggered by a signal) will 401 and redirect to login, which also tears down the WebSocket connection via the logout flow
+- Re-validating mid-session would require either periodic checks on a timer (complexity for no real security gain) or validating on every message (performance overhead on a high-frequency channel)
+
+### Graceful Shutdown
+
+On server shutdown (restart, deploy):
+- Spring's `@PreDestroy` on the WebSocket config closes all active STOMP sessions
+- Clients receive a disconnect event; rx-stomp begins auto-reconnect with backoff
+- No custom shutdown message needed — the client's reconnect behavior handles this transparently
+- After reconnect, stores re-subscribe and refetch current state (same as initial page load)
+
+---
+
+## Resource Limits
+
+### Connection Limits
+
+For a self-hosted, single-user application, aggressive connection limits are unnecessary. Sensible defaults:
+- **No per-user connection cap** — a handful of tabs is the expected usage pattern
+- **Spring's default send buffer limit** (512KB) and send timeout (10s) are sufficient
+- If buffer fills (slow client), Spring closes the session — client reconnects automatically
+
+These defaults are revisited if the application moves to multi-tenant (Phase 9+).
+
+### Message Rate
+
+Signals are produced by sync operations, not user input — the rate is naturally bounded:
+- Feed sync: one `FeedSyncCompleted` + N `ContentMutated` per sync (N = new items, typically < 100)
+- Video sync: one `VideoDownloadCompleted` per video download (slow, minutes apart)
+- Content mutations: one per user action (bookmark, mark-read, etc.)
+
+No rate limiting needed on the server side. Client-side debounce (500ms) in the stores handles burst scenarios.
+
+---
+
+## Cross-Cutting Concerns Checklist
+
+| Concern | Status | Section |
+|---------|--------|---------|
+| Auth / security | Addressed | JWT Authentication on Connect |
+| Error handling | Addressed | Error Handling |
+| Threading / concurrency | Addressed | Threading |
+| Logging / observability | Addressed | Logging |
+| Connection lifecycle (heartbeats, expiry, reconnect, shutdown) | Addressed | Connection Lifecycle |
+| Resource limits (connections, message rate) | Addressed | Resource Limits |
+| Configuration (what's tunable) | Addressed | Inline in each section (heartbeat interval, executor pool size, debounce window, CORS origins) |
+
+---
+
 ## AWS Migration Path
 
 The architecture is designed for a clean AWS transition:
