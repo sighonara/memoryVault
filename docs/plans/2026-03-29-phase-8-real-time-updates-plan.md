@@ -276,7 +276,7 @@ git commit -m "feat: add Angular environment files and WebSocket proxy"
 - Create: `src/main/kotlin/org/sightech/memoryvault/websocket/VaultEvent.kt`
 - Test: `src/test/kotlin/org/sightech/memoryvault/websocket/VaultEventTest.kt`
 
-- [ ] **Step 1: Write a test for VaultEvent construction and eventType**
+- [x] **Step 1: Write a test for VaultEvent construction and eventType**
 
 Create `src/test/kotlin/org/sightech/memoryvault/websocket/VaultEventTest.kt`:
 
@@ -354,12 +354,12 @@ class VaultEventTest {
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `./gradlew test --tests "org.sightech.memoryvault.websocket.VaultEventTest"`
 Expected: FAIL — classes don't exist yet.
 
-- [ ] **Step 3: Create `VaultEvent.kt`**
+- [x] **Step 3: Create `VaultEvent.kt`**
 
 Create `src/main/kotlin/org/sightech/memoryvault/websocket/VaultEvent.kt`:
 
@@ -442,12 +442,12 @@ data class ContentMutated(
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `./gradlew test --tests "org.sightech.memoryvault.websocket.VaultEventTest"`
 Expected: PASS — all 5 tests green.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```
 git add src/main/kotlin/org/sightech/memoryvault/websocket/VaultEvent.kt src/test/kotlin/org/sightech/memoryvault/websocket/VaultEventTest.kt
