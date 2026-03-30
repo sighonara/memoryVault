@@ -211,7 +211,7 @@ git commit -m "refactor: split application.properties into dev/prod profiles"
 - Create: `client/src/environments/environment.prod.ts`
 - Modify: `client/proxy.conf.json`
 
-- [ ] **Step 1: Create `client/src/environments/environment.ts`**
+- [x] **Step 1: Create `client/src/environments/environment.ts`**
 
 ```typescript
 export const environment = {
@@ -221,7 +221,7 @@ export const environment = {
 };
 ```
 
-- [ ] **Step 2: Create `client/src/environments/environment.prod.ts`**
+- [x] **Step 2: Create `client/src/environments/environment.prod.ts`**
 
 ```typescript
 export const environment = {
@@ -231,7 +231,7 @@ export const environment = {
 };
 ```
 
-- [ ] **Step 3: Add WebSocket proxy to `client/proxy.conf.json`**
+- [x] **Step 3: Add WebSocket proxy to `client/proxy.conf.json`**
 
 Add the `/ws` entry:
 
@@ -261,7 +261,7 @@ Add the `/ws` entry:
 }
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```
 git add client/src/environments/environment.ts client/src/environments/environment.prod.ts client/proxy.conf.json
