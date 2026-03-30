@@ -9,12 +9,14 @@ Add WebSocket support to MemoryVault so the Angular UI receives live signals whe
 
 ## Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Signal model | Lightweight signals (no payloads) | Client refetches via existing queries; server stays simple |
-| Transport | WebSocket + STOMP (simple broker) | Decouples from app server; swappable to external broker (Amazon MQ, Redis) on AWS |
-| Auth | JWT validated on STOMP CONNECT | Reuses existing JwtService; prevents unauthenticated connections |
-| Internal eventing | Spring ApplicationEvents | Services stay decoupled from WebSocket; same event shape works when services move to Lambda |
+| Decision          | Choice                            | Rationale                                                                                      |
+|-------------------|-----------------------------------|------------------------------------------------------------------------------------------------|
+| Signal model      | Lightweight signals (no payloads) | Client refetches via existing queries; server stays simple                                     |
+| Transport         | WebSocket + STOMP (simple broker) | Decouples from app server; swappable to external broker (Amazon MQ, Redis) on AWS              |
+| Auth              | JWT validated on STOMP CONNECT    | Reuses existing JwtService; prevents unauthenticated connections                               |
+| Internal eventing | Spring ApplicationEvents          | Services stay decoupled from WebSocket; same event shape works when services move to Lambda    |
+| Threading         | `@Async` relay with dedicated executor | Isolates relay failures from sync services; mirrors AWS architecture (decoupled consumption) |
+| Error handling    | Best-effort signals, catch-and-swallow | Missed signal = stale until next signal or manual refresh; never break a sync job            |
 
 ## Event Types
 
@@ -118,13 +120,13 @@ Services inject `ApplicationEventPublisher` and call `publishEvent()` at the end
 
 All topics are user-scoped: `/topic/user/{userId}/...`
 
-| Topic | Event | Signal Payload |
-|-------|-------|----------------|
-| `/topic/user/{userId}/feeds` | `FeedSyncCompleted` | `{ eventType, feedId?, newItemCount }` |
-| `/topic/user/{userId}/jobs` | `JobStatusChanged` | `{ eventType, jobId, jobType, newStatus }` |
-| `/topic/user/{userId}/videos` | `VideoDownloadCompleted` | `{ eventType, videoId, listId, success }` |
-| `/topic/user/{userId}/ingests` | `IngestReady` | `{ eventType, previewId, itemCount }` |
-| `/topic/user/{userId}/sync` | `ContentMutated` | `{ eventType, contentType, mutationType, entityId? }` |
+| Topic                          | Event                    | Signal Payloa d                                       |
+|--------------------------------|--------------------------|-------------------------------------------------------|
+| `/topic/user/{userId}/feeds`   | `FeedSyncCompleted`      | `{ eventType, feedId?, newItemCount }`                |
+| `/topic/user/{userId}/jobs`    | `JobStatusChanged`       | `{ eventType, jobId, jobType, newStatus }`            |
+| `/topic/user/{userId}/videos`  | `VideoDownloadCompleted` | `{ eventType, videoId, listId, success }`             |
+| `/topic/user/{userId}/ingests` | `IngestReady`            | `{ eventType, previewId, itemCount }`                 |
+| `/topic/user/{userId}/sync`    | `ContentMutated`         | `{ eventType, contentType, mutationType, entityId? }` |
 
 User-scoped topics ensure clients only receive their own events. The relay reads `userId` from the domain event and targets that user's topic. Explicit topic paths (not `convertAndSendToUser()`) for consistency with future external broker routing.
 
@@ -149,12 +151,12 @@ Add `@stomp/rx-stomp` — RxJS-native STOMP client with built-in auto-reconnect.
 
 Each NgRx Signal Store subscribes to its relevant topic(s) and triggers a refetch:
 
-| Store | Subscribes To | Action on Signal |
-|-------|--------------|-----------------|
-| `ReaderStore` | `/feeds`, `/sync` (FEED_ITEM) | `loadCategories()`, `loadItems()` |
+| Store            | Subscribes To                          | Action on Signal                                           |
+|------------------|----------------------------------------|------------------------------------------------------------|
+| `ReaderStore`    | `/feeds`, `/sync` (FEED_ITEM)          | `loadCategories()`, `loadItems()`                          |
 | `BookmarksStore` | `/sync` (BOOKMARK, FOLDER), `/ingests` | `loadBookmarks()`, `loadFolders()`, `loadPendingIngests()` |
-| `YoutubeStore` | `/videos` | `loadLists()`, reload selected list videos |
-| `AdminStore` | `/jobs` | `loadJobs()` |
+| `YoutubeStore`   | `/videos`                              | `loadLists()`, reload selected list videos                 |
+| `AdminStore`     | `/jobs`                                | `loadJobs()`                                               |
 
 ### Debounce
 
@@ -194,6 +196,63 @@ Single smoke test proving the full chain:
 - Open two browser tabs
 - Mark a feed item read in tab A
 - Assert tab B reflects the change without manual refresh
+
+---
+
+## Logging
+
+Per project conventions, all new classes get `private val log = LoggerFactory.getLogger(javaClass)`.
+
+| Component | Level | What |
+|-----------|-------|------|
+| `WebSocketAuthInterceptor` | INFO | Successful WebSocket connect (userId) |
+| `WebSocketAuthInterceptor` | WARN | Auth failure — invalid/missing JWT (remote address) |
+| `WebSocketAuthInterceptor` | INFO | WebSocket disconnect (userId, session duration) |
+| `WebSocketEventRelay` | DEBUG | Event received and signal sent (eventType, userId, topic) |
+| `WebSocketEventRelay` | WARN | Failed to relay signal (eventType, userId, error message) |
+| Domain services | DEBUG | Event published (eventType, userId, relevant IDs) |
+
+DEBUG for relay signals keeps logs quiet under normal operation; bump to INFO via Logback config when debugging WebSocket issues.
+
+---
+
+## Threading
+
+`@Async` on the relay's `@EventListener` methods, with a dedicated thread pool executor:
+
+- `WebSocketConfig` (or a separate `AsyncConfig`) defines a `ThreadPoolTaskExecutor` named `websocketRelayExecutor` — small pool (2–4 threads), since `convertAndSend()` is non-blocking
+- `@Async("websocketRelayExecutor")` on each `@EventListener` method in `WebSocketEventRelay`
+- `@EnableAsync` on the config class
+
+**Why `@Async`:**
+- Isolates relay exceptions from the publishing service — a relay failure never breaks a sync job
+- Mirrors the eventual AWS architecture where event consumption is always on a separate thread (external broker consumer)
+- Switching to `@Async` later would require verifying no ordering assumptions crept in; doing it from the start avoids that
+
+**Ordering**: Signals are lightweight refetch triggers, not ordered data streams. If two signals arrive out of order, the client refetches the same data either way. No ordering guarantees needed.
+
+---
+
+## Error Handling
+
+### Backend — WebSocket Auth Interceptor
+- Invalid/missing JWT: log WARN, reject the STOMP CONNECT frame (send ERROR frame, close session). Do not throw — Spring's channel interceptor contract expects a clean return or `null` message.
+
+### Backend — WebSocket Event Relay
+- `convertAndSend()` failure: catch, log WARN with event details, swallow. A failed signal means the client misses one update and stays on stale data until the next signal or manual refresh. This is acceptable — signals are best-effort, not guaranteed delivery.
+- Exception in event deserialization/mapping: same — catch, log ERROR, swallow. Never propagate back to the async executor (would only log to stderr and be lost).
+
+### Backend — Domain Event Publishing
+- `publishEvent()` is fire-and-forget from the service's perspective (async relay). If `ApplicationEventPublisher` itself throws (should not happen), it would propagate — but this is a Spring framework failure, not something we handle.
+
+### Frontend — WebSocket Connection
+- Connection failure / server unreachable: rx-stomp auto-reconnects with exponential backoff. No user-facing error — the UI works normally via manual fetches, just without live updates.
+- Auth rejection (ERROR frame): log to console. If the JWT expired, the next HTTP request will also 401 and trigger the existing redirect-to-login flow.
+- Stale connection (server restart): rx-stomp detects disconnect and reconnects. Stores re-subscribe automatically on reconnect.
+
+### Frontend — Signal Processing
+- Malformed signal payload: catch in the `WebSocketService.on()` observable, log to console, skip. Don't break the subscription.
+- Refetch failure after signal: handled by existing store error handling (stores already handle failed GraphQL queries).
 
 ---
 
