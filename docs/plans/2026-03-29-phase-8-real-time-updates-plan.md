@@ -2414,3 +2414,20 @@ Mark Phase 8 as complete in `docs/plans/2026-03-05-tooling-first-design.md` by p
 git add docs/plans/2026-03-05-tooling-first-design.md
 git commit -m "docs: mark Phase 8 complete in master roadmap"
 ```
+
+---
+
+## Summary
+
+| Task | Description                              | Key Files                                                                  |
+|------|------------------------------------------|----------------------------------------------------------------------------|
+| 1    | Dev/prod configuration split             | application.properties, application-dev/prod.properties, SecurityConfig.kt |
+| 2    | Angular environment files                | environment.ts, environment.prod.ts, proxy.conf.json                       |
+| 3    | Domain events (VaultEvent)               | websocket/VaultEvent.kt                                                    |
+| 4    | WebSocket infrastructure + auth          | WebSocketConfig.kt, WebSocketAuthInterceptor.kt, build.gradle.kts          |
+| 5    | WebSocket event relay                    | websocket/WebSocketEventRelay.kt                                           |
+| 6    | Publish events from backend services     | SyncJobService, FeedService, FeedItemService, BookmarkService, + 3 more    |
+| 7    | Angular WebSocketService                 | core/services/websocket.service.ts, @stomp/rx-stomp                        |
+| 8    | Store integration (all 4 stores)         | reader.store.ts, bookmarks.store.ts, youtube.store.ts, admin.store.ts      |
+| 9    | Backend integration test                 | websocket/WebSocketIntegrationTest.kt                                      |
+| 10   | E2E test + final verification            | e2e/websocket.spec.ts, master roadmap update                               |
