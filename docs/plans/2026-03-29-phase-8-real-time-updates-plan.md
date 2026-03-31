@@ -1739,7 +1739,7 @@ git commit -m "feat: add Angular WebSocketService with rx-stomp"
 
 Each store subscribes to its relevant WebSocket topics and triggers a debounced refetch when a signal arrives. The debounce prevents rapid-fire signals from causing multiple refetches.
 
-- [ ] **Step 1: Update `reader.store.ts`**
+- [x] **Step 1: Update `reader.store.ts`**
 
 Add WebSocket subscription in the `init` method. Import `WebSocketService` and add debounced subscriptions to `/feeds` and `/sync`:
 
@@ -1803,7 +1803,7 @@ init: () => {
 },
 ```
 
-- [ ] **Step 2: Update `bookmarks.store.ts`**
+- [x] **Step 2: Update `bookmarks.store.ts`**
 
 At the top, add:
 
@@ -1842,7 +1842,7 @@ After the `loadPendingIngests` definition and before the `return {`, add:
     initWebSocket();
 ```
 
-- [ ] **Step 3: Update `youtube.store.ts`**
+- [x] **Step 3: Update `youtube.store.ts`**
 
 At the top, add:
 
@@ -1874,7 +1874,7 @@ After the `loadVideosRx` definition and before `return {`, add:
     });
 ```
 
-- [ ] **Step 4: Update `admin.store.ts`**
+- [x] **Step 4: Update `admin.store.ts`**
 
 At the top, add:
 
@@ -1974,7 +1974,7 @@ withMethods((store, apollo = inject(Apollo), ws = inject(WebSocketService)) => {
 
 Note: this also fixes the existing `(store as any).loadJobs()` / `(store as any).loadLogs()` calls by switching to the local variable pattern (per project conventions in CLAUDE.md).
 
-- [ ] **Step 5: Update `admin.ts` to replace setInterval with WebSocket**
+- [x] **Step 5: Update `admin.ts` to replace setInterval with WebSocket**
 
 The `toggleFollow` method in `admin.ts` can be simplified. The WebSocket `/jobs` subscription already pushes updates. The "Follow" button for logs can keep the interval for now (logs aren't pushed via WebSocket), but jobs no longer need polling:
 
@@ -1992,7 +1992,7 @@ toggleFollow() {
 
 This stays the same since log following is a different concern (tailing structured logs, not job status). The job status updates are now handled by the WebSocket subscription in the store.
 
-- [ ] **Step 6: Connect WebSocket on app startup**
+- [x] **Step 6: Connect WebSocket on app startup**
 
 The `WebSocketService.connect()` needs to be called when the user is authenticated. Find the app's root component or the layout component that loads after login. In `client/src/app/shared/layout/app-layout.ts`, inject `WebSocketService` and call `connect()` in the constructor or `ngOnInit`:
 
@@ -2017,12 +2017,12 @@ Also disconnect on logout. In `auth.service.ts`, inject `WebSocketService` and c
 
 In the layout component's logout handler, call `this.ws.disconnect()` before or after clearing the token.
 
-- [ ] **Step 7: Run frontend tests**
+- [x] **Step 7: Run frontend tests**
 
 Run from `client/`: `npm run test -- --run`
 Expected: Existing tests pass. Some may need `WebSocketService` mocked if they construct stores.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```
 git add client/src/app/reader/reader.store.ts client/src/app/bookmarks/bookmarks.store.ts client/src/app/youtube/youtube.store.ts client/src/app/admin/admin.store.ts client/src/app/admin/admin.ts client/src/app/shared/layout/app-layout.ts client/src/app/core/services/websocket.service.ts
