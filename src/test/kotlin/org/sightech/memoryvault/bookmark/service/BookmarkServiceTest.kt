@@ -10,6 +10,7 @@ import org.sightech.memoryvault.bookmark.repository.BookmarkRepository
 import org.sightech.memoryvault.bookmark.repository.FolderRepository
 import org.sightech.memoryvault.tag.entity.Tag
 import org.sightech.memoryvault.tag.service.TagService
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContext
 import org.springframework.security.core.context.SecurityContextHolder
@@ -25,7 +26,8 @@ class BookmarkServiceTest {
     private val bookmarkRepository = mockk<BookmarkRepository>()
     private val folderRepository = mockk<FolderRepository>(relaxed = true)
     private val tagService = mockk<TagService>()
-    private val service = BookmarkService(bookmarkRepository, folderRepository, tagService)
+    private val eventPublisher = mockk<ApplicationEventPublisher>(relaxed = true)
+    private val service = BookmarkService(bookmarkRepository, folderRepository, tagService, eventPublisher)
     private val userId = UUID.fromString("00000000-0000-0000-0000-000000000001")
 
     @BeforeEach

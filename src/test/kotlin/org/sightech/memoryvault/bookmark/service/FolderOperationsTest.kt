@@ -10,6 +10,7 @@ import org.sightech.memoryvault.bookmark.repository.BookmarkRepository
 import org.sightech.memoryvault.bookmark.repository.FolderRepository
 import org.sightech.memoryvault.tag.service.TagService
 import org.sightech.memoryvault.auth.CurrentUser
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import java.util.UUID
@@ -19,6 +20,7 @@ class FolderOperationsTest {
     private val bookmarkRepository = mockk<BookmarkRepository>(relaxed = true)
     private val folderRepository = mockk<FolderRepository>(relaxed = true)
     private val tagService = mockk<TagService>(relaxed = true)
+    private val eventPublisher = mockk<ApplicationEventPublisher>(relaxed = true)
     private lateinit var service: BookmarkService
     private val userId = UUID.randomUUID()
 
@@ -26,7 +28,7 @@ class FolderOperationsTest {
     fun setUp() {
         val auth = UsernamePasswordAuthenticationToken(userId.toString(), null, emptyList())
         SecurityContextHolder.getContext().authentication = auth
-        service = BookmarkService(bookmarkRepository, folderRepository, tagService)
+        service = BookmarkService(bookmarkRepository, folderRepository, tagService, eventPublisher)
     }
 
     @Test

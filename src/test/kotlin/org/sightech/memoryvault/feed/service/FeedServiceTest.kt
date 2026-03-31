@@ -8,6 +8,7 @@ import org.sightech.memoryvault.feed.entity.Feed
 import org.sightech.memoryvault.feed.entity.FeedCategory
 import org.sightech.memoryvault.feed.repository.FeedItemRepository
 import org.sightech.memoryvault.feed.repository.FeedRepository
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContext
 import org.springframework.security.core.context.SecurityContextHolder
@@ -23,7 +24,8 @@ class FeedServiceTest {
     private val feedItemRepository = mockk<FeedItemRepository>()
     private val rssFetchService = mockk<RssFetchService>()
     private val feedCategoryService = mockk<FeedCategoryService>()
-    private val service = FeedService(feedRepository, feedItemRepository, rssFetchService, feedCategoryService)
+    private val eventPublisher = mockk<ApplicationEventPublisher>(relaxed = true)
+    private val service = FeedService(feedRepository, feedItemRepository, rssFetchService, feedCategoryService, eventPublisher)
     private val userId = UUID.fromString("00000000-0000-0000-0000-000000000001")
     private val defaultCategory = FeedCategory(userId = userId, name = "Subscribed")
 

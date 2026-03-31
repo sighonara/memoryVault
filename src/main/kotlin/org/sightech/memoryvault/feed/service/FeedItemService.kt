@@ -4,7 +4,11 @@ import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.feed.entity.FeedItem
 import org.sightech.memoryvault.feed.repository.FeedItemRepository
 import org.sightech.memoryvault.feed.repository.FeedRepository
+import org.sightech.memoryvault.websocket.ContentMutated
+import org.sightech.memoryvault.websocket.ContentType
+import org.sightech.memoryvault.websocket.MutationType
 import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
@@ -13,7 +17,8 @@ import java.util.UUID
 @Service
 class FeedItemService(
     private val feedItemRepository: FeedItemRepository,
-    private val feedRepository: FeedRepository
+    private val feedRepository: FeedRepository,
+    private val eventPublisher: ApplicationEventPublisher
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -50,7 +55,13 @@ class FeedItemService(
         val item = feedItemRepository.findByIdAndUserId(itemId, userId) ?: return null
         item.readAt = Instant.now()
         log.info("Marked item read itemId={}", itemId)
-        return feedItemRepository.save(item)
+        val saved = feedItemRepository.save(item)
+        eventPublisher.publishEvent(ContentMutated(
+            userId = userId, timestamp = Instant.now(),
+            contentType = ContentType.FEED_ITEM, mutationType = MutationType.UPDATED,
+            entityId = itemId
+        ))
+        return saved
     }
 
     fun markItemUnread(itemId: UUID): FeedItem? {
@@ -58,13 +69,26 @@ class FeedItemService(
         val item = feedItemRepository.findByIdAndUserId(itemId, userId) ?: return null
         item.readAt = null
         log.info("Marked item unread itemId={}", itemId)
-        return feedItemRepository.save(item)
+        val saved = feedItemRepository.save(item)
+        eventPublisher.publishEvent(ContentMutated(
+            userId = userId, timestamp = Instant.now(),
+            contentType = ContentType.FEED_ITEM, mutationType = MutationType.UPDATED,
+            entityId = itemId
+        ))
+        return saved
     }
 
     @Transactional
     fun markFeedRead(feedId: UUID): Int {
         val userId = CurrentUser.userId()
-        return feedItemRepository.markAllReadByFeedIdAndUserId(feedId, userId, Instant.now())
+        val count = feedItemRepository.markAllReadByFeedIdAndUserId(feedId, userId, Instant.now())
+        if (count > 0) {
+            eventPublisher.publishEvent(ContentMutated(
+                userId = userId, timestamp = Instant.now(),
+                contentType = ContentType.FEED_ITEM, mutationType = MutationType.UPDATED
+            ))
+        }
+        return count
     }
 
     @Transactional
@@ -76,6 +100,12 @@ class FeedItemService(
             feedItemRepository.markAllReadByFeedIdAndUserId(feed.id, userId, now)
         }
         log.info("Marked category read categoryId={} count={}", categoryId, count)
+        if (count > 0) {
+            eventPublisher.publishEvent(ContentMutated(
+                userId = userId, timestamp = Instant.now(),
+                contentType = ContentType.FEED_ITEM, mutationType = MutationType.UPDATED
+            ))
+        }
         return count
     }
 

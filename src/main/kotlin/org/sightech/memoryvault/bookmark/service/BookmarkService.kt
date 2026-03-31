@@ -6,6 +6,11 @@ import org.sightech.memoryvault.bookmark.entity.Folder
 import org.sightech.memoryvault.bookmark.repository.BookmarkRepository
 import org.sightech.memoryvault.bookmark.repository.FolderRepository
 import org.sightech.memoryvault.tag.service.TagService
+import org.sightech.memoryvault.websocket.ContentMutated
+import org.sightech.memoryvault.websocket.ContentType
+import org.sightech.memoryvault.websocket.MutationType
+import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.util.UUID
@@ -14,8 +19,11 @@ import java.util.UUID
 class BookmarkService(
     private val bookmarkRepository: BookmarkRepository,
     private val folderRepository: FolderRepository,
-    private val tagService: TagService
+    private val tagService: TagService,
+    private val eventPublisher: ApplicationEventPublisher
 ) {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     fun create(url: String, title: String?, tagNames: List<String>?, folderId: UUID? = null): Bookmark {
         val userId = CurrentUser.userId()
@@ -29,7 +37,14 @@ class BookmarkService(
             val tags = tagService.findOrCreateByNames(tagNames)
             bookmark.tags.addAll(tags)
         }
-        return bookmarkRepository.save(bookmark)
+        val saved = bookmarkRepository.save(bookmark)
+        log.info("Created bookmark url={} bookmarkId={}", url, saved.id)
+        eventPublisher.publishEvent(ContentMutated(
+            userId = userId, timestamp = Instant.now(),
+            contentType = ContentType.BOOKMARK, mutationType = MutationType.CREATED,
+            entityId = saved.id
+        ))
+        return saved
     }
 
     fun findAll(query: String?, tagNames: List<String>?): List<Bookmark> {
@@ -60,7 +75,14 @@ class BookmarkService(
         bookmark.tags.clear()
         bookmark.tags.addAll(tags)
         bookmark.updatedAt = Instant.now()
-        return bookmarkRepository.save(bookmark)
+        val saved = bookmarkRepository.save(bookmark)
+        log.info("Updated tags bookmarkId={}", bookmarkId)
+        eventPublisher.publishEvent(ContentMutated(
+            userId = userId, timestamp = Instant.now(),
+            contentType = ContentType.BOOKMARK, mutationType = MutationType.UPDATED,
+            entityId = bookmarkId
+        ))
+        return saved
     }
 
     fun softDelete(bookmarkId: UUID): Bookmark? {
@@ -68,7 +90,14 @@ class BookmarkService(
         val bookmark = bookmarkRepository.findActiveByIdAndUserId(bookmarkId, userId) ?: return null
         bookmark.deletedAt = Instant.now()
         bookmark.updatedAt = Instant.now()
-        return bookmarkRepository.save(bookmark)
+        val saved = bookmarkRepository.save(bookmark)
+        log.info("Deleted bookmark bookmarkId={}", bookmarkId)
+        eventPublisher.publishEvent(ContentMutated(
+            userId = userId, timestamp = Instant.now(),
+            contentType = ContentType.BOOKMARK, mutationType = MutationType.DELETED,
+            entityId = bookmarkId
+        ))
+        return saved
     }
 
     fun moveBookmark(bookmarkId: UUID, folderId: UUID?): Bookmark {
@@ -81,7 +110,14 @@ class BookmarkService(
         }
         bookmark.folderId = folderId
         bookmark.updatedAt = Instant.now()
-        return bookmarkRepository.save(bookmark)
+        val saved = bookmarkRepository.save(bookmark)
+        log.info("Moved bookmark bookmarkId={} folderId={}", bookmarkId, folderId)
+        eventPublisher.publishEvent(ContentMutated(
+            userId = userId, timestamp = Instant.now(),
+            contentType = ContentType.BOOKMARK, mutationType = MutationType.UPDATED,
+            entityId = bookmarkId
+        ))
+        return saved
     }
 
     fun reorderBookmarks(folderId: UUID?, bookmarkIds: List<UUID>): List<Bookmark> {
@@ -146,7 +182,14 @@ class BookmarkService(
                 ?: throw IllegalArgumentException("Parent folder not found")
         }
         val folder = Folder(name = name, userId = userId, parentId = parentId)
-        return folderRepository.save(folder)
+        val saved = folderRepository.save(folder)
+        log.info("Created folder name={} folderId={}", name, saved.id)
+        eventPublisher.publishEvent(ContentMutated(
+            userId = userId, timestamp = Instant.now(),
+            contentType = ContentType.FOLDER, mutationType = MutationType.CREATED,
+            entityId = saved.id
+        ))
+        return saved
     }
 
     fun renameFolder(id: UUID, name: String): Folder {
@@ -155,7 +198,14 @@ class BookmarkService(
             ?: throw IllegalArgumentException("Folder not found")
         folder.name = name
         folder.updatedAt = Instant.now()
-        return folderRepository.save(folder)
+        val saved = folderRepository.save(folder)
+        log.info("Renamed folder folderId={} name={}", id, name)
+        eventPublisher.publishEvent(ContentMutated(
+            userId = userId, timestamp = Instant.now(),
+            contentType = ContentType.FOLDER, mutationType = MutationType.UPDATED,
+            entityId = id
+        ))
+        return saved
     }
 
     fun moveFolder(id: UUID, newParentId: UUID?): Folder {
@@ -180,7 +230,14 @@ class BookmarkService(
 
         folder.parentId = newParentId
         folder.updatedAt = Instant.now()
-        return folderRepository.save(folder)
+        val saved = folderRepository.save(folder)
+        log.info("Moved folder folderId={} newParentId={}", id, newParentId)
+        eventPublisher.publishEvent(ContentMutated(
+            userId = userId, timestamp = Instant.now(),
+            contentType = ContentType.FOLDER, mutationType = MutationType.UPDATED,
+            entityId = id
+        ))
+        return saved
     }
 
     fun deleteFolder(id: UUID) {
@@ -199,6 +256,12 @@ class BookmarkService(
         folder.deletedAt = Instant.now()
         folder.updatedAt = Instant.now()
         folderRepository.save(folder)
+        log.info("Deleted folder folderId={}", id)
+        eventPublisher.publishEvent(ContentMutated(
+            userId = userId, timestamp = Instant.now(),
+            contentType = ContentType.FOLDER, mutationType = MutationType.DELETED,
+            entityId = id
+        ))
     }
 
     fun findAllFolders(): List<Folder> {

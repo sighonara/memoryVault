@@ -4,7 +4,9 @@ import org.sightech.memoryvault.youtube.entity.Video
 import org.sightech.memoryvault.youtube.entity.YoutubeList
 import org.sightech.memoryvault.youtube.repository.VideoRepository
 import org.sightech.memoryvault.youtube.repository.YoutubeListRepository
+import org.sightech.memoryvault.websocket.VideoDownloadCompleted
 import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import java.time.Instant
 
@@ -21,7 +23,8 @@ class VideoSyncService(
     private val ytDlpService: YtDlpService,
     private val videoRepository: VideoRepository,
     private val youtubeListRepository: YoutubeListRepository,
-    private val videoDownloader: VideoDownloader
+    private val videoDownloader: VideoDownloader,
+    private val eventPublisher: ApplicationEventPublisher
 ) {
 
     private val logger = LoggerFactory.getLogger(VideoSyncService::class.java)
@@ -84,6 +87,11 @@ class VideoSyncService(
                 logger.warn("Failed to download video {}: {}", video.youtubeVideoId, result.error)
                 downloadFailures++
             }
+            eventPublisher.publishEvent(VideoDownloadCompleted(
+                userId = list.userId, timestamp = Instant.now(),
+                videoId = video.id, listId = list.id,
+                success = result.success && result.filePath != null
+            ))
         }
 
         // Update list metadata

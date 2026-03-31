@@ -10,6 +10,7 @@ import org.sightech.memoryvault.scheduling.entity.JobType
 import org.sightech.memoryvault.scheduling.entity.SyncJob
 import org.sightech.memoryvault.scheduling.entity.TriggerSource
 import org.sightech.memoryvault.scheduling.repository.SyncJobRepository
+import org.springframework.context.ApplicationEventPublisher
 import java.time.Instant
 import java.util.UUID
 import kotlin.test.assertEquals
@@ -18,7 +19,8 @@ import kotlin.test.assertNotNull
 class SyncJobServiceTest {
 
     private val repository = mockk<SyncJobRepository>()
-    private val service = SyncJobService(repository)
+    private val eventPublisher = mockk<ApplicationEventPublisher>(relaxed = true)
+    private val service = SyncJobService(repository, eventPublisher)
     private val userId = UUID.fromString("00000000-0000-0000-0000-000000000001")
 
     @Test
