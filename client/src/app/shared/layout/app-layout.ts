@@ -1,6 +1,7 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { TopBarComponent } from './top-bar';
+import { WebSocketService } from '../../core/services/websocket.service';
 
 @Component({
   selector: 'app-layout',
@@ -10,4 +11,10 @@ import { TopBarComponent } from './top-bar';
   styleUrl: './app-layout.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AppLayoutComponent {}
+export class AppLayoutComponent implements OnInit {
+  private ws = inject(WebSocketService);
+
+  ngOnInit() {
+    this.ws.connect();
+  }
+}

@@ -20,7 +20,8 @@ import {
   IngestPreview,
 } from '../shared/graphql/generated';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
-import { pipe, switchMap, tap, catchError, EMPTY } from 'rxjs';
+import { pipe, switchMap, tap, catchError, EMPTY, Subscription, filter, debounceTime } from 'rxjs';
+import { WebSocketService, VaultSignal } from '../core/services/websocket.service';
 
 export interface IngestResolutionInput {
   url: string;
@@ -98,7 +99,7 @@ export const BookmarksStore = signalStore(
     }),
     unfiledCount: computed(() => store.bookmarks().filter(b => !b.folderId).length),
   })),
-  withMethods((store, apollo = inject(Apollo), http = inject(HttpClient)) => {
+  withMethods((store, apollo = inject(Apollo), http = inject(HttpClient), ws = inject(WebSocketService)) => {
     // Define rxMethod methods as local variables so they can be called
     // from other methods within the same withMethods block.
     // The `store` parameter only has state/computed — NOT methods.
@@ -161,6 +162,24 @@ export const BookmarksStore = signalStore(
         })
       )
     );
+
+    const initWebSocket = () => {
+      ws.on('sync').pipe(
+        filter((signal: VaultSignal) =>
+          signal.contentType === 'BOOKMARK' || signal.contentType === 'FOLDER'
+        ),
+        debounceTime(500)
+      ).subscribe(() => {
+        loadBookmarks();
+        loadFolders();
+      });
+
+      ws.on('ingests').pipe(debounceTime(500)).subscribe(() => {
+        loadPendingIngests();
+      });
+    };
+
+    initWebSocket();
 
     return {
       loadBookmarks,

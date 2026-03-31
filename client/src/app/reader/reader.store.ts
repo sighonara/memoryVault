@@ -1,6 +1,9 @@
 import { signalStore, withState, withMethods, withComputed, patchState } from '@ngrx/signals';
 import { inject, computed } from '@angular/core';
 import { Apollo } from 'apollo-angular';
+import { WebSocketService, VaultSignal } from '../core/services/websocket.service';
+import { Subscription, filter } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 import {
   GetFeedCategoriesDocument,
   GetFeedItemsDocument,
@@ -72,7 +75,7 @@ export const ReaderStore = signalStore(
       return store.categories().reduce((sum: number, cat: any) => sum + cat.totalUnread, 0);
     }),
   })),
-  withMethods((store, apollo = inject(Apollo)) => {
+  withMethods((store, apollo = inject(Apollo), ws = inject(WebSocketService)) => {
     const loadItems = () => {
       patchState(store, { loadingItems: true });
       const type = store.selectedType();
@@ -122,11 +125,36 @@ export const ReaderStore = signalStore(
       });
     };
 
+    let wsSubs: Subscription[] = [];
+
+    const subscribeToSignals = () => {
+      wsSubs.forEach(s => s.unsubscribe());
+      wsSubs = [];
+
+      wsSubs.push(
+        ws.on('feeds').pipe(debounceTime(500)).subscribe(() => {
+          loadCategories();
+          loadItems();
+        })
+      );
+
+      wsSubs.push(
+        ws.on('sync').pipe(
+          filter((signal: VaultSignal) => signal.contentType === 'FEED_ITEM'),
+          debounceTime(500)
+        ).subscribe(() => {
+          loadCategories();
+          loadItems();
+        })
+      );
+    };
+
     return {
       init: () => {
         loadCategories();
         loadPreferences();
         loadItems();
+        subscribeToSignals();
       },
 
       selectAll: () => {
