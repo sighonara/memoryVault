@@ -1011,7 +1011,7 @@ git commit -m "feat: add WebSocketEventRelay to forward domain events to STOMP t
 
 This task wires `ApplicationEventPublisher` into each service and publishes the appropriate `VaultEvent` after mutations. Each service follows the same pattern: inject the publisher, call `publishEvent()` after the mutation.
 
-- [ ] **Step 1: Update `SyncJobService` to publish `JobStatusChanged`**
+- [x] **Step 1: Update `SyncJobService` to publish `JobStatusChanged`**
 
 Add `ApplicationEventPublisher` to the constructor and publish events in `recordStart`, `recordSuccess`, and `recordFailure`:
 
@@ -1112,7 +1112,7 @@ class SyncJobService(
 }
 ```
 
-- [ ] **Step 2: Update `FeedService` to publish `FeedSyncCompleted`**
+- [x] **Step 2: Update `FeedService` to publish `FeedSyncCompleted`**
 
 Add `ApplicationEventPublisher` to the `FeedService` constructor and publish after `refreshFeed()`:
 
@@ -1156,7 +1156,7 @@ suspend fun refreshFeed(feedId: UUID?): List<Pair<Feed, Int>> {
 }
 ```
 
-- [ ] **Step 3: Update `FeedItemService` to publish `ContentMutated`**
+- [x] **Step 3: Update `FeedItemService` to publish `ContentMutated`**
 
 Add to `FeedItemService.kt`:
 
@@ -1238,7 +1238,7 @@ fun markCategoryRead(categoryId: UUID): Int {
 }
 ```
 
-- [ ] **Step 4: Update `FeedCategoryService` to publish `ContentMutated`**
+- [x] **Step 4: Update `FeedCategoryService` to publish `ContentMutated`**
 
 Add to `FeedCategoryService.kt`:
 
@@ -1309,7 +1309,7 @@ eventPublisher.publishEvent(ContentMutated(
 ))
 ```
 
-- [ ] **Step 5: Update `VideoSyncService` to publish `VideoDownloadCompleted`**
+- [x] **Step 5: Update `VideoSyncService` to publish `VideoDownloadCompleted`**
 
 Add to `VideoSyncService.kt`:
 
@@ -1346,7 +1346,7 @@ for (video in newVideos) {
 }
 ```
 
-- [ ] **Step 6: Update `BookmarkService` to publish `ContentMutated`**
+- [x] **Step 6: Update `BookmarkService` to publish `ContentMutated`**
 
 Add to `BookmarkService.kt`:
 
@@ -1464,7 +1464,7 @@ fun createFolder(name: String, parentId: UUID?): Folder {
 
 Apply the same pattern for `renameFolder` (UPDATED), `moveFolder` (UPDATED), and `deleteFolder` (DELETED).
 
-- [ ] **Step 7: Update `IngestService` to publish `IngestReady`**
+- [x] **Step 7: Update `IngestService` to publish `IngestReady`**
 
 Add to `IngestService.kt`:
 
@@ -1494,7 +1494,7 @@ fun generatePreview(input: List<IngestBookmarkInput>): IngestPreviewResult {
 }
 ```
 
-- [ ] **Step 8: Update existing unit tests to provide the new `eventPublisher` mock**
+- [x] **Step 8: Update existing unit tests to provide the new `eventPublisher` mock**
 
 Every existing test that constructs these services directly will need a mock `ApplicationEventPublisher` added. For example, in `SyncJobServiceTest.kt`:
 
@@ -1515,12 +1515,12 @@ The `relaxed = true` means `publishEvent()` calls are accepted without explicit 
 
 For each: add `private val eventPublisher = mockk<ApplicationEventPublisher>(relaxed = true)` and pass it to the service constructor.
 
-- [ ] **Step 9: Run all tests**
+- [x] **Step 9: Run all tests**
 
 Run: `./gradlew test`
 Expected: All tests pass. The relaxed mocks absorb the new `publishEvent()` calls without breaking existing assertions.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```
 git add src/main/kotlin/org/sightech/memoryvault/scheduling/service/SyncJobService.kt src/main/kotlin/org/sightech/memoryvault/feed/service/FeedService.kt src/main/kotlin/org/sightech/memoryvault/feed/service/FeedItemService.kt src/main/kotlin/org/sightech/memoryvault/feed/service/FeedCategoryService.kt src/main/kotlin/org/sightech/memoryvault/youtube/service/VideoSyncService.kt src/main/kotlin/org/sightech/memoryvault/bookmark/service/BookmarkService.kt src/main/kotlin/org/sightech/memoryvault/bookmark/service/IngestService.kt src/test/
@@ -1536,7 +1536,7 @@ git commit -m "feat: publish VaultEvent domain events from all backend services"
 - Create: `client/src/app/core/services/websocket.service.ts`
 - Test: `client/src/app/core/services/websocket.service.spec.ts`
 
-- [ ] **Step 1: Install `@stomp/rx-stomp` and `@stomp/stompjs`**
+- [x] **Step 1: Install `@stomp/rx-stomp` and `@stomp/stompjs`**
 
 Run from the `client/` directory:
 
@@ -1544,7 +1544,7 @@ Run from the `client/` directory:
 cd client && npm install @stomp/rx-stomp @stomp/stompjs
 ```
 
-- [ ] **Step 2: Write the WebSocketService test**
+- [x] **Step 2: Write the WebSocketService test**
 
 Create `client/src/app/core/services/websocket.service.spec.ts`:
 
@@ -1609,12 +1609,12 @@ describe('WebSocketService', () => {
 });
 ```
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run from `client/`: `npm run test -- --run`
 Expected: FAIL — `WebSocketService` doesn't exist.
 
-- [ ] **Step 4: Create `WebSocketService`**
+- [x] **Step 4: Create `WebSocketService`**
 
 Create `client/src/app/core/services/websocket.service.ts`:
 
@@ -1714,12 +1714,12 @@ export class WebSocketService implements OnDestroy {
 }
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run from `client/`: `npm run test -- --run`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```
 git add client/package.json client/package-lock.json client/src/app/core/services/websocket.service.ts client/src/app/core/services/websocket.service.spec.ts
