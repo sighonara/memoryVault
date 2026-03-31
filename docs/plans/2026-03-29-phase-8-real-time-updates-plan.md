@@ -743,7 +743,7 @@ git commit -m "feat: add WebSocket STOMP config with JWT auth interceptor"
 - Create: `src/main/kotlin/org/sightech/memoryvault/websocket/WebSocketEventRelay.kt`
 - Test: `src/test/kotlin/org/sightech/memoryvault/websocket/WebSocketEventRelayTest.kt`
 
-- [ ] **Step 1: Write the relay test**
+- [x] **Step 1: Write the relay test**
 
 Create `src/test/kotlin/org/sightech/memoryvault/websocket/WebSocketEventRelayTest.kt`:
 
@@ -897,12 +897,12 @@ class WebSocketEventRelayTest {
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `./gradlew test --tests "org.sightech.memoryvault.websocket.WebSocketEventRelayTest"`
 Expected: FAIL — `WebSocketEventRelay` doesn't exist.
 
-- [ ] **Step 3: Create `WebSocketEventRelay.kt`**
+- [x] **Step 3: Create `WebSocketEventRelay.kt`**
 
 Create `src/main/kotlin/org/sightech/memoryvault/websocket/WebSocketEventRelay.kt`:
 
@@ -984,12 +984,12 @@ class WebSocketEventRelay(private val messagingTemplate: SimpMessagingTemplate) 
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `./gradlew test --tests "org.sightech.memoryvault.websocket.WebSocketEventRelayTest"`
 Expected: PASS — all 6 tests green.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```
 git add src/main/kotlin/org/sightech/memoryvault/websocket/WebSocketEventRelay.kt src/test/kotlin/org/sightech/memoryvault/websocket/WebSocketEventRelayTest.kt
