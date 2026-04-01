@@ -2036,7 +2036,7 @@ git commit -m "feat: integrate WebSocket signals into all Angular stores"
 **Files:**
 - Create: `src/test/kotlin/org/sightech/memoryvault/websocket/WebSocketIntegrationTest.kt`
 
-- [ ] **Step 1: Write the integration test**
+- [x] **Step 1: Write the integration test**
 
 This test starts the full Spring Boot app with TestContainers, connects a STOMP client, triggers service actions, and asserts signals arrive.
 
@@ -2308,17 +2308,17 @@ class WebSocketIntegrationTest {
 }
 ```
 
-- [ ] **Step 2: Run the integration test**
+- [x] **Step 2: Run the integration test**
 
 Run: `./gradlew test --tests "org.sightech.memoryvault.websocket.WebSocketIntegrationTest"`
 Expected: All 6 tests pass. Each event type arrives on its correct topic within the timeout.
 
-- [ ] **Step 3: Run all tests**
+- [x] **Step 3: Run all tests**
 
 Run: `./gradlew test`
 Expected: All tests pass (unit + integration).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```
 git add src/test/kotlin/org/sightech/memoryvault/websocket/WebSocketIntegrationTest.kt
@@ -2332,7 +2332,7 @@ git commit -m "test: add WebSocket integration tests for all event types"
 **Files:**
 - Create: `client/e2e/websocket.spec.ts` (Playwright)
 
-- [ ] **Step 1: Write the E2E smoke test**
+- [x] **Step 1: Write the E2E smoke test**
 
 Create `client/e2e/websocket.spec.ts`:
 
@@ -2389,7 +2389,7 @@ test.describe('WebSocket real-time updates', () => {
 });
 ```
 
-- [ ] **Step 2: Run the full test suite**
+- [x] **Step 2: Run the full test suite**
 
 Backend: `./gradlew test`
 Frontend: `cd client && npm run test -- --run`
@@ -2397,18 +2397,18 @@ E2E (requires running backend + frontend): `cd client && npm run e2e`
 
 Expected: All pass.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```
 git add client/e2e/websocket.spec.ts
 git commit -m "test: add E2E WebSocket smoke test"
 ```
 
-- [ ] **Step 4: Update the master roadmap**
+- [x] **Step 4: Update the master roadmap**
 
 Mark Phase 8 as complete in `docs/plans/2026-03-05-tooling-first-design.md` by prepending the Phase 8 description with completion status, matching the pattern of earlier phases.
 
-- [ ] **Step 5: Final commit**
+- [x] **Step 5: Final commit**
 
 ```
 git add docs/plans/2026-03-05-tooling-first-design.md
