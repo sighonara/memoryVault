@@ -5,6 +5,8 @@ import org.sightech.memoryvault.bookmark.entity.*
 import org.sightech.memoryvault.bookmark.repository.BookmarkRepository
 import org.sightech.memoryvault.bookmark.repository.FolderRepository
 import org.sightech.memoryvault.bookmark.repository.IngestPreviewRepository
+import org.sightech.memoryvault.websocket.IngestReady
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import tools.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -18,7 +20,8 @@ class IngestService(
     private val folderRepository: FolderRepository,
     private val bookmarkService: BookmarkService,
     private val ingestPreviewRepository: IngestPreviewRepository,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val eventPublisher: ApplicationEventPublisher
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -82,6 +85,11 @@ class IngestService(
             previewData = objectMapper.writeValueAsString(mapOf("items" to items, "summary" to summary))
         )
         ingestPreviewRepository.save(previewEntity)
+
+        eventPublisher.publishEvent(IngestReady(
+            userId = userId, timestamp = Instant.now(),
+            previewId = previewEntity.id, itemCount = items.size
+        ))
 
         return IngestPreviewResult(previewId = previewEntity.id, items = items, summary = summary)
     }

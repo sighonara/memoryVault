@@ -60,7 +60,7 @@
 - Create: `src/main/resources/application-prod.properties`
 - Modify: `src/main/kotlin/org/sightech/memoryvault/config/SecurityConfig.kt`
 
-- [ ] **Step 1: Create `application-dev.properties`**
+- [x] **Step 1: Create `application-dev.properties`**
 
 ```properties
 # Dev profile — active by default (no SPRING_PROFILES_ACTIVE set)
@@ -80,7 +80,7 @@ memoryvault.jwt.secret=dev-secret-key-change-in-production-must-be-at-least-256-
 spring.graphql.graphiql.enabled=true
 ```
 
-- [ ] **Step 2: Create `application-prod.properties`**
+- [x] **Step 2: Create `application-prod.properties`**
 
 ```properties
 # Prod profile — activate with SPRING_PROFILES_ACTIVE=prod
@@ -100,7 +100,7 @@ memoryvault.jwt.secret=${JWT_SECRET}
 spring.graphql.graphiql.enabled=false
 ```
 
-- [ ] **Step 3: Update `application.properties` to contain only shared settings**
+- [x] **Step 3: Update `application.properties` to contain only shared settings**
 
 Remove the env-specific values that are now in dev/prod profiles. Keep:
 
@@ -152,7 +152,7 @@ spring.graphql.schema.printer.enabled=true
 # spring.security.oauth2.client.registration.github.client-secret=YOUR_GITHUB_CLIENT_SECRET
 ```
 
-- [ ] **Step 4: Update SecurityConfig to read CORS from config**
+- [x] **Step 4: Update SecurityConfig to read CORS from config**
 
 Replace the hardcoded `http://localhost:4200` in `SecurityConfig.kt` with a `@Value` injection:
 
@@ -180,7 +180,7 @@ class SecurityConfig(
 }
 ```
 
-- [ ] **Step 5: Add CORS property to `application-test.properties`**
+- [x] **Step 5: Add CORS property to `application-test.properties`**
 
 Append to `src/main/resources/application-test.properties`:
 
@@ -190,12 +190,12 @@ memoryvault.cors.allowed-origins=http://localhost
 
 This ensures the `@Value("${memoryvault.cors.allowed-origins}")` in `SecurityConfig` resolves during tests, even though the test profile doesn't load `application-dev.properties`.
 
-- [ ] **Step 6: Run all tests to verify the config split didn't break anything**
+- [x] **Step 6: Run all tests to verify the config split didn't break anything**
 
 Run: `./gradlew test`
 Expected: All existing tests pass. `application-test.properties` continues to override test-specific values (JWT secret). The `spring.profiles.default=dev` ensures `application-dev.properties` is loaded when no profile is active.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```
 git add src/main/resources/application.properties src/main/resources/application-dev.properties src/main/resources/application-prod.properties src/main/resources/application-test.properties src/main/kotlin/org/sightech/memoryvault/config/SecurityConfig.kt
@@ -211,7 +211,7 @@ git commit -m "refactor: split application.properties into dev/prod profiles"
 - Create: `client/src/environments/environment.prod.ts`
 - Modify: `client/proxy.conf.json`
 
-- [ ] **Step 1: Create `client/src/environments/environment.ts`**
+- [x] **Step 1: Create `client/src/environments/environment.ts`**
 
 ```typescript
 export const environment = {
@@ -221,7 +221,7 @@ export const environment = {
 };
 ```
 
-- [ ] **Step 2: Create `client/src/environments/environment.prod.ts`**
+- [x] **Step 2: Create `client/src/environments/environment.prod.ts`**
 
 ```typescript
 export const environment = {
@@ -231,7 +231,7 @@ export const environment = {
 };
 ```
 
-- [ ] **Step 3: Add WebSocket proxy to `client/proxy.conf.json`**
+- [x] **Step 3: Add WebSocket proxy to `client/proxy.conf.json`**
 
 Add the `/ws` entry:
 
@@ -261,7 +261,7 @@ Add the `/ws` entry:
 }
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```
 git add client/src/environments/environment.ts client/src/environments/environment.prod.ts client/proxy.conf.json
@@ -276,7 +276,7 @@ git commit -m "feat: add Angular environment files and WebSocket proxy"
 - Create: `src/main/kotlin/org/sightech/memoryvault/websocket/VaultEvent.kt`
 - Test: `src/test/kotlin/org/sightech/memoryvault/websocket/VaultEventTest.kt`
 
-- [ ] **Step 1: Write a test for VaultEvent construction and eventType**
+- [x] **Step 1: Write a test for VaultEvent construction and eventType**
 
 Create `src/test/kotlin/org/sightech/memoryvault/websocket/VaultEventTest.kt`:
 
@@ -354,12 +354,12 @@ class VaultEventTest {
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `./gradlew test --tests "org.sightech.memoryvault.websocket.VaultEventTest"`
 Expected: FAIL — classes don't exist yet.
 
-- [ ] **Step 3: Create `VaultEvent.kt`**
+- [x] **Step 3: Create `VaultEvent.kt`**
 
 Create `src/main/kotlin/org/sightech/memoryvault/websocket/VaultEvent.kt`:
 
@@ -442,12 +442,12 @@ data class ContentMutated(
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `./gradlew test --tests "org.sightech.memoryvault.websocket.VaultEventTest"`
 Expected: PASS — all 5 tests green.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```
 git add src/main/kotlin/org/sightech/memoryvault/websocket/VaultEvent.kt src/test/kotlin/org/sightech/memoryvault/websocket/VaultEventTest.kt
@@ -468,7 +468,7 @@ git commit -m "feat: add VaultEvent domain events for real-time updates"
 - Modify: `src/main/resources/application-prod.properties`
 - Test: `src/test/kotlin/org/sightech/memoryvault/config/WebSocketAuthInterceptorTest.kt`
 
-- [ ] **Step 1: Add WebSocket dependency to `build.gradle.kts`**
+- [x] **Step 1: Add WebSocket dependency to `build.gradle.kts`**
 
 In the `dependencies` block, after the `spring-boot-starter-graphql` line, add:
 
@@ -476,7 +476,7 @@ In the `dependencies` block, after the `spring-boot-starter-graphql` line, add:
 implementation("org.springframework.boot:spring-boot-starter-websocket")
 ```
 
-- [ ] **Step 2: Add WebSocket config properties**
+- [x] **Step 2: Add WebSocket config properties**
 
 Append to `src/main/resources/application.properties`:
 
@@ -508,7 +508,7 @@ memoryvault.websocket.heartbeat-interval-ms=10000
 memoryvault.websocket.relay-executor-pool-size=2
 ```
 
-- [ ] **Step 3: Write the auth interceptor test**
+- [x] **Step 3: Write the auth interceptor test**
 
 Create `src/test/kotlin/org/sightech/memoryvault/config/WebSocketAuthInterceptorTest.kt`:
 
@@ -590,12 +590,12 @@ class WebSocketAuthInterceptorTest {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it fails**
+- [x] **Step 4: Run test to verify it fails**
 
 Run: `./gradlew test --tests "org.sightech.memoryvault.config.WebSocketAuthInterceptorTest"`
 Expected: FAIL — `WebSocketAuthInterceptor` doesn't exist.
 
-- [ ] **Step 5: Create `WebSocketAuthInterceptor.kt`**
+- [x] **Step 5: Create `WebSocketAuthInterceptor.kt`**
 
 Create `src/main/kotlin/org/sightech/memoryvault/config/WebSocketAuthInterceptor.kt`:
 
@@ -647,12 +647,12 @@ class WebSocketAuthInterceptor(private val jwtService: JwtService) : ChannelInte
 }
 ```
 
-- [ ] **Step 6: Run test to verify it passes**
+- [x] **Step 6: Run test to verify it passes**
 
 Run: `./gradlew test --tests "org.sightech.memoryvault.config.WebSocketAuthInterceptorTest"`
 Expected: PASS — all 4 tests green.
 
-- [ ] **Step 7: Create `WebSocketConfig.kt`**
+- [x] **Step 7: Create `WebSocketConfig.kt`**
 
 Create `src/main/kotlin/org/sightech/memoryvault/config/WebSocketConfig.kt`:
 
@@ -708,7 +708,7 @@ class WebSocketConfig(
 }
 ```
 
-- [ ] **Step 8: Update SecurityConfig to permit `/ws/**`**
+- [x] **Step 8: Update SecurityConfig to permit `/ws/**`**
 
 In the `securityFilterChain` method, add `/ws/**` to the permitted paths:
 
@@ -723,12 +723,12 @@ In the `securityFilterChain` method, add `/ws/**` to the permitted paths:
 }
 ```
 
-- [ ] **Step 9: Run all tests**
+- [x] **Step 9: Run all tests**
 
 Run: `./gradlew test`
 Expected: All tests pass including the new interceptor tests.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```
 git add build.gradle.kts src/main/resources/application.properties src/main/resources/application-dev.properties src/main/resources/application-prod.properties src/main/kotlin/org/sightech/memoryvault/config/WebSocketConfig.kt src/main/kotlin/org/sightech/memoryvault/config/WebSocketAuthInterceptor.kt src/main/kotlin/org/sightech/memoryvault/config/SecurityConfig.kt src/test/kotlin/org/sightech/memoryvault/config/WebSocketAuthInterceptorTest.kt
@@ -743,7 +743,7 @@ git commit -m "feat: add WebSocket STOMP config with JWT auth interceptor"
 - Create: `src/main/kotlin/org/sightech/memoryvault/websocket/WebSocketEventRelay.kt`
 - Test: `src/test/kotlin/org/sightech/memoryvault/websocket/WebSocketEventRelayTest.kt`
 
-- [ ] **Step 1: Write the relay test**
+- [x] **Step 1: Write the relay test**
 
 Create `src/test/kotlin/org/sightech/memoryvault/websocket/WebSocketEventRelayTest.kt`:
 
@@ -897,12 +897,12 @@ class WebSocketEventRelayTest {
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `./gradlew test --tests "org.sightech.memoryvault.websocket.WebSocketEventRelayTest"`
 Expected: FAIL — `WebSocketEventRelay` doesn't exist.
 
-- [ ] **Step 3: Create `WebSocketEventRelay.kt`**
+- [x] **Step 3: Create `WebSocketEventRelay.kt`**
 
 Create `src/main/kotlin/org/sightech/memoryvault/websocket/WebSocketEventRelay.kt`:
 
@@ -984,12 +984,12 @@ class WebSocketEventRelay(private val messagingTemplate: SimpMessagingTemplate) 
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `./gradlew test --tests "org.sightech.memoryvault.websocket.WebSocketEventRelayTest"`
 Expected: PASS — all 6 tests green.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```
 git add src/main/kotlin/org/sightech/memoryvault/websocket/WebSocketEventRelay.kt src/test/kotlin/org/sightech/memoryvault/websocket/WebSocketEventRelayTest.kt
@@ -1011,7 +1011,7 @@ git commit -m "feat: add WebSocketEventRelay to forward domain events to STOMP t
 
 This task wires `ApplicationEventPublisher` into each service and publishes the appropriate `VaultEvent` after mutations. Each service follows the same pattern: inject the publisher, call `publishEvent()` after the mutation.
 
-- [ ] **Step 1: Update `SyncJobService` to publish `JobStatusChanged`**
+- [x] **Step 1: Update `SyncJobService` to publish `JobStatusChanged`**
 
 Add `ApplicationEventPublisher` to the constructor and publish events in `recordStart`, `recordSuccess`, and `recordFailure`:
 
@@ -1112,7 +1112,7 @@ class SyncJobService(
 }
 ```
 
-- [ ] **Step 2: Update `FeedService` to publish `FeedSyncCompleted`**
+- [x] **Step 2: Update `FeedService` to publish `FeedSyncCompleted`**
 
 Add `ApplicationEventPublisher` to the `FeedService` constructor and publish after `refreshFeed()`:
 
@@ -1156,7 +1156,7 @@ suspend fun refreshFeed(feedId: UUID?): List<Pair<Feed, Int>> {
 }
 ```
 
-- [ ] **Step 3: Update `FeedItemService` to publish `ContentMutated`**
+- [x] **Step 3: Update `FeedItemService` to publish `ContentMutated`**
 
 Add to `FeedItemService.kt`:
 
@@ -1238,7 +1238,7 @@ fun markCategoryRead(categoryId: UUID): Int {
 }
 ```
 
-- [ ] **Step 4: Update `FeedCategoryService` to publish `ContentMutated`**
+- [x] **Step 4: Update `FeedCategoryService` to publish `ContentMutated`**
 
 Add to `FeedCategoryService.kt`:
 
@@ -1309,7 +1309,7 @@ eventPublisher.publishEvent(ContentMutated(
 ))
 ```
 
-- [ ] **Step 5: Update `VideoSyncService` to publish `VideoDownloadCompleted`**
+- [x] **Step 5: Update `VideoSyncService` to publish `VideoDownloadCompleted`**
 
 Add to `VideoSyncService.kt`:
 
@@ -1346,7 +1346,7 @@ for (video in newVideos) {
 }
 ```
 
-- [ ] **Step 6: Update `BookmarkService` to publish `ContentMutated`**
+- [x] **Step 6: Update `BookmarkService` to publish `ContentMutated`**
 
 Add to `BookmarkService.kt`:
 
@@ -1464,7 +1464,7 @@ fun createFolder(name: String, parentId: UUID?): Folder {
 
 Apply the same pattern for `renameFolder` (UPDATED), `moveFolder` (UPDATED), and `deleteFolder` (DELETED).
 
-- [ ] **Step 7: Update `IngestService` to publish `IngestReady`**
+- [x] **Step 7: Update `IngestService` to publish `IngestReady`**
 
 Add to `IngestService.kt`:
 
@@ -1494,7 +1494,7 @@ fun generatePreview(input: List<IngestBookmarkInput>): IngestPreviewResult {
 }
 ```
 
-- [ ] **Step 8: Update existing unit tests to provide the new `eventPublisher` mock**
+- [x] **Step 8: Update existing unit tests to provide the new `eventPublisher` mock**
 
 Every existing test that constructs these services directly will need a mock `ApplicationEventPublisher` added. For example, in `SyncJobServiceTest.kt`:
 
@@ -1515,12 +1515,12 @@ The `relaxed = true` means `publishEvent()` calls are accepted without explicit 
 
 For each: add `private val eventPublisher = mockk<ApplicationEventPublisher>(relaxed = true)` and pass it to the service constructor.
 
-- [ ] **Step 9: Run all tests**
+- [x] **Step 9: Run all tests**
 
 Run: `./gradlew test`
 Expected: All tests pass. The relaxed mocks absorb the new `publishEvent()` calls without breaking existing assertions.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```
 git add src/main/kotlin/org/sightech/memoryvault/scheduling/service/SyncJobService.kt src/main/kotlin/org/sightech/memoryvault/feed/service/FeedService.kt src/main/kotlin/org/sightech/memoryvault/feed/service/FeedItemService.kt src/main/kotlin/org/sightech/memoryvault/feed/service/FeedCategoryService.kt src/main/kotlin/org/sightech/memoryvault/youtube/service/VideoSyncService.kt src/main/kotlin/org/sightech/memoryvault/bookmark/service/BookmarkService.kt src/main/kotlin/org/sightech/memoryvault/bookmark/service/IngestService.kt src/test/
@@ -1536,7 +1536,7 @@ git commit -m "feat: publish VaultEvent domain events from all backend services"
 - Create: `client/src/app/core/services/websocket.service.ts`
 - Test: `client/src/app/core/services/websocket.service.spec.ts`
 
-- [ ] **Step 1: Install `@stomp/rx-stomp` and `@stomp/stompjs`**
+- [x] **Step 1: Install `@stomp/rx-stomp` and `@stomp/stompjs`**
 
 Run from the `client/` directory:
 
@@ -1544,7 +1544,7 @@ Run from the `client/` directory:
 cd client && npm install @stomp/rx-stomp @stomp/stompjs
 ```
 
-- [ ] **Step 2: Write the WebSocketService test**
+- [x] **Step 2: Write the WebSocketService test**
 
 Create `client/src/app/core/services/websocket.service.spec.ts`:
 
@@ -1609,12 +1609,12 @@ describe('WebSocketService', () => {
 });
 ```
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run from `client/`: `npm run test -- --run`
 Expected: FAIL — `WebSocketService` doesn't exist.
 
-- [ ] **Step 4: Create `WebSocketService`**
+- [x] **Step 4: Create `WebSocketService`**
 
 Create `client/src/app/core/services/websocket.service.ts`:
 
@@ -1714,12 +1714,12 @@ export class WebSocketService implements OnDestroy {
 }
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run from `client/`: `npm run test -- --run`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```
 git add client/package.json client/package-lock.json client/src/app/core/services/websocket.service.ts client/src/app/core/services/websocket.service.spec.ts
@@ -1739,7 +1739,7 @@ git commit -m "feat: add Angular WebSocketService with rx-stomp"
 
 Each store subscribes to its relevant WebSocket topics and triggers a debounced refetch when a signal arrives. The debounce prevents rapid-fire signals from causing multiple refetches.
 
-- [ ] **Step 1: Update `reader.store.ts`**
+- [x] **Step 1: Update `reader.store.ts`**
 
 Add WebSocket subscription in the `init` method. Import `WebSocketService` and add debounced subscriptions to `/feeds` and `/sync`:
 
@@ -1803,7 +1803,7 @@ init: () => {
 },
 ```
 
-- [ ] **Step 2: Update `bookmarks.store.ts`**
+- [x] **Step 2: Update `bookmarks.store.ts`**
 
 At the top, add:
 
@@ -1842,7 +1842,7 @@ After the `loadPendingIngests` definition and before the `return {`, add:
     initWebSocket();
 ```
 
-- [ ] **Step 3: Update `youtube.store.ts`**
+- [x] **Step 3: Update `youtube.store.ts`**
 
 At the top, add:
 
@@ -1874,7 +1874,7 @@ After the `loadVideosRx` definition and before `return {`, add:
     });
 ```
 
-- [ ] **Step 4: Update `admin.store.ts`**
+- [x] **Step 4: Update `admin.store.ts`**
 
 At the top, add:
 
@@ -1974,7 +1974,7 @@ withMethods((store, apollo = inject(Apollo), ws = inject(WebSocketService)) => {
 
 Note: this also fixes the existing `(store as any).loadJobs()` / `(store as any).loadLogs()` calls by switching to the local variable pattern (per project conventions in CLAUDE.md).
 
-- [ ] **Step 5: Update `admin.ts` to replace setInterval with WebSocket**
+- [x] **Step 5: Update `admin.ts` to replace setInterval with WebSocket**
 
 The `toggleFollow` method in `admin.ts` can be simplified. The WebSocket `/jobs` subscription already pushes updates. The "Follow" button for logs can keep the interval for now (logs aren't pushed via WebSocket), but jobs no longer need polling:
 
@@ -1992,7 +1992,7 @@ toggleFollow() {
 
 This stays the same since log following is a different concern (tailing structured logs, not job status). The job status updates are now handled by the WebSocket subscription in the store.
 
-- [ ] **Step 6: Connect WebSocket on app startup**
+- [x] **Step 6: Connect WebSocket on app startup**
 
 The `WebSocketService.connect()` needs to be called when the user is authenticated. Find the app's root component or the layout component that loads after login. In `client/src/app/shared/layout/app-layout.ts`, inject `WebSocketService` and call `connect()` in the constructor or `ngOnInit`:
 
@@ -2017,12 +2017,12 @@ Also disconnect on logout. In `auth.service.ts`, inject `WebSocketService` and c
 
 In the layout component's logout handler, call `this.ws.disconnect()` before or after clearing the token.
 
-- [ ] **Step 7: Run frontend tests**
+- [x] **Step 7: Run frontend tests**
 
 Run from `client/`: `npm run test -- --run`
 Expected: Existing tests pass. Some may need `WebSocketService` mocked if they construct stores.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```
 git add client/src/app/reader/reader.store.ts client/src/app/bookmarks/bookmarks.store.ts client/src/app/youtube/youtube.store.ts client/src/app/admin/admin.store.ts client/src/app/admin/admin.ts client/src/app/shared/layout/app-layout.ts client/src/app/core/services/websocket.service.ts
@@ -2036,7 +2036,7 @@ git commit -m "feat: integrate WebSocket signals into all Angular stores"
 **Files:**
 - Create: `src/test/kotlin/org/sightech/memoryvault/websocket/WebSocketIntegrationTest.kt`
 
-- [ ] **Step 1: Write the integration test**
+- [x] **Step 1: Write the integration test**
 
 This test starts the full Spring Boot app with TestContainers, connects a STOMP client, triggers service actions, and asserts signals arrive.
 
@@ -2308,17 +2308,17 @@ class WebSocketIntegrationTest {
 }
 ```
 
-- [ ] **Step 2: Run the integration test**
+- [x] **Step 2: Run the integration test**
 
 Run: `./gradlew test --tests "org.sightech.memoryvault.websocket.WebSocketIntegrationTest"`
 Expected: All 6 tests pass. Each event type arrives on its correct topic within the timeout.
 
-- [ ] **Step 3: Run all tests**
+- [x] **Step 3: Run all tests**
 
 Run: `./gradlew test`
 Expected: All tests pass (unit + integration).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```
 git add src/test/kotlin/org/sightech/memoryvault/websocket/WebSocketIntegrationTest.kt
@@ -2332,7 +2332,7 @@ git commit -m "test: add WebSocket integration tests for all event types"
 **Files:**
 - Create: `client/e2e/websocket.spec.ts` (Playwright)
 
-- [ ] **Step 1: Write the E2E smoke test**
+- [x] **Step 1: Write the E2E smoke test**
 
 Create `client/e2e/websocket.spec.ts`:
 
@@ -2389,7 +2389,7 @@ test.describe('WebSocket real-time updates', () => {
 });
 ```
 
-- [ ] **Step 2: Run the full test suite**
+- [x] **Step 2: Run the full test suite**
 
 Backend: `./gradlew test`
 Frontend: `cd client && npm run test -- --run`
@@ -2397,18 +2397,18 @@ E2E (requires running backend + frontend): `cd client && npm run e2e`
 
 Expected: All pass.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```
 git add client/e2e/websocket.spec.ts
 git commit -m "test: add E2E WebSocket smoke test"
 ```
 
-- [ ] **Step 4: Update the master roadmap**
+- [x] **Step 4: Update the master roadmap**
 
 Mark Phase 8 as complete in `docs/plans/2026-03-05-tooling-first-design.md` by prepending the Phase 8 description with completion status, matching the pattern of earlier phases.
 
-- [ ] **Step 5: Final commit**
+- [x] **Step 5: Final commit**
 
 ```
 git add docs/plans/2026-03-05-tooling-first-design.md
