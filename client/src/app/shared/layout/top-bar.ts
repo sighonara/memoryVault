@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { AuthService } from '../../auth/auth.service';
+import { WebSocketService } from '../../core/services/websocket.service';
 
 @Component({
   selector: 'app-top-bar',
@@ -26,6 +27,7 @@ import { AuthService } from '../../auth/auth.service';
 export class TopBarComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private ws = inject(WebSocketService);
 
   searchQuery = '';
 
@@ -36,6 +38,7 @@ export class TopBarComponent {
   }
 
   logout(): void {
+    this.ws.disconnect();
     this.authService.logout();
     this.router.navigate(['/login']);
   }

@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.sightech.memoryvault.bookmark.entity.*
 import org.sightech.memoryvault.bookmark.repository.*
 import org.sightech.memoryvault.auth.CurrentUser
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import java.time.Instant
@@ -19,6 +20,7 @@ class IngestServiceTest {
     private val bookmarkService = mockk<BookmarkService>(relaxed = true)
     private val ingestPreviewRepository = mockk<IngestPreviewRepository>(relaxed = true)
     private val objectMapper = tools.jackson.databind.json.JsonMapper.builder().build()
+    private val eventPublisher = mockk<ApplicationEventPublisher>(relaxed = true)
     private lateinit var service: IngestService
     private val userId = UUID.randomUUID()
 
@@ -26,7 +28,7 @@ class IngestServiceTest {
     fun setUp() {
         val auth = UsernamePasswordAuthenticationToken(userId.toString(), null, emptyList())
         SecurityContextHolder.getContext().authentication = auth
-        service = IngestService(bookmarkRepository, folderRepository, bookmarkService, ingestPreviewRepository, objectMapper)
+        service = IngestService(bookmarkRepository, folderRepository, bookmarkService, ingestPreviewRepository, objectMapper, eventPublisher)
     }
 
     @Test

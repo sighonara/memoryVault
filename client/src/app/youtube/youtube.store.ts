@@ -12,6 +12,8 @@ import {
 } from '../shared/graphql/generated';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { pipe, switchMap, tap } from 'rxjs';
+import { WebSocketService } from '../core/services/websocket.service';
+import { debounceTime } from 'rxjs/operators';
 
 export interface YoutubeState {
   lists: YoutubeListWithStats[];
@@ -41,7 +43,7 @@ export const YoutubeStore = signalStore(
       store.lists().find(l => l.list.id === store.selectedListId()) || null
     )
   })),
-  withMethods((store, apollo = inject(Apollo)) => {
+  withMethods((store, apollo = inject(Apollo), ws = inject(WebSocketService)) => {
     const loadVideosRx = rxMethod<{listId: string | null, query: string, removedOnly: boolean}>(
       pipe(
         tap(() => patchState(store, { loadingVideos: true })),
@@ -60,6 +62,16 @@ export const YoutubeStore = signalStore(
         })
       )
     );
+
+    ws.on('videos').pipe(debounceTime(500)).subscribe(() => {
+      apollo.query({ query: GetYoutubeListsDocument, fetchPolicy: 'network-only' }).subscribe((result: any) => {
+        patchState(store, { lists: result.data.youtubeLists });
+      });
+      const selectedId = store.selectedListId();
+      if (selectedId) {
+        loadVideosRx({ listId: selectedId, query: store.searchQuery(), removedOnly: store.removedOnly() });
+      }
+    });
 
     return {
       loadLists: () => {

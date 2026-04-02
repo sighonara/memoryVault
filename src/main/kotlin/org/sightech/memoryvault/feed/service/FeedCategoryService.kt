@@ -4,7 +4,11 @@ import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.feed.entity.FeedCategory
 import org.sightech.memoryvault.feed.repository.FeedCategoryRepository
 import org.sightech.memoryvault.feed.repository.FeedRepository
+import org.sightech.memoryvault.websocket.ContentMutated
+import org.sightech.memoryvault.websocket.ContentType
+import org.sightech.memoryvault.websocket.MutationType
 import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
@@ -13,7 +17,8 @@ import java.util.UUID
 @Service
 class FeedCategoryService(
     private val categoryRepository: FeedCategoryRepository,
-    private val feedRepository: FeedRepository
+    private val feedRepository: FeedRepository,
+    private val eventPublisher: ApplicationEventPublisher
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -51,7 +56,13 @@ class FeedCategoryService(
         val maxSort = categoryRepository.findMaxSortOrderByUserId(userId)
         val category = FeedCategory(userId = userId, name = name, sortOrder = maxSort + 1)
         log.info("Created feed category '{}' for user {}", name, userId)
-        return categoryRepository.save(category)
+        val saved = categoryRepository.save(category)
+        eventPublisher.publishEvent(ContentMutated(
+            userId = userId, timestamp = Instant.now(),
+            contentType = ContentType.CATEGORY, mutationType = MutationType.CREATED,
+            entityId = saved.id
+        ))
+        return saved
     }
 
     fun renameCategory(categoryId: UUID, newName: String): FeedCategory? {
@@ -63,7 +74,13 @@ class FeedCategoryService(
         category.name = newName
         category.updatedAt = Instant.now()
         log.info("Renamed feed category {} to '{}' for user {}", categoryId, newName, userId)
-        return categoryRepository.save(category)
+        val saved = categoryRepository.save(category)
+        eventPublisher.publishEvent(ContentMutated(
+            userId = userId, timestamp = Instant.now(),
+            contentType = ContentType.CATEGORY, mutationType = MutationType.UPDATED,
+            entityId = categoryId
+        ))
+        return saved
     }
 
     @Transactional
@@ -80,6 +97,11 @@ class FeedCategoryService(
         category.updatedAt = Instant.now()
         categoryRepository.save(category)
         log.info("Deleted feed category {} for user {}", categoryId, userId)
+        eventPublisher.publishEvent(ContentMutated(
+            userId = userId, timestamp = Instant.now(),
+            contentType = ContentType.CATEGORY, mutationType = MutationType.DELETED,
+            entityId = categoryId
+        ))
         return true
     }
 
@@ -95,6 +117,11 @@ class FeedCategoryService(
             cat.updatedAt = now
         }
         log.info("Reordered {} feed categories for user {}", categoryIds.size, userId)
-        return categoryRepository.saveAll(categories)
+        val saved = categoryRepository.saveAll(categories)
+        eventPublisher.publishEvent(ContentMutated(
+            userId = userId, timestamp = Instant.now(),
+            contentType = ContentType.CATEGORY, mutationType = MutationType.UPDATED
+        ))
+        return saved
     }
 }

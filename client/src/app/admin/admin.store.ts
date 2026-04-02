@@ -11,6 +11,8 @@ import {
 } from '../shared/graphql/generated';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { pipe, switchMap, tap } from 'rxjs';
+import { WebSocketService } from '../core/services/websocket.service';
+import { debounceTime } from 'rxjs/operators';
 
 export interface AdminState {
   stats: SystemStats | null;
@@ -40,8 +42,8 @@ const initialState: AdminState = {
 
 export const AdminStore = signalStore(
   withState(initialState),
-  withMethods((store, apollo = inject(Apollo)) => ({
-    loadStats: rxMethod<void>(
+  withMethods((store, apollo = inject(Apollo), ws = inject(WebSocketService)) => {
+    const loadStats = rxMethod<void>(
       pipe(
         tap(() => patchState(store, { loading: true })),
         switchMap(() =>
@@ -54,9 +56,9 @@ export const AdminStore = signalStore(
           patchState(store, { stats: result.data.stats, loading: false });
         })
       )
-    ),
+    );
 
-    loadJobs: rxMethod<void>(
+    const loadJobs = rxMethod<void>(
       pipe(
         switchMap(() =>
           apollo.query({
@@ -72,9 +74,9 @@ export const AdminStore = signalStore(
           patchState(store, { jobs: result.data.jobs });
         })
       )
-    ),
+    );
 
-    loadLogs: rxMethod<void>(
+    const loadLogs = rxMethod<void>(
       pipe(
         switchMap(() =>
           apollo.query({
@@ -91,25 +93,22 @@ export const AdminStore = signalStore(
           patchState(store, { logs: result.data.logs });
         })
       )
-    ),
+    );
 
-    setJobTypeFilter: (type: string | null) => {
-      patchState(store, { jobTypeFilter: type });
-      (store as any).loadJobs();
-    },
+    // WebSocket subscription for job updates
+    ws.on('jobs').pipe(debounceTime(500)).subscribe(() => {
+      loadJobs();
+      loadStats();
+    });
 
-    setLogLevelFilter: (level: string | null) => {
-      patchState(store, { logLevelFilter: level });
-      (store as any).loadLogs();
-    },
-
-    setLogServiceFilter: (service: string) => {
-      patchState(store, { logServiceFilter: service || null });
-      (store as any).loadLogs();
-    },
-
-    setFollowActive: (active: boolean) => {
-      patchState(store, { followActive: active });
-    },
-  }))
+    return {
+      loadStats,
+      loadJobs,
+      loadLogs,
+      setJobTypeFilter: (type: string | null) => { patchState(store, { jobTypeFilter: type }); loadJobs(); },
+      setLogLevelFilter: (level: string | null) => { patchState(store, { logLevelFilter: level }); loadLogs(); },
+      setLogServiceFilter: (service: string) => { patchState(store, { logServiceFilter: service || null }); loadLogs(); },
+      setFollowActive: (active: boolean) => { patchState(store, { followActive: active }); },
+    };
+  })
 );

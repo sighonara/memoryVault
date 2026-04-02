@@ -7,6 +7,7 @@ import org.sightech.memoryvault.youtube.entity.Video
 import org.sightech.memoryvault.youtube.entity.YoutubeList
 import org.sightech.memoryvault.youtube.repository.VideoRepository
 import org.sightech.memoryvault.youtube.repository.YoutubeListRepository
+import org.springframework.context.ApplicationEventPublisher
 import java.util.Optional
 import java.util.UUID
 import kotlin.test.assertEquals
@@ -17,8 +18,9 @@ class VideoSyncServiceTest {
     private val videoRepository = mockk<VideoRepository>()
     private val youtubeListRepository = mockk<YoutubeListRepository>()
     private val videoDownloader = mockk<VideoDownloader>()
+    private val eventPublisher = mockk<ApplicationEventPublisher>(relaxed = true)
 
-    private val service = VideoSyncService(ytDlpService, videoRepository, youtubeListRepository, videoDownloader)
+    private val service = VideoSyncService(ytDlpService, videoRepository, youtubeListRepository, videoDownloader, eventPublisher)
 
     private val userId = UUID.fromString("00000000-0000-0000-0000-000000000001")
     private val list = YoutubeList(userId = userId, youtubeListId = "PLtest", url = "https://youtube.com/playlist?list=PLtest")
