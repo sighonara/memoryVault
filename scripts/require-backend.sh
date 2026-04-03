@@ -2,7 +2,7 @@
 # Checks that the backend is running. If not, prompts the user to start it.
 # Usage: source this script, or call it directly before tests that need the backend.
 
-BACKEND_URL="${BACKEND_URL:-http://localhost:8080/actuator/health}"
+BACKEND_URL="${BACKEND_URL:-http://localhost:8085/actuator/health}"
 
 if curl -sf "$BACKEND_URL" > /dev/null 2>&1; then
   return 0 2>/dev/null || exit 0

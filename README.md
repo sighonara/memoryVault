@@ -134,7 +134,7 @@ docker compose exec postgres psql -U memoryvault -c "SELECT * FROM users;"
 
 ### GraphQL Playground
 
-http://localhost:8080/graphiql — available in dev for ad-hoc queries.
+http://localhost:8085/graphiql — available in dev for ad-hoc queries.
 
 ## MCP Configuration (Claude Desktop)
 

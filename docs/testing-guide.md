@@ -19,7 +19,7 @@ Quick reference for human testers working with MemoryVault locally.
 Many commands below require a JWT token. Get one via:
 
 ```bash
-TOKEN=$(curl -s -X POST http://localhost:8080/api/auth/login \
+TOKEN=$(curl -s -X POST http://localhost:8085/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"system@memoryvault.local","password":"memoryvault"}' \
   | python3 -c "import json,sys; print(json.load(sys.stdin)['token'])")
@@ -37,14 +37,14 @@ Or log in via the UI at `http://localhost:4200/login` and grab the token from br
 
 ```bash
 # Single bookmark
-curl -s -X POST http://localhost:8080/graphql \
+curl -s -X POST http://localhost:8085/graphql \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"query":"mutation { addBookmark(url: \"https://example.com\", title: \"Example Site\", tags: [\"test\"]) { id url title } }"}'
 
 # Multiple bookmarks (run in a loop)
 for i in $(seq 1 10); do
-  curl -s -X POST http://localhost:8080/graphql \
+  curl -s -X POST http://localhost:8085/graphql \
     -H "Authorization: Bearer $TOKEN" \
     -H "Content-Type: application/json" \
     -d "{\"query\":\"mutation { addBookmark(url: \\\"https://example-${i}.com\\\", title: \\\"Test Bookmark ${i}\\\", tags: [\\\"batch\\\", \\\"test\\\"]) { id } }\"}"
@@ -55,13 +55,13 @@ done
 
 ```bash
 # Create a root folder
-curl -s -X POST http://localhost:8080/graphql \
+curl -s -X POST http://localhost:8085/graphql \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"query":"mutation { createFolder(name: \"Tech\") { id name } }"}'
 
 # Create a nested folder (use the parent id from above)
-curl -s -X POST http://localhost:8080/graphql \
+curl -s -X POST http://localhost:8085/graphql \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"query":"mutation { createFolder(name: \"Frontend\", parentId: \"<PARENT_ID>\") { id name parentId } }"}'
@@ -70,7 +70,7 @@ curl -s -X POST http://localhost:8080/graphql \
 ### Feeds (via GraphQL)
 
 ```bash
-curl -s -X POST http://localhost:8080/graphql \
+curl -s -X POST http://localhost:8085/graphql \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"query":"mutation { addFeed(url: \"https://hnrss.org/newest\") { id title url } }"}'
@@ -79,7 +79,7 @@ curl -s -X POST http://localhost:8080/graphql \
 ### Ingest Preview (via REST)
 
 ```bash
-curl -s -X POST http://localhost:8080/api/bookmarks/ingest \
+curl -s -X POST http://localhost:8085/api/bookmarks/ingest \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -245,5 +245,5 @@ docker compose exec postgres psql -U memoryvault -c "
 ## Frontend Testing Notes
 
 - **Clear browser state:** Open DevTools > Application > Local Storage > Clear `auth_token` to force re-login
-- **GraphQL playground:** If you have a GraphQL client (e.g., Altair, GraphQL Playground), point it at `http://localhost:8080/graphql` with the `Authorization: Bearer <token>` header
+- **GraphQL playground:** If you have a GraphQL client (e.g., Altair, GraphQL Playground), point it at `http://localhost:8085/graphql` with the `Authorization: Bearer <token>` header
 - **Ingest flow:** Use the Import panel in the bookmarks page to copy a CLI command, or seed a preview via the REST endpoint above and navigate to `?ingest=<previewId>`

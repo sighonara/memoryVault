@@ -168,7 +168,7 @@ test.describe('Bookmarks (requires backend)', () => {
       }
 
       // Seed a preview via REST API
-      const response = await request.post('http://localhost:8080/api/bookmarks/ingest', {
+      const response = await request.post('http://localhost:8085/api/bookmarks/ingest', {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',

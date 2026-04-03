@@ -3,54 +3,54 @@ import { generateIngestCommand, detectBrowser, detectOS } from './ingest-panel';
 
 describe('IngestPanel command generation', () => {
   it('generates Chrome macOS command with token and URL', () => {
-    const command = generateIngestCommand('chrome', 'macos', 'eyJhbGciOiJIUzI1NiJ9.test', 'http://localhost:8080');
+    const command = generateIngestCommand('chrome', 'macos', 'eyJhbGciOiJIUzI1NiJ9.test', 'http://localhost:8085');
     expect(command).toContain('curl');
     expect(command).toContain('eyJhbGciOiJIUzI1NiJ9.test');
-    expect(command).toContain('http://localhost:8080');
+    expect(command).toContain('http://localhost:8085');
     expect(command).toContain('Google/Chrome/Default/Bookmarks');
   });
 
   it('generates Chrome Windows command', () => {
-    const command = generateIngestCommand('chrome', 'windows', 'token', 'http://localhost:8080');
+    const command = generateIngestCommand('chrome', 'windows', 'token', 'http://localhost:8085');
     expect(command).toContain('LOCALAPPDATA');
     expect(command).toContain('Google\\Chrome');
   });
 
   it('generates Chrome Linux command', () => {
-    const command = generateIngestCommand('chrome', 'linux', 'token', 'http://localhost:8080');
+    const command = generateIngestCommand('chrome', 'linux', 'token', 'http://localhost:8085');
     expect(command).toContain('.config/google-chrome');
   });
 
   it('generates Firefox macOS command with sqlite3', () => {
-    const command = generateIngestCommand('firefox', 'macos', 'token', 'http://localhost:8080');
+    const command = generateIngestCommand('firefox', 'macos', 'token', 'http://localhost:8085');
     expect(command).toContain('sqlite3');
     expect(command).toContain('places.sqlite');
   });
 
   it('Firefox command includes sqlite3 availability check', () => {
-    const command = generateIngestCommand('firefox', 'macos', 'token', 'http://localhost:8080');
+    const command = generateIngestCommand('firefox', 'macos', 'token', 'http://localhost:8085');
     expect(command).toContain('command -v sqlite3');
   });
 
   it('generates Safari command with plutil', () => {
-    const command = generateIngestCommand('safari', 'macos', 'token', 'http://localhost:8080');
+    const command = generateIngestCommand('safari', 'macos', 'token', 'http://localhost:8085');
     expect(command).toContain('plutil');
     expect(command).toContain('Bookmarks.plist');
   });
 
   it('generates Brave macOS command with Brave path', () => {
-    const command = generateIngestCommand('brave', 'macos', 'token', 'http://localhost:8080');
+    const command = generateIngestCommand('brave', 'macos', 'token', 'http://localhost:8085');
     expect(command).toContain('BraveSoftware/Brave-Browser/Default/Bookmarks');
     expect(command).toContain('curl');
   });
 
   it('generates Brave Windows command', () => {
-    const command = generateIngestCommand('brave', 'windows', 'token', 'http://localhost:8080');
+    const command = generateIngestCommand('brave', 'windows', 'token', 'http://localhost:8085');
     expect(command).toContain('BraveSoftware\\Brave-Browser');
   });
 
   it('generates Brave Linux command', () => {
-    const command = generateIngestCommand('brave', 'linux', 'token', 'http://localhost:8080');
+    const command = generateIngestCommand('brave', 'linux', 'token', 'http://localhost:8085');
     expect(command).toContain('BraveSoftware/Brave-Browser');
   });
 

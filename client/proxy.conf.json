@@ -1,21 +1,21 @@
 {
   "/api": {
-    "target": "http://localhost:8080",
+    "target": "http://localhost:8085",
     "secure": false,
     "changeOrigin": true
   },
   "/graphql": {
-    "target": "http://localhost:8080",
+    "target": "http://localhost:8085",
     "secure": false,
     "changeOrigin": true
   },
   "/graphiql": {
-    "target": "http://localhost:8080",
+    "target": "http://localhost:8085",
     "secure": false,
     "changeOrigin": true
   },
   "/ws": {
-    "target": "http://localhost:8080",
+    "target": "http://localhost:8085",
     "secure": false,
     "changeOrigin": true,
     "ws": true
