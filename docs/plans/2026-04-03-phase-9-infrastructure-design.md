@@ -17,8 +17,8 @@ Phase 9 deploys MemoryVault to AWS, replacing local-only development with a prod
 
 ## Sub-Project Decomposition
 
-| # | Sub-project                      | Depends on  | Deliverable                                                                                                          |
-|---|----------------------------------|-------------|----------------------------------------------------------------------------------------------------------------------|
+| #  | Sub-project                      | Depends on  | Deliverable                                                                                                          |
+|----|----------------------------------|-------------|----------------------------------------------------------------------------------------------------------------------|
 | 9A | AWS Foundation + Terraform       | Nothing     | AWS account, Terraform for VPC, EC2, RDS, S3, ALB, Route 53, ACM, IAM, ECR. Dockerized Spring Boot deploys and runs. |
 | 9B | CI/CD Pipeline                   | 9A          | GitHub Actions: test, build Docker image, push to ECR, deploy to EC2 via SSM.                                        |
 | 9C | AWS Service Implementations      | 9A          | S3StorageService, CloudWatchLogService implementations. Wire up @Profile("aws").                                     |
@@ -32,10 +32,10 @@ Phase 9 deploys MemoryVault to AWS, replacing local-only development with a prod
 
 Phase 9 replaces the `@Profile("local")` negation pattern with explicit profile names for readability and future extensibility (e.g., Azure, staging):
 
-| Profile | When active | Purpose |
-|---|---|---|
-| `local` | Default (`spring.profiles.default=local`) | Local development, no AWS credentials needed |
-| `aws` | `SPRING_PROFILES_ACTIVE=aws` in production | AWS services (S3, CloudWatch, Cognito, SSM, Cost Explorer) |
+| Profile  | When active                                | Purpose                                                    |
+|----------|--------------------------------------------|------------------------------------------------------------|
+| `local`  | Default (`spring.profiles.default=local`)  | Local development, no AWS credentials needed               |
+| `aws`    | `SPRING_PROFILES_ACTIVE=aws` in production | AWS services (S3, CloudWatch, Cognito, SSM, Cost Explorer) |
 
 **Migration from current state:**
 - Rename `application-dev.properties` → `application-local.properties`
@@ -126,7 +126,6 @@ Shell script that runs on first boot:
 - Installs AWS CloudWatch agent (for log shipping)
 - Installs SSM agent
 - Installs yt-dlp + ffmpeg (for video downloads in 9E)
-- Sets up weekly cron to auto-update yt-dlp (`pip install --upgrade yt-dlp`)
 - Authenticates to ECR, pulls latest image, runs the container
 - Container environment variables: DATABASE_URL, DATABASE_USERNAME, DATABASE_PASSWORD, JWT_SECRET, CORS_ALLOWED_ORIGINS, SPRING_PROFILES_ACTIVE=aws
 - Configures Caddy: reverse proxy HTTPS (443) → localhost:8085, redirect HTTP (80) → HTTPS
@@ -297,12 +296,21 @@ Since we're on EC2 (not a managed service with environment injection), Cognito c
   3. Updates the video record in the database
 - Reuses existing `YtDlpService` and `StorageService` — no code duplication
 
+### yt-dlp Update Strategy
+
+Rather than a weekly cron (which leaves a failure window when YouTube changes their API), yt-dlp is updated just-in-time:
+
+- **Before each download:** The video download endpoint runs `pip install --upgrade yt-dlp` before invoking yt-dlp. This is a fast no-op when already current (~1 second) and ensures the latest version is always used.
+- **Manual update endpoint:** `POST /api/internal/ytdlp/update` forces an update and returns the installed version. Useful when you notice download failures and want to trigger an update immediately (e.g., via MCP tool or curl).
+- **MCP tool:** `updateYtDlp` tool (in existing `YoutubeTools.kt` or a new `MaintenanceTools.kt`) that calls the internal endpoint. Available on both `local` and `aws` profiles since yt-dlp runs on EC2 in both cases.
+
 ### LambdaVideoDownloader Implementation
 
 - Implements `VideoDownloader` interface
 - `@Component @Profile("aws")`
 - Uses AWS SDK v2 `SsmClient` to send RunCommand
 - SSM command calls an internal API endpoint: `POST /api/internal/videos/download` with the video ID
+- The download endpoint runs yt-dlp update before each download attempt (see above)
 - The endpoint invokes `YtDlpService` + `StorageService` inside the running app — no code duplication
 - Returns `DownloadResult` (async — sets status to PENDING, internal endpoint updates to SUCCESS/FAILED)
 
@@ -395,15 +403,15 @@ New Flyway migration creates `aws_cost_records` table:
 
 ## Cross-Cutting Concerns
 
-| Concern       | Approach                                                                                                                                                       |
-|---------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Auth**      | Cognito (`@Profile("aws")`) / local JWT (`@Profile("local")`), explicit profile toggle                                                                         |
-| **Errors**    | AWS SDK exceptions caught and logged, wrapped in service-layer exceptions. All AWS service calls wrapped in try/catch with WARN-level logging on failure.      |
-| **Threading** | No changes — async WebSocket relay stays, Lambda is external, SSM commands are fire-and-forget with status polling                                             |
-| **Logging**   | JSON structured logs → CloudWatch (AWS) / local file (dev). EC2 CloudWatch agent ships Docker stdout. 30-day retention both environments.                      |
-| **Lifecycle** | Docker container managed by SSM commands. Caddy health check proxied to /actuator/health. Auto-restart via Docker --restart=unless-stopped.                     |
-| **Limits**    | RDS 20GB gp3, S3 lifecycle tiering (90d→IA, 365d→Glacier), Lambda 15-min timeout, EC2 t3.small (2 vCPU, 2GB RAM)                                               |
-| **Config**    | All secrets via environment variables. Terraform outputs feed deploy scripts. No secrets in code or Docker images.                                             |
+| Concern       | Approach                                                                                                                                                                   |
+|---------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Auth**      | Cognito (`@Profile("aws")`) / local JWT (`@Profile("local")`), explicit profile toggle                                                                                     |
+| **Errors**    | AWS SDK exceptions caught and logged, wrapped in service-layer exceptions. All AWS service calls wrapped in try/catch with WARN-level logging on failure.                  |
+| **Threading** | No changes — async WebSocket relay stays, Lambda is external, SSM commands are fire-and-forget with status polling                                                         |
+| **Logging**   | JSON structured logs → CloudWatch (AWS) / local file (dev). EC2 CloudWatch agent ships Docker stdout. 30-day retention both environments.                                  |
+| **Lifecycle** | Docker container managed by SSM commands. Caddy health check proxied to /actuator/health. Auto-restart via Docker --restart=unless-stopped.                                |
+| **Limits**    | RDS 20GB gp3, S3 lifecycle tiering (90d→IA, 365d→Glacier), Lambda 15-min timeout, EC2 t3.small (2 vCPU, 2GB RAM)                                                           |
+| **Config**    | All secrets via environment variables. Terraform outputs feed deploy scripts. No secrets in code or Docker images.                                                         |
 | **Security**  | HTTPS via Caddy+Let's Encrypt. Security groups restrict network access. IAM least-privilege roles. Internal API key for Lambda→EC2 calls. No SSH needed for deploys (SSM). |
 
 ---
@@ -425,22 +433,22 @@ New Flyway migration creates `aws_cost_records` table:
 
 ### New Environment Variables (Production)
 
-| Variable                                   | Source                                   | Used by                                  |
-|--------------------------------------------|------------------------------------------|------------------------------------------|
-| `DATABASE_URL`                             | Terraform output (RDS endpoint)          | Spring Boot                              |
-| `DATABASE_USERNAME`                        | Terraform variable                       | Spring Boot                              |
-| `DATABASE_PASSWORD`                        | Terraform variable (sensitive)           | Spring Boot                              |
-| `JWT_SECRET`                               | Generated, stored in AWS Secrets Manager | Spring Boot (local auth fallback)        |
-| `CORS_ALLOWED_ORIGINS`                     | Domain URL from Terraform                | Spring Boot                              |
+| Variable                                   | Source                                                 | Used by                                  |
+|--------------------------------------------|--------------------------------------------------------|------------------------------------------|
+| `DATABASE_URL`                             | Terraform output (RDS endpoint)                        | Spring Boot                              |
+| `DATABASE_USERNAME`                        | Terraform variable                                     | Spring Boot                              |
+| `DATABASE_PASSWORD`                        | Terraform variable (sensitive)                         | Spring Boot                              |
+| `JWT_SECRET`                               | Generated, stored in AWS Secrets Manager               | Spring Boot (local auth fallback)        |
+| `CORS_ALLOWED_ORIGINS`                     | Domain URL from Terraform                              | Spring Boot                              |
 | `SPRING_PROFILES_ACTIVE`                   | `aws,prod` (`aws` for services, `prod` for env config) | Spring Boot                              |
-| `MEMORYVAULT_STORAGE_S3_BUCKET`            | Terraform output                         | S3StorageService                         |
-| `MEMORYVAULT_STORAGE_S3_REGION`            | Terraform variable                       | S3StorageService                         |
-| `MEMORYVAULT_LOGGING_CLOUDWATCH_LOG_GROUP` | Terraform output                         | CloudWatchLogService                     |
-| `MEMORYVAULT_LOGGING_CLOUDWATCH_REGION`    | Terraform variable                       | CloudWatchLogService                     |
-| `COGNITO_USER_POOL_ID`                     | Terraform output                         | CognitoJwtFilter                         |
-| `COGNITO_CLIENT_ID`                        | Terraform output                         | Angular (build-time)                     |
-| `COGNITO_REGION`                           | Terraform variable                       | CognitoJwtFilter + Angular               |
-| `INTERNAL_API_KEY`                         | Generated, stored in Secrets Manager     | InternalSyncController, Lambda functions |
+| `MEMORYVAULT_STORAGE_S3_BUCKET`            | Terraform output                                       | S3StorageService                         |
+| `MEMORYVAULT_STORAGE_S3_REGION`            | Terraform variable                                     | S3StorageService                         |
+| `MEMORYVAULT_LOGGING_CLOUDWATCH_LOG_GROUP` | Terraform output                                       | CloudWatchLogService                     |
+| `MEMORYVAULT_LOGGING_CLOUDWATCH_REGION`    | Terraform variable                                     | CloudWatchLogService                     |
+| `COGNITO_USER_POOL_ID`                     | Terraform output                                       | CognitoJwtFilter                         |
+| `COGNITO_CLIENT_ID`                        | Terraform output                                       | Angular (build-time)                     |
+| `COGNITO_REGION`                           | Terraform variable                                     | CognitoJwtFilter + Angular               |
+| `INTERNAL_API_KEY`                         | Generated, stored in Secrets Manager                   | InternalSyncController, Lambda functions |
 
 ### New Angular Environment Fields (environment.prod.ts)
 
