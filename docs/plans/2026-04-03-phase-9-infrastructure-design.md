@@ -1,0 +1,423 @@
+# Phase 9 — Infrastructure: Design Spec
+
+## Overview
+
+Phase 9 deploys MemoryVault to AWS, replacing local-only development with a production-ready infrastructure. It covers six sub-projects executed in dependency order.
+
+**Decisions made during brainstorming:**
+- AWS account: starting from scratch (no existing resources)
+- Deployment model: EC2 + Docker (single t3.small instance, not ECS/Fargate)
+- VPC: Simple — public subnets only, no NAT Gateway (~$47/mo baseline)
+- Domain: New domain registered through Route 53, HTTPS via ALB + ACM
+- Cognito: Custom UI (keep existing Angular login form, call Cognito API directly)
+- Lambda + video downloads: Lambda schedules jobs, EC2 does the yt-dlp heavy lifting
+- Cost tracking: @Scheduled in Spring Boot (not Lambda) for daily cost refresh
+
+**Estimated monthly AWS cost:** ~$47/mo baseline (EC2 t3.small $15, RDS db.t3.micro $15, ALB $16, Route 53 $0.50, S3/Lambda negligible)
+
+## Sub-Project Decomposition
+
+| # | Sub-project | Depends on | Deliverable |
+|---|---|---|---|
+| 9A | AWS Foundation + Terraform | Nothing | AWS account, Terraform for VPC, EC2, RDS, S3, ALB, Route 53, ACM, IAM, ECR. Dockerized Spring Boot deploys and runs. |
+| 9B | CI/CD Pipeline | 9A | GitHub Actions: test, build Docker image, push to ECR, deploy to EC2 via SSM. |
+| 9C | AWS Service Implementations | 9A | S3StorageService, CloudWatchLogService implementations. Wire up @Profile("aws"). |
+| 9D | Cognito Auth Swap | 9A | Cognito User Pool, Angular login calls Cognito API, Spring Boot validates Cognito JWTs. |
+| 9E | Lambda Scheduling + Video Worker | 9A, 9C | EventBridge rules, RSS/YouTube sync Lambdas, video download dispatch (Lambda → EC2). |
+| 9F | Cost Tracking | 9A | AwsCostRecord entity, CostService, CostTools MCP tool. |
+
+---
+
+## 9A: AWS Foundation + Terraform
+
+### Architecture
+
+Single-region deployment. One VPC with two public subnets across two AZs (ALB requires two AZs). EC2 in one subnet runs the Spring Boot app as a Docker container. RDS PostgreSQL in a DB subnet group (public subnets but access restricted by security group to EC2 only). S3 bucket for video/content storage. ALB fronts EC2 with HTTPS via ACM cert.
+
+### AWS Resources
+
+| Resource | Config |
+|---|---|
+| VPC | 10.0.0.0/16, 2 public subnets in different AZs |
+| EC2 | t3.small, Amazon Linux 2023, Docker pre-installed via user_data |
+| RDS | db.t3.micro, PostgreSQL 16, single-AZ, 20GB gp3 |
+| S3 | One bucket, versioning enabled, lifecycle rules (90d → IA, 365d → Glacier Deep Archive) |
+| ALB | HTTPS listener (443) → EC2 target group (8085), HTTP (80) redirects to HTTPS |
+| ACM | Certificate for the domain, DNS validation via Route 53 |
+| Route 53 | Hosted zone + A record (alias to ALB). Domain registered through Route 53. |
+| ECR | Repository for the Spring Boot Docker image |
+| Security Groups | ALB: 80/443 from anywhere. EC2: 8085 from ALB only, 22 from your IP. RDS: 5432 from EC2 only. |
+| IAM | EC2 instance role with S3, CloudWatch Logs, ECR pull, SSM permissions |
+| SSM | For deploy commands — no SSH needed for deploys |
+
+### Terraform Structure
+
+```
+terraform/
+├── main.tf          # Provider, backend (S3 for state), variables
+├── vpc.tf           # VPC, subnets, internet gateway, route tables
+├── ec2.tf           # Instance, user_data, key pair
+├── rds.tf           # PostgreSQL instance, subnet group
+├── s3.tf            # Content bucket + Terraform state bucket
+├── alb.tf           # Load balancer, listeners, target group
+├── dns.tf           # Route 53 hosted zone, records, ACM cert
+├── ecr.tf           # Container registry
+├── iam.tf           # Roles, policies, instance profile
+├── security.tf      # Security groups
+├── outputs.tf       # EC2 IP, ALB DNS, RDS endpoint, etc.
+└── variables.tf     # Region, instance sizes, domain name, etc.
+```
+
+### Terraform State
+
+Stored in S3 with DynamoDB locking. The state bucket and DynamoDB table are created via a small bootstrap script (`terraform/bootstrap/`) since Terraform can't create its own backend.
+
+### Dockerfile
+
+Multi-stage build added to the project root:
+- Stage 1: Gradle builds the JAR (uses Gradle Docker image)
+- Stage 2: Slim JRE image runs the JAR
+- Exposes port 8085
+- Health check via /actuator/health
+
+### EC2 user_data
+
+Shell script that runs on first boot:
+- Installs Docker
+- Installs AWS CloudWatch agent (for log shipping)
+- Installs SSM agent
+- Installs yt-dlp + ffmpeg (for video downloads in 9E)
+- Authenticates to ECR, pulls latest image, runs the container
+- Container environment variables: DATABASE_URL, DATABASE_USERNAME, DATABASE_PASSWORD, JWT_SECRET, CORS_ALLOWED_ORIGINS, SPRING_PROFILES_ACTIVE=aws,prod
+
+---
+
+## 9B: CI/CD Pipeline
+
+### GitHub Actions Workflows
+
+**`ci.yml` — runs on every push and PR:**
+- Checkout code
+- Run backend tests (`./gradlew test`)
+- Run frontend tests (`cd client && npm test`)
+- Build Angular for production (`cd client && npm run build`)
+- Build Docker image (verify it builds, don't push)
+
+**`deploy.yml` — runs on push to `master` (or manual trigger via workflow_dispatch):**
+- Run all tests (same as CI)
+- Build Docker image
+- Authenticate to ECR, push image tagged with git SHA + `latest`
+- Deploy to EC2 via SSM `SendCommand`: pull new image, stop old container, start new one
+- Run smoke test against the live instance (`scripts/smoke-test.sh` with prod URL)
+
+### GitHub Secrets
+
+- `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` (deploy IAM user)
+- `AWS_REGION`
+- `AWS_ACCOUNT_ID`
+- `EC2_INSTANCE_ID`
+
+### No Staging Environment
+
+For a single-user app, the CI test suite is the gate. Deploy goes straight to prod after tests pass. Staging can be added later if needed.
+
+### Rollback
+
+Previous Docker images remain tagged in ECR. Rolling back = SSM command to pull a previous tag. No automated rollback for now.
+
+---
+
+## 9C: AWS Service Implementations
+
+### S3StorageService
+
+- Implements the existing `StorageService` interface
+- Uses AWS SDK v2 `S3Client`
+- Config properties: `memoryvault.storage.s3-bucket`, `memoryvault.storage.s3-region`
+- `store()` → `PutObjectRequest`
+- `retrieve()` → `GetObjectRequest`
+- `delete()` → `DeleteObjectRequest`
+- `exists()` → `HeadObjectRequest`
+- `usedBytes()` → `ListObjectsV2` with size summation
+- Annotation: `@Component @Profile("aws")`
+
+### CloudWatchLogService
+
+- Implements the existing `LogService` interface
+- Uses AWS SDK v2 `CloudWatchLogsClient`
+- Config properties: `memoryvault.logging.cloudwatch-log-group`, `memoryvault.logging.cloudwatch-region`
+- Uses CloudWatch Logs Insights: `startQuery()` → poll `getQueryResults()` until complete
+- Maps results to the existing `LogEntry` data class
+- Filter by level/logger translated to Insights query syntax
+- Annotation: `@Component @Profile("aws")`
+
+### CloudWatch Log Shipping
+
+- Docker container writes JSON structured logs to stdout (existing logback config)
+- CloudWatch agent on EC2 captures Docker container logs → ships to log group
+- Terraform creates the log group with 30-day retention (matches local config)
+
+### Gradle Dependencies
+
+- `software.amazon.awssdk:bom` (version management)
+- `software.amazon.awssdk:s3`
+- `software.amazon.awssdk:cloudwatchlogs`
+
+### No Changes to Existing Code
+
+Local implementations (`LocalStorageService`, `LocalLogService`) and their interfaces remain untouched. The `@Profile` annotation handles the swap.
+
+---
+
+## 9D: Cognito Auth Swap
+
+### Cognito User Pool (Terraform)
+
+- Email as primary sign-in attribute
+- Password policy: 8+ chars, mixed case, numbers, symbols
+- No MFA initially (can enable later)
+- One App Client: public client (no secret) for SPA use
+- Custom attribute: `custom:role` (OWNER/VIEWER)
+
+### Seed User Migration
+
+- Create `system@memoryvault.local` user in Cognito via Terraform or a one-time script
+- Set permanent password: `memoryvault`
+- Set `custom:role = OWNER`
+
+### Angular Changes
+
+- Add `amazon-cognito-identity-js` npm package
+- `AuthService.login()` calls Cognito `InitiateAuth` instead of `POST /api/auth/login`
+- On success: Cognito returns ID token + access token + refresh token
+- Store tokens same way (localStorage), use ID token as Bearer token
+- Token refresh handled by Cognito SDK automatically
+- New environment config fields: `cognitoUserPoolId`, `cognitoClientId`, `cognitoRegion`
+- Login form UI stays identical
+
+### Spring Boot Changes
+
+- New `CognitoJwtFilter` (`@Profile("aws")`) replaces `JwtAuthenticationFilter`
+- Validates Cognito JWT against JWKS endpoint: `https://cognito-idp.{region}.amazonaws.com/{poolId}/.well-known/jwks.json`
+- Extracts `sub` (maps to userId), `email`, `custom:role` from claims
+- Sets `SecurityContext` the same way the current filter does
+- `CurrentUser.userId()` continues to work unchanged
+
+### WebSocket Auth on AWS
+
+- `WebSocketAuthInterceptor` needs updating for Cognito JWT validation
+- Extract into `StompTokenValidator` interface with two implementations:
+  - `LocalStompTokenValidator` (`@Profile("!aws")`) — uses existing JwtService
+  - `CognitoStompTokenValidator` (`@Profile("aws")`) — validates against Cognito JWKS
+- `WebSocketAuthInterceptor` injects `StompTokenValidator` interface
+
+### What Stays the Same
+
+- `AuthService` + `AuthController` remain with `@Profile("!aws")` for local dev
+- `JwtAuthenticationFilter` remains with `@Profile("!aws")` for local dev
+- `JwtService` remains for local dev
+- Local dev workflow completely unaffected
+
+### Build-Time Configuration
+
+Since we're on EC2 (not a managed service with environment injection), Cognito config (User Pool ID, Client ID, region) is baked into `environment.prod.ts` at Angular build time. These are not secrets — they're public client identifiers.
+
+---
+
+## 9E: Lambda Scheduling + Video Worker
+
+### EventBridge Rules (Terraform)
+
+- RSS feed sync: cron schedule (configurable, default every 30 minutes)
+- YouTube list sync: cron schedule (configurable, default every 6 hours)
+- Each rule triggers its corresponding Lambda function
+
+### RSS Sync Lambda (Python)
+
+- Small Python function that calls the Spring Boot API on EC2
+- Endpoint: `POST /api/internal/sync/feeds`
+- Reuses existing `FeedService.refreshAllFeeds()` logic — no code duplication
+- Lambda just acts as a scheduler that pokes the app
+
+### YouTube Sync Lambda (Python)
+
+- Same pattern — calls `POST /api/internal/sync/youtube`
+- Triggers `VideoSyncService` to check for new videos across all lists
+
+### Video Download Dispatch (Lambda → EC2)
+
+- When `VideoSyncService` identifies new videos, it needs to download them
+- On AWS profile: `LambdaVideoDownloader` sends an SSM `SendCommand` to the EC2 instance
+- The SSM command runs a script on EC2 that:
+  1. Downloads the video with yt-dlp (already installed on EC2)
+  2. Uploads to S3 via the app's StorageService
+  3. Updates the video record in the database
+- Reuses existing `YtDlpService` and `StorageService` — no code duplication
+
+### LambdaVideoDownloader Implementation
+
+- Implements `VideoDownloader` interface
+- `@Component @Profile("aws")`
+- Uses AWS SDK v2 `SsmClient` to send RunCommand
+- Command runs: a shell script that calls a Spring Boot CLI endpoint or runs yt-dlp directly
+- Returns `DownloadResult` (async — sets status to PENDING, EC2 script updates to SUCCESS/FAILED)
+
+### Internal API Security
+
+- New endpoints under `/api/internal/**`
+- Secured by shared API key header (`X-Internal-Key`) checked against environment variable `INTERNAL_API_KEY`
+- `InternalSyncController` (`@Profile("aws")`) with endpoints:
+  - `POST /api/internal/sync/feeds`
+  - `POST /api/internal/sync/youtube`
+  - `POST /api/internal/costs/refresh` (used by 9F)
+
+### SpringJobScheduler on AWS
+
+- `FeedSyncRegistrar` and `YoutubeSyncRegistrar` still register with cron `"-"` (disabled)
+- EventBridge + Lambda replaces the Spring cron scheduling
+- `SyncJobService` still tracks job execution (internal endpoints call it)
+- `triggerNow()` still works for manual triggers from MCP/UI
+
+### Lambda Structure
+
+```
+lambdas/
+├── feed-sync/
+│   ├── handler.py
+│   └── requirements.txt
+└── youtube-sync/
+    ├── handler.py
+    └── requirements.txt
+```
+
+Packaged as ZIP, uploaded to S3, deployed via Terraform.
+
+### Gradle Dependency
+
+- `software.amazon.awssdk:ssm`
+
+---
+
+## 9F: Cost Tracking
+
+### AwsCostRecord Entity
+
+New Flyway migration creates `aws_cost_records` table:
+- `id` UUID PRIMARY KEY
+- `billing_cycle_start` DATE NOT NULL
+- `billing_cycle_end` DATE NOT NULL
+- `compute_cost_usd` DECIMAL(10,4) NOT NULL DEFAULT 0
+- `storage_cost_usd` DECIMAL(10,4) NOT NULL DEFAULT 0
+- `transfer_cost_usd` DECIMAL(10,4) NOT NULL DEFAULT 0
+- `total_cost_usd` DECIMAL(10,4) NOT NULL DEFAULT 0
+- `fetched_at` TIMESTAMPTZ NOT NULL
+- `created_at` TIMESTAMPTZ NOT NULL DEFAULT now()
+
+### CostService (`@Profile("aws")`)
+
+- Uses AWS SDK v2 `CostExplorerClient`
+- `fetchCurrentCycle()` — queries Cost Explorer for current month, grouped by service
+- Maps AWS service names to three buckets:
+  - Compute: EC2, Lambda
+  - Storage: S3, RDS
+  - Transfer: Data Transfer
+- Stores result as an `AwsCostRecord`
+- `getLatestCost()` — returns most recent record
+- `getCostHistory(months)` — returns records for last N months
+
+### Cost Refresh Schedule
+
+- `@Scheduled(cron = "0 0 6 * * *")` in a `CostRefreshTask` (`@Profile("aws")`)
+- Runs daily at 6 AM (AWS cost data is delayed ~24 hours)
+- Also callable via `POST /api/internal/costs/refresh`
+
+### LocalCostService (`@Profile("!aws")`)
+
+- Returns empty list / informative message
+- Keeps the app bootable locally without AWS credentials
+
+### MCP Tool
+
+- `CostTools.kt` with `getAwsCosts` tool
+- Returns current billing cycle costs and optional history
+- On local profile: returns a message saying cost tracking is only available in production
+
+### Gradle Dependency
+
+- `software.amazon.awssdk:costexplorer`
+
+---
+
+## Cross-Cutting Concerns
+
+| Concern | Approach |
+|---|---|
+| **Auth** | Cognito (AWS) / local JWT (dev), @Profile toggle |
+| **Errors** | AWS SDK exceptions caught and logged, wrapped in service-layer exceptions. All AWS service calls wrapped in try/catch with WARN-level logging on failure. |
+| **Threading** | No changes — async WebSocket relay stays, Lambda is external, SSM commands are fire-and-forget with status polling |
+| **Logging** | JSON structured logs → CloudWatch (AWS) / local file (dev). EC2 CloudWatch agent ships Docker stdout. 30-day retention both environments. |
+| **Lifecycle** | Docker container managed by SSM commands. ALB health check on /actuator/health. Auto-restart via Docker --restart=unless-stopped. |
+| **Limits** | RDS 20GB gp3, S3 lifecycle tiering (90d→IA, 365d→Glacier), Lambda 15-min timeout, EC2 t3.small (2 vCPU, 2GB RAM) |
+| **Config** | All secrets via environment variables. Terraform outputs feed deploy scripts. No secrets in code or Docker images. |
+| **Security** | HTTPS via ALB+ACM. Security groups restrict network access. IAM least-privilege roles. Internal API key for Lambda→EC2 calls. No SSH needed for deploys (SSM). |
+
+---
+
+## Testing Strategy
+
+| Sub-project | Testing approach |
+|---|---|
+| 9A (Terraform) | `terraform plan` review, smoke test after `terraform apply` |
+| 9B (CI/CD) | Trigger workflow, verify image in ECR, verify deploy completes, smoke test |
+| 9C (S3/CloudWatch) | Unit tests with mocked AWS SDK clients. Integration test against LocalStack or real AWS in CI. |
+| 9D (Cognito) | Unit tests for CognitoJwtFilter with mocked JWKS. E2E login test against Cognito in staging. |
+| 9E (Lambda) | Unit tests for Lambda handlers. Integration test: EventBridge triggers Lambda, Lambda calls internal API, job tracked in SyncJob. |
+| 9F (Cost) | Unit tests for CostService with mocked CostExplorerClient. Verify daily schedule runs. |
+
+---
+
+## Configuration Summary
+
+### New Environment Variables (Production)
+
+| Variable | Source | Used by |
+|---|---|---|
+| `DATABASE_URL` | Terraform output (RDS endpoint) | Spring Boot |
+| `DATABASE_USERNAME` | Terraform variable | Spring Boot |
+| `DATABASE_PASSWORD` | Terraform variable (sensitive) | Spring Boot |
+| `JWT_SECRET` | Generated, stored in AWS Secrets Manager | Spring Boot (local auth fallback) |
+| `CORS_ALLOWED_ORIGINS` | Domain URL from Terraform | Spring Boot |
+| `SPRING_PROFILES_ACTIVE` | `aws,prod` | Spring Boot |
+| `MEMORYVAULT_STORAGE_S3_BUCKET` | Terraform output | S3StorageService |
+| `MEMORYVAULT_STORAGE_S3_REGION` | Terraform variable | S3StorageService |
+| `MEMORYVAULT_LOGGING_CLOUDWATCH_LOG_GROUP` | Terraform output | CloudWatchLogService |
+| `MEMORYVAULT_LOGGING_CLOUDWATCH_REGION` | Terraform variable | CloudWatchLogService |
+| `COGNITO_USER_POOL_ID` | Terraform output | CognitoJwtFilter |
+| `COGNITO_CLIENT_ID` | Terraform output | Angular (build-time) |
+| `COGNITO_REGION` | Terraform variable | CognitoJwtFilter + Angular |
+| `INTERNAL_API_KEY` | Generated, stored in Secrets Manager | InternalSyncController, Lambda functions |
+
+### New Angular Environment Fields (environment.prod.ts)
+
+| Field | Value |
+|---|---|
+| `cognitoUserPoolId` | From Terraform output |
+| `cognitoClientId` | From Terraform output |
+| `cognitoRegion` | AWS region |
+
+### New Gradle Dependencies
+
+| Dependency | Sub-project |
+|---|---|
+| `software.amazon.awssdk:bom` | All |
+| `software.amazon.awssdk:s3` | 9C |
+| `software.amazon.awssdk:cloudwatchlogs` | 9C |
+| `software.amazon.awssdk:cognitoidp` | 9D |
+| `software.amazon.awssdk:ssm` | 9E |
+| `software.amazon.awssdk:costexplorer` | 9F |
+
+### New npm Dependencies
+
+| Package | Sub-project |
+|---|---|
+| `amazon-cognito-identity-js` | 9D |
