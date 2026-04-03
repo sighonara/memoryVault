@@ -36,7 +36,8 @@ src/main/kotlin/org/sightech/memoryvault/
 
 ### Commands
 
-- `./gradlew bootRun` — start the app (requires Docker Compose running)
+- `./scripts/dev.sh` — start backend + frontend together (Ctrl+C stops both)
+- `./gradlew bootRun` — start the backend only (requires Docker Compose running)
 - `./gradlew test` — run tests (TestContainers handles PostgreSQL)
 - `docker compose up -d` — start PostgreSQL
 - `./scripts/test-all.sh` — run all tests across all services (backend + frontend + E2E)

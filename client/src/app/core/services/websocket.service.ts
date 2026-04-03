@@ -5,6 +5,8 @@ import { AuthService } from '../../auth/auth.service';
 
 export interface VaultSignal {
   eventType: string;
+  contentType?: string;
+  mutationType?: string;
   [key: string]: any;
 }
 

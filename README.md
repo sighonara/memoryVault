@@ -63,6 +63,7 @@ memoryVault/
 ├── terraform/                  # AWS infrastructure (Phase 7)
 ├── lambdas/                    # AWS Lambda functions (Phase 7)
 ├── scripts/                    # Test and utility scripts
+│   ├── dev.sh
 │   ├── test-all.sh
 │   ├── smoke-test.sh
 │   └── test-frontend.sh
@@ -86,11 +87,15 @@ memoryVault/
 # Start PostgreSQL (port 5433)
 docker compose up -d
 
-# Start backend
-./gradlew bootRun
+# Start backend + frontend together (Ctrl+C stops both)
+./scripts/dev.sh
+```
 
-# Start frontend (in another terminal)
-cd client && npm start
+Or start them separately:
+
+```bash
+./gradlew bootRun          # backend on port 8085
+cd client && npm start     # frontend on port 4200
 ```
 
 Open http://localhost:4200
