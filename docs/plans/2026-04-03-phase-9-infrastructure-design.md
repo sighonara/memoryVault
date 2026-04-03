@@ -199,9 +199,10 @@ Local implementations (`LocalStorageService`, `LocalLogService`) and their inter
 
 - New `CognitoJwtFilter` (`@Profile("aws")`) replaces `JwtAuthenticationFilter`
 - Validates Cognito JWT against JWKS endpoint: `https://cognito-idp.{region}.amazonaws.com/{poolId}/.well-known/jwks.json`
-- Extracts `sub` (maps to userId), `email`, `custom:role` from claims
-- Sets `SecurityContext` the same way the current filter does
-- `CurrentUser.userId()` continues to work unchanged
+- Extracts `email` and `custom:role` from Cognito claims
+- Looks up the local `User` entity by email to get the database UUID
+- Sets that database UUID in `SecurityContext` (not Cognito's `sub` — our app uses its own UUIDs)
+- `CurrentUser.userId()` continues to work unchanged because SecurityContext still holds our database UUID
 
 ### WebSocket Auth on AWS
 
@@ -259,8 +260,9 @@ Since we're on EC2 (not a managed service with environment injection), Cognito c
 - Implements `VideoDownloader` interface
 - `@Component @Profile("aws")`
 - Uses AWS SDK v2 `SsmClient` to send RunCommand
-- Command runs: a shell script that calls a Spring Boot CLI endpoint or runs yt-dlp directly
-- Returns `DownloadResult` (async — sets status to PENDING, EC2 script updates to SUCCESS/FAILED)
+- SSM command calls an internal API endpoint: `POST /api/internal/videos/download` with the video ID
+- The endpoint invokes `YtDlpService` + `StorageService` inside the running app — no code duplication
+- Returns `DownloadResult` (async — sets status to PENDING, internal endpoint updates to SUCCESS/FAILED)
 
 ### Internal API Security
 
@@ -269,6 +271,7 @@ Since we're on EC2 (not a managed service with environment injection), Cognito c
 - `InternalSyncController` (`@Profile("aws")`) with endpoints:
   - `POST /api/internal/sync/feeds`
   - `POST /api/internal/sync/youtube`
+  - `POST /api/internal/videos/download` (used by LambdaVideoDownloader via SSM)
   - `POST /api/internal/costs/refresh` (used by 9F)
 
 ### SpringJobScheduler on AWS
