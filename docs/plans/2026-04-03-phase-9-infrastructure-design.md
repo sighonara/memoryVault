@@ -75,19 +75,19 @@ Single-region deployment. One VPC with two public subnets across two AZs (for fu
 
 ### AWS Resources
 
-| Resource        | Config                                                                                        |
-|-----------------|-----------------------------------------------------------------------------------------------|
-| VPC             | 10.0.0.0/16, 2 public subnets in different AZs                                                |
-| EC2             | t3.small, Amazon Linux 2023, Docker pre-installed via user_data                               |
-| RDS             | db.t3.micro, PostgreSQL 16, single-AZ, 20GB gp3                                               |
-| S3              | One bucket, versioning enabled, lifecycle rules (90d → IA, 365d → Glacier Deep Archive)       |
+| Resource        | Config                                                                                                           |
+|-----------------|------------------------------------------------------------------------------------------------------------------|
+| VPC             | 10.0.0.0/16, 2 public subnets in different AZs                                                                   |
+| EC2             | t3.small, Amazon Linux 2023, Docker pre-installed via user_data                                                  |
+| RDS             | db.t3.micro, PostgreSQL 16, single-AZ, 20GB gp3                                                                  |
+| S3              | One bucket, versioning enabled, lifecycle rules (90d → IA, 365d → Glacier Deep Archive)                          |
 | Caddy           | Reverse proxy on EC2. HTTPS via Let's Encrypt (auto-renewing). Proxies 443 → localhost:8085, redirects 80 → 443. |
-| Route 53        | Hosted zone + A record pointing to EC2 Elastic IP. Domain registered through Route 53.        |
-| Elastic IP      | Static IP for EC2 so DNS records don't change on instance restart                             |
-| ECR             | Repository for the Spring Boot Docker image                                                   |
-| Security Groups | EC2: 80/443 from anywhere (Caddy), 22 from your IP. RDS: 5432 from EC2 only.                  |
-| IAM             | EC2 instance role with S3, CloudWatch Logs, ECR pull, SSM permissions                         |
-| SSM             | For deploy commands — no SSH needed for deploys                                               |
+| Route 53        | Hosted zone + A record pointing to EC2 Elastic IP. Domain registered through Route 53.                           |
+| Elastic IP      | Static IP for EC2 so DNS records don't change on instance restart                                                |
+| ECR             | Repository for the Spring Boot Docker image                                                                      |
+| Security Groups | EC2: 80/443 from anywhere (Caddy), 22 from your IP. RDS: 5432 from EC2 only.                                     |
+| IAM             | EC2 instance role with S3, CloudWatch Logs, ECR pull, SSM permissions                                            |
+| SSM             | For deploy commands — no SSH needed for deploys                                                                  |
 
 ### Terraform Structure
 
