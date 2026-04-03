@@ -8,7 +8,7 @@ import java.nio.file.Files
 import java.util.UUID
 
 @Component
-@Profile("!aws")
+@Profile("local | test")
 class LocalVideoDownloader(
     private val ytDlpService: YtDlpService,
     private val storageService: StorageService
