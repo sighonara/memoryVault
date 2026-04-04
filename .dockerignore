@@ -1,0 +1,11 @@
+.git
+.gradle
+.idea
+build
+client/node_modules
+client/dist
+client/.angular
+terraform
+lambdas
+docs
+*.md
