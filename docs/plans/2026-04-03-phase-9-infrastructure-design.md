@@ -134,6 +134,8 @@ Shell script that runs on first boot:
 
 ## 9B: CI/CD Pipeline
 
+> **Implementation note:** 9B was implemented directly from this design spec without a separate implementation plan — the scope was small enough (two workflow files + deploy script + user_data update) that a detailed task breakdown was unnecessary.
+
 ### GitHub Actions Workflows
 
 **`ci.yml` — runs on every push and PR:**

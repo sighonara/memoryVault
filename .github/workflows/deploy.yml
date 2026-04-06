@@ -1,0 +1,59 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Docker image
+        env:
+          ECR_REPO: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/memoryvault
+        run: |
+          docker build -t "$ECR_REPO:${{ github.sha }}" -t "$ECR_REPO:latest" .
+          docker push "$ECR_REPO:${{ github.sha }}"
+          docker push "$ECR_REPO:latest"
+
+      - name: Deploy to EC2 via SSM
+        env:
+          ECR_REPO: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/memoryvault
+          INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
+          REGION: ${{ secrets.AWS_REGION }}
+          ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+        run: |
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --comment "Deploy memoryvault ${{ github.sha }}" \
+            --parameters commands="[
+              \"aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com\",
+              \"docker pull $ECR_REPO:latest\",
+              \"docker stop memoryvault || true\",
+              \"docker rm memoryvault || true\",
+              \"docker run -d --name memoryvault --restart unless-stopped -p 8085:8085 -v /var/log/memoryvault:/app/logs --env-file /etc/memoryvault/env $ECR_REPO:latest\"
+            ]" \
+            --query "Command.CommandId" --output text)
+          echo "SSM Command ID: $COMMAND_ID"
+          aws ssm wait command-executed \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" || true
+
+      - name: Smoke test
+        run: ./scripts/smoke-test.sh https://mem-vault.com

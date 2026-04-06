@@ -64,6 +64,24 @@ pip3 install yt-dlp
 systemctl enable amazon-ssm-agent
 systemctl start amazon-ssm-agent
 
+# --- Environment file for app container (reused by deploy script) ---
+mkdir -p /etc/memoryvault
+cat > /etc/memoryvault/env <<'ENVFILE'
+SPRING_PROFILES_ACTIVE=aws,prod
+SPRING_DATASOURCE_URL=jdbc:postgresql://${db_endpoint}/memoryvault
+SPRING_DATASOURCE_USERNAME=${db_username}
+SPRING_DATASOURCE_PASSWORD=${db_password}
+MEMORYVAULT_JWT_SECRET=${jwt_secret}
+MEMORYVAULT_CORS_ALLOWED__ORIGINS=https://${domain_name}
+MEMORYVAULT_STORAGE_S3__BUCKET=${s3_bucket}
+MEMORYVAULT_STORAGE_S3__REGION=${region}
+MEMORYVAULT_LOGGING_CLOUDWATCH__LOG__GROUP=${cloudwatch_log_group}
+MEMORYVAULT_LOGGING_CLOUDWATCH__REGION=${region}
+MEMORYVAULT_WEBSOCKET_ALLOWED__ORIGINS=https://${domain_name}
+INTERNAL_API_KEY=${internal_api_key}
+ENVFILE
+chmod 600 /etc/memoryvault/env
+
 # --- Pull and run the application ---
 REGION="${region}"
 ACCOUNT_ID="${account_id}"
@@ -82,18 +100,7 @@ docker run -d \
   --restart unless-stopped \
   -p 8085:8085 \
   -v /var/log/memoryvault:/app/logs \
-  -e SPRING_PROFILES_ACTIVE=aws,prod \
-  -e SPRING_DATASOURCE_URL="jdbc:postgresql://${db_endpoint}/memoryvault" \
-  -e SPRING_DATASOURCE_USERNAME="${db_username}" \
-  -e SPRING_DATASOURCE_PASSWORD="${db_password}" \
-  -e MEMORYVAULT_JWT_SECRET="${jwt_secret}" \
-  -e MEMORYVAULT_CORS_ALLOWED__ORIGINS="https://${domain_name}" \
-  -e MEMORYVAULT_STORAGE_S3__BUCKET="${s3_bucket}" \
-  -e MEMORYVAULT_STORAGE_S3__REGION="${region}" \
-  -e MEMORYVAULT_LOGGING_CLOUDWATCH__LOG__GROUP="${cloudwatch_log_group}" \
-  -e MEMORYVAULT_LOGGING_CLOUDWATCH__REGION="${region}" \
-  -e MEMORYVAULT_WEBSOCKET_ALLOWED__ORIGINS="https://${domain_name}" \
-  -e INTERNAL_API_KEY="${internal_api_key}" \
+  --env-file /etc/memoryvault/env \
   "$ECR_REPO:latest"
 
 echo "=== MemoryVault EC2 setup complete ==="
