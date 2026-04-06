@@ -20,6 +20,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "content" {
   rule {
     id     = "transition-to-ia"
     status = "Enabled"
+    filter {}
 
     transition {
       days          = 90

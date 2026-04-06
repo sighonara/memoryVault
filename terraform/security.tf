@@ -18,7 +18,7 @@ resource "aws_security_group" "ec2" {
     to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "HTTPS (Caddy with Let's Encrypt)"
+    description = "HTTPS (Caddy with LetsEncrypt)"
   }
 
   # SSH (restricted to your IP)
