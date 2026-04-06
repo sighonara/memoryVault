@@ -57,7 +57,9 @@ CW_CONFIG
   -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
 
 # --- yt-dlp + ffmpeg ---
-dnf install -y python3-pip ffmpeg-free
+dnf install -y python3-pip
+# ffmpeg-free is not in AL2023 default repos; install from amazon-linux-extras or skip
+# yt-dlp works without ffmpeg (just can't merge formats)
 pip3 install yt-dlp
 
 # --- SSM Agent (usually pre-installed on Amazon Linux 2023) ---
