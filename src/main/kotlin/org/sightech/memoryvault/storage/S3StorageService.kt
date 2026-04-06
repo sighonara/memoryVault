@@ -1,57 +1,70 @@
 package org.sightech.memoryvault.storage
 
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
+import software.amazon.awssdk.core.sync.RequestBody
+import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.services.s3.model.*
 import java.io.InputStream
-
-// AWS S3 implementation of StorageService.
-//
-// When activated (spring.profiles.active=aws), this replaces LocalStorageService.
-//
-// Implementation notes for Phase 6:
-// - Use AWS SDK v2 S3Client (software.amazon.awssdk:s3)
-// - Configure via properties:
-//     memoryvault.storage.s3-bucket=memoryvault-storage
-//     memoryvault.storage.s3-region=us-east-1
-// - store(): Use S3Client.putObject() for small files, S3TransferManager for large videos
-//   (multipart upload threshold ~100MB). The key becomes the S3 object key.
-// - retrieve(): Use S3Client.getObject() to return an InputStream. For web UI access,
-//   consider generating pre-signed URLs (S3Presigner) with 1-hour expiry instead.
-// - delete(): Use S3Client.deleteObject()
-// - exists(): Use S3Client.headObject(), catch NoSuchKeyException
-// - Consider S3 lifecycle policies for cost optimization:
-//   - Move to Infrequent Access after 90 days
-//   - Move to Glacier Deep Archive after 365 days (videos unlikely to be re-watched)
-// - Bucket should have versioning enabled for accidental deletion protection
 
 @Component
 @Profile("aws")
-class S3StorageService : StorageService {
+class S3StorageService(
+    private val s3Client: S3Client,
+    @Value("\${memoryvault.storage.s3-bucket}")
+    private val bucket: String
+) : StorageService {
 
-    private val logger = LoggerFactory.getLogger(S3StorageService::class.java)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun store(key: String, inputStream: InputStream): String {
-        logger.warn("S3StorageService.store() is a stub — AWS implementation pending (Phase 6)")
-        throw UnsupportedOperationException("S3 storage not yet implemented. Use 'local' profile for development.")
+        val bytes = inputStream.readAllBytes()
+        s3Client.putObject(
+            PutObjectRequest.builder().bucket(bucket).key(key).build(),
+            RequestBody.fromBytes(bytes)
+        )
+        log.info("Stored object: s3://{}/{} ({} bytes)", bucket, key, bytes.size)
+        return key
     }
 
     override fun retrieve(key: String): InputStream {
-        throw UnsupportedOperationException("S3 storage not yet implemented. Use 'local' profile for development.")
+        return s3Client.getObject(
+            GetObjectRequest.builder().bucket(bucket).key(key).build()
+        )
     }
 
     override fun delete(key: String) {
-        throw UnsupportedOperationException("S3 storage not yet implemented. Use 'local' profile for development.")
+        s3Client.deleteObject(
+            DeleteObjectRequest.builder().bucket(bucket).key(key).build()
+        )
+        log.info("Deleted object: s3://{}/{}", bucket, key)
     }
 
     override fun exists(key: String): Boolean {
-        throw UnsupportedOperationException("S3 storage not yet implemented. Use 'local' profile for development.")
+        return try {
+            s3Client.headObject(
+                HeadObjectRequest.builder().bucket(bucket).key(key).build()
+            )
+            true
+        } catch (e: NoSuchKeyException) {
+            false
+        }
     }
 
-    // TODO: Phase 6 — use CloudWatch GetMetricData for BucketSizeBytes,
-    //  or S3 inventory reports for bucket-level size tracking.
     override fun usedBytes(): Long {
-        logger.warn("S3StorageService.usedBytes() is a stub — AWS implementation pending (Phase 6)")
-        return 0
+        var totalSize = 0L
+        var continuationToken: String? = null
+        do {
+            val request = ListObjectsV2Request.builder()
+                .bucket(bucket)
+                .apply { continuationToken?.let { continuationToken(it) } }
+                .build()
+            val response = s3Client.listObjectsV2(request)
+            totalSize += response.contents().sumOf { it.size() }
+            continuationToken = if (response.isTruncated()) response.nextContinuationToken() else null
+        } while (continuationToken != null)
+        return totalSize
     }
 }
