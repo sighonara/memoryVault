@@ -242,6 +242,13 @@ Archived YouTube videos are automatically backed up to a configurable secondary 
 
 ---
 
+## Tech Debt
+
+- **Jackson 3.x `asText()`/`textValue()` deprecation warnings** — 27 compiler warnings across `IngestService.kt`, `LocalLogService.kt`, and `YtDlpService.kt`. Jackson 3.x (bundled with Spring Boot 4.x) deprecated `JsonNode.asText()` and `textValue()`. Migrate to the replacement API.
+- **scaffold-entity skill modified in-place** — entity design conventions (enums, JSONB, field patterns) were added directly to `.claude/skills/scaffold-entity.md`, which is an externally installed skill. Extract into a project-owned skill or doc so upstream updates don't conflict.
+
+---
+
 ## Notes
 
 - **Browser extension for two-way bookmark sync** — push bookmarks directly into browser without manual HTML import. Deferred from Phase 6.
