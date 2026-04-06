@@ -25,11 +25,16 @@ class YtDlpService(private val objectMapper: ObjectMapper) {
     private val logger = LoggerFactory.getLogger(YtDlpService::class.java)
 
     fun fetchPlaylistMetadata(playlistUrl: String): List<VideoMetadata> {
-        val process = ProcessBuilder(
-            "yt-dlp", "--flat-playlist", "--dump-json", playlistUrl
-        )
-            .redirectErrorStream(false)
-            .start()
+        val process = try {
+            ProcessBuilder(
+                "yt-dlp", "--flat-playlist", "--dump-json", playlistUrl
+            )
+                .redirectErrorStream(false)
+                .start()
+        } catch (e: java.io.IOException) {
+            logger.error("Failed to start yt-dlp: {}", e.message)
+            throw RuntimeException("yt-dlp not found or failed to start: ${e.message}", e)
+        }
 
         val output = process.inputStream.bufferedReader().readText()
         val exitCode = process.waitFor()
@@ -63,11 +68,16 @@ class YtDlpService(private val objectMapper: ObjectMapper) {
     fun downloadVideo(videoUrl: String, outputPath: String): DownloadResult {
         logger.info("Downloading video: {} -> {}", videoUrl, outputPath)
 
-        val process = ProcessBuilder(
-            "yt-dlp", "-o", outputPath, videoUrl
-        )
-            .redirectErrorStream(false)
-            .start()
+        val process = try {
+            ProcessBuilder(
+                "yt-dlp", "-o", outputPath, videoUrl
+            )
+                .redirectErrorStream(false)
+                .start()
+        } catch (e: java.io.IOException) {
+            logger.error("Failed to start yt-dlp: {}", e.message)
+            return DownloadResult(success = false, error = "yt-dlp not found or failed to start: ${e.message}")
+        }
 
         val exitCode = process.waitFor()
 
