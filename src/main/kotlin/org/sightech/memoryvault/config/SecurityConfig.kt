@@ -33,6 +33,7 @@ class SecurityConfig(
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/graphiql/**").permitAll()
                     .requestMatchers("/ws/**").permitAll()
+                    .requestMatchers("/", "/index.html", "/*.js", "/*.css", "/*.ico", "/*.png", "/*.svg", "/*.woff2", "/assets/**", "/media/**").permitAll()
                     .anyRequest().authenticated()
             }
             .exceptionHandling { ex ->
