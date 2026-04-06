@@ -70,16 +70,15 @@ systemctl start amazon-ssm-agent
 mkdir -p /etc/memoryvault
 cat > /etc/memoryvault/env <<'ENVFILE'
 SPRING_PROFILES_ACTIVE=aws,prod
-SPRING_DATASOURCE_URL=jdbc:postgresql://${db_endpoint}/memoryvault
-SPRING_DATASOURCE_USERNAME=${db_username}
-SPRING_DATASOURCE_PASSWORD=${db_password}
-MEMORYVAULT_JWT_SECRET=${jwt_secret}
-MEMORYVAULT_CORS_ALLOWED__ORIGINS=https://${domain_name}
+DATABASE_URL=jdbc:postgresql://${db_endpoint}/memoryvault
+DATABASE_USERNAME=${db_username}
+DATABASE_PASSWORD=${db_password}
+JWT_SECRET=${jwt_secret}
+CORS_ALLOWED_ORIGINS=https://${domain_name}
 MEMORYVAULT_STORAGE_S3__BUCKET=${s3_bucket}
 MEMORYVAULT_STORAGE_S3__REGION=${region}
 MEMORYVAULT_LOGGING_CLOUDWATCH__LOG__GROUP=${cloudwatch_log_group}
 MEMORYVAULT_LOGGING_CLOUDWATCH__REGION=${region}
-MEMORYVAULT_WEBSOCKET_ALLOWED__ORIGINS=https://${domain_name}
 INTERNAL_API_KEY=${internal_api_key}
 ENVFILE
 chmod 600 /etc/memoryvault/env
