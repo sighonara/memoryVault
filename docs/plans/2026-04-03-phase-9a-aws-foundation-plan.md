@@ -1423,20 +1423,20 @@ git add docs/plans/2026-03-05-tooling-first-design.md && git commit -m "docs: ma
 
 ## Summary Table
 
-| Task | Description | Key Files |
-|------|-------------|-----------|
-| 1 | Profile naming migration (dev → local) | `application.properties`, `application-local.properties`, 5 Kotlin files |
-| 2 | Dockerfile | `Dockerfile`, `.dockerignore` |
-| 3 | Terraform bootstrap | `terraform/bootstrap/bootstrap.sh`, `terraform/bootstrap/README.md` |
-| 4 | Terraform provider and variables | `terraform/main.tf`, `terraform/variables.tf` |
-| 5 | VPC and networking | `terraform/vpc.tf` |
-| 6 | Security groups | `terraform/security.tf` |
-| 7 | IAM roles and instance profile | `terraform/iam.tf` |
-| 8 | S3 bucket | `terraform/s3.tf` |
-| 9 | ECR repository | `terraform/ecr.tf` |
-| 10 | RDS PostgreSQL | `terraform/rds.tf` |
-| 11 | Route 53 DNS and Elastic IP | `terraform/dns.tf` |
-| 12 | EC2 instance with user_data | `terraform/ec2.tf`, `terraform/templates/user_data.sh` |
-| 13 | Terraform outputs | `terraform/outputs.tf` |
-| 14 | Terraform tfvars example and .gitignore | `terraform/terraform.tfvars.example`, `.gitignore` |
-| 15 | Update master roadmap | `docs/plans/2026-03-05-tooling-first-design.md` |
+| Task  | Description                             | Key Files                                                                |
+|-------|-----------------------------------------|--------------------------------------------------------------------------|
+| 1     | Profile naming migration (dev → local)  | `application.properties`, `application-local.properties`, 5 Kotlin files |
+| 2     | Dockerfile                              | `Dockerfile`, `.dockerignore`                                            |
+| 3     | Terraform bootstrap                     | `terraform/bootstrap/bootstrap.sh`, `terraform/bootstrap/README.md`      |
+| 4     | Terraform provider and variables        | `terraform/main.tf`, `terraform/variables.tf`                            |
+| 5     | VPC and networking                      | `terraform/vpc.tf`                                                       |
+| 6     | Security groups                         | `terraform/security.tf`                                                  |
+| 7     | IAM roles and instance profile          | `terraform/iam.tf`                                                       |
+| 8     | S3 bucket                               | `terraform/s3.tf`                                                        |
+| 9     | ECR repository                          | `terraform/ecr.tf`                                                       |
+| 10    | RDS PostgreSQL                          | `terraform/rds.tf`                                                       |
+| 11    | Route 53 DNS and Elastic IP             | `terraform/dns.tf`                                                       |
+| 12    | EC2 instance with user_data             | `terraform/ec2.tf`, `terraform/templates/user_data.sh`                   |
+| 13    | Terraform outputs                       | `terraform/outputs.tf`                                                   |
+| 14    | Terraform tfvars example and .gitignore | `terraform/terraform.tfvars.example`, `.gitignore`                       |
+| 15    | Update master roadmap                   | `docs/plans/2026-03-05-tooling-first-design.md`                          |

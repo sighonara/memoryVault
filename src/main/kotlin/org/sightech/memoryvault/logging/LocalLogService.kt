@@ -9,7 +9,7 @@ import java.nio.file.Path
 import java.time.Instant
 
 @Component
-@Profile("!aws")
+@Profile("local | test")
 class LocalLogService(
     @Value("\${memoryvault.logging.path:\${user.home}/.memoryvault/logs}/memoryvault.log")
     private val logFilePath: String

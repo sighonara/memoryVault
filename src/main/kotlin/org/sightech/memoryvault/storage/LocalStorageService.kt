@@ -10,7 +10,7 @@ import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 
 @Component
-@Profile("!aws")
+@Profile("local | test")
 class LocalStorageService(
     @Value("\${memoryvault.storage.local-path:\${user.home}/.memoryvault/storage}")
     private val basePath: String

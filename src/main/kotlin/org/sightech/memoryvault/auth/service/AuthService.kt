@@ -6,7 +6,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
 
 @Service
-@Profile("!aws")
+@Profile("local | test")
 class AuthService(
     private val userService: UserService,
     private val jwtService: JwtService,

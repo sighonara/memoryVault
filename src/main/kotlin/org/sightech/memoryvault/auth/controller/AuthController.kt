@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api/auth")
-@Profile("!aws")
+@Profile("local | test")
 class AuthController(private val authService: AuthService) {
 
     @PostMapping("/login")
