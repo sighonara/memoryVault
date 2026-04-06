@@ -1,0 +1,14 @@
+# Copy this file to terraform.tfvars and fill in the values.
+# terraform.tfvars is gitignored — it contains secrets.
+
+aws_region            = "us-east-1"
+domain_name           = "memoryvault.example.com"
+ec2_instance_type     = "t3.small"
+rds_instance_class    = "db.t3.micro"
+rds_allocated_storage = 20
+db_username           = "memoryvault"
+db_password           = "CHANGE_ME_strong_password_here"
+ssh_allowed_cidr      = "YOUR_IP/32"
+ec2_key_pair_name     = "memoryvault-key"
+jwt_secret            = "CHANGE_ME_at_least_256_bits_long_for_hs256_signing"
+internal_api_key      = "CHANGE_ME_random_uuid_or_long_string"
