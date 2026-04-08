@@ -98,6 +98,13 @@ describe('AuthService', () => {
       service.setToken(makeJwt({ exp: pastExp }));
       expect(service.isAuthenticated()).toBe(false);
     });
+
+    it('should purge an expired token from storage', () => {
+      const pastExp = Math.floor(Date.now() / 1000) - 3600;
+      service.setToken(makeJwt({ exp: pastExp }));
+      service.isAuthenticated();
+      expect(service.getToken()).toBeNull();
+    });
   });
 
   describe('login', () => {

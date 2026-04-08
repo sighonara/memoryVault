@@ -19,8 +19,8 @@ export class WebSocketService implements OnDestroy {
   connect(): void {
     if (this.rxStomp) return;
 
-    const token = this.authService.getToken();
-    if (!token) return;
+    if (!this.authService.isAuthenticated()) return;
+    const token = this.authService.getToken()!;
 
     this.rxStomp = new RxStomp();
     this.rxStomp.configure({
