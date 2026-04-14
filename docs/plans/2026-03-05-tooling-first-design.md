@@ -240,6 +240,9 @@ Terraform, GitHub Actions CI/CD, production AWS deployment (EC2, RDS, S3, Lambda
 ### Phase 10 — Cross-Platform Video Backup
 Archived YouTube videos are automatically backed up to a configurable secondary video platform (Rumble, Vimeo, etc.). If the video doesn't already exist on the target platform, MemoryVault uploads it. Ensures resilience against YouTube takedowns/deletions.
 
+### Phase 11 — Public Self-Signup (OldReader Parity)
+Open self-service account creation via Cognito-hosted signup, gated behind a payment wall (Stripe or similar) to deter spam/abuse. Includes: signup page in Angular, Cognito `allow_admin_create_user_only = false` configuration, payment integration before account activation, email verification flow, and a minimal user-management admin view. Mirrors The Old Reader's open-registration model. Depends on Phase 9D (Cognito) being complete.
+
 ---
 
 ## Tech Debt

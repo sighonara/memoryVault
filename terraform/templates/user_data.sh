@@ -56,6 +56,9 @@ CW_CONFIG
   -a fetch-config -m ec2 \
   -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
 
+# --- PostgreSQL client (for operational debugging against RDS) ---
+dnf install -y postgresql16
+
 # --- yt-dlp + ffmpeg ---
 dnf install -y python3-pip
 # ffmpeg-free is not in AL2023 default repos; install from amazon-linux-extras or skip

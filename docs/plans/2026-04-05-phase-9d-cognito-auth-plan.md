@@ -12,6 +12,25 @@
 
 ---
 
+### User creation model (Phase 9D scope)
+
+Phase 9D is **invite-only**: only the seed admin script creates users, and ongoing user creation happens via a separate admin path (MCP tool / Cognito console) added later if needed. The Terraform `aws_cognito_user_pool` must set `admin_create_user_config.allow_admin_create_user_only = true` to enforce this — self-signup is explicitly out of scope here.
+
+Public self-signup (with a payment wall to deter abuse) is tracked as **Phase 11 — Public Self-Signup (OldReader Parity)** in the master roadmap. Do not enable self-signup or build signup UI in this phase.
+
+---
+
+### Pre-existing cleanup required when this phase starts
+
+During Phase 9 deploy hardening (April 2026), `@Profile("local | test")` was **removed** from `AuthController` and `AuthService` so that `/api/auth/login` would be reachable on the AWS-hosted deploy (needed by the expanded smoke test and for manual login against the local-JWT auth that was still in place). Search for `TODO(phase-9d)` in those files.
+
+When implementing this phase:
+- Restore `@Profile("local | test")` on `AuthController`, `AuthService`, `JwtAuthenticationFilter` (Step 5) per the sections below.
+- Delete the `TODO(phase-9d)` markers once the gate is back in place.
+- The smoke test hardcodes `system@memoryvault.local` / `memoryvault`. Before Cognito goes live in prod, update `scripts/smoke-test.sh` to authenticate via Cognito (or split the smoke test into local-auth and cognito-auth variants selected by the target URL).
+
+---
+
 ### Task 1: Cognito User Pool Terraform
 
 **Files:**
