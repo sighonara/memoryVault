@@ -25,24 +25,24 @@ Phase 6 upgrades the bookmark system from a flat, manually-managed list to a ful
 
 ### New Entity: Folder
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | UUID | PK, gen_random_uuid() |
-| `name` | VARCHAR(255) | NOT NULL |
-| `parent_id` | UUID | Nullable FK to folders.id (null = root) |
-| `user_id` | UUID | FK to users.id |
-| `sort_order` | INT | Position among siblings |
-| `created_at` | TIMESTAMPTZ | NOT NULL |
-| `updated_at` | TIMESTAMPTZ | NOT NULL |
-| `deleted_at` | TIMESTAMPTZ | Nullable, soft delete |
-| `version` | BIGINT | Optimistic locking |
+| Column       | Type         | Notes                                   |
+|--------------|--------------|-----------------------------------------|
+| `id`         | UUID         | PK, gen_random_uuid()                   |
+| `name`       | VARCHAR(255) | NOT NULL                                |
+| `parent_id`  | UUID         | Nullable FK to folders.id (null = root) |
+| `user_id`    | UUID         | FK to users.id                          |
+| `sort_order` | INT          | Position among siblings                 |
+| `created_at` | TIMESTAMPTZ  | NOT NULL                                |
+| `updated_at` | TIMESTAMPTZ  | NOT NULL                                |
+| `deleted_at` | TIMESTAMPTZ  | Nullable, soft delete                   |
+| `version`    | BIGINT       | Optimistic locking                      |
 
 ### Bookmark Changes
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `folder_id` | UUID | Nullable FK to folders.id (null = unfiled) |
-| `sort_order` | INT | Position within folder |
+| Column           | Type          | Notes                                                                                                                  |
+|------------------|---------------|------------------------------------------------------------------------------------------------------------------------|
+| `folder_id`      | UUID          | Nullable FK to folders.id (null = unfiled)                                                                             |
+| `sort_order`     | INT           | Position within folder                                                                                                 |
 | `normalized_url` | VARCHAR(2048) | Normalized form of URL for ingest dedup (lowercase scheme/host, strip trailing slash, sort query params, strip `www.`) |
 
 ### Flyway Migration (V5)
@@ -70,12 +70,12 @@ Note: V4 already exists (`V4__auth_password.sql`).
 
 ### Conflict Types
 
-| Status | Meaning |
-|--------|---------|
-| `NEW` | Bookmark exists in browser but not in MemoryVault |
-| `UNCHANGED` | Identical in both, no action needed |
-| `MOVED` | Same bookmark, different folder |
-| `TITLE_CHANGED` | Same URL, different title |
+| Status               | Meaning                                                       |
+|----------------------|---------------------------------------------------------------|
+| `NEW`                | Bookmark exists in browser but not in MemoryVault             |
+| `UNCHANGED`          | Identical in both, no action needed                           |
+| `MOVED`              | Same bookmark, different folder                               |
+| `TITLE_CHANGED`      | Same URL, different title                                     |
 | `PREVIOUSLY_DELETED` | Bookmark was soft-deleted in MemoryVault but still in browser |
 
 ### IngestPreview Response
@@ -124,20 +124,20 @@ The Angular frontend already holds the JWT token (from auth) and knows the API U
 
 ### Supported Browsers
 
-| Browser | OS | Bookmark Source |
-|---------|-----|----------------|
-| Chrome | macOS | `~/Library/Application Support/Google/Chrome/Default/Bookmarks` (JSON) |
-| Chrome | Linux | `~/.config/google-chrome/Default/Bookmarks` (JSON) |
-| Chrome | Windows | `%LOCALAPPDATA%\Google\Chrome\User Data\Default\Bookmarks` (JSON) |
-| Firefox | macOS | `~/Library/Application Support/Firefox/Profiles/*.default-release/places.sqlite` |
-| Firefox | Linux | `~/.mozilla/firefox/*.default-release/places.sqlite` |
-| Firefox | Windows | `%APPDATA%\Mozilla\Firefox\Profiles\*.default-release\places.sqlite` |
-| Safari | macOS | `~/Library/Safari/Bookmarks.plist` (binary plist, parsed via `plutil`) |
-| Opera | macOS | `~/Library/Application Support/com.operasoftware.Opera/Bookmarks` (JSON) |
-| Opera | Linux | `~/.config/opera/Bookmarks` (JSON) |
-| Opera | Windows | `%APPDATA%\Opera Software\Opera Stable\Bookmarks` (JSON) |
-| Edge | macOS/Linux/Windows | Chromium JSON format, browser-specific paths |
-| Brave | macOS/Linux/Windows | Chromium JSON format, browser-specific paths |
+| Browser  | OS                  | Bookmark Source                                                                  |
+|----------|---------------------|----------------------------------------------------------------------------------|
+| Chrome   | macOS               | `~/Library/Application Support/Google/Chrome/Default/Bookmarks` (JSON)           |
+| Chrome   | Linux               | `~/.config/google-chrome/Default/Bookmarks` (JSON)                               |
+| Chrome   | Windows             | `%LOCALAPPDATA%\Google\Chrome\User Data\Default\Bookmarks` (JSON)                |
+| Firefox  | macOS               | `~/Library/Application Support/Firefox/Profiles/*.default-release/places.sqlite` |
+| Firefox  | Linux               | `~/.mozilla/firefox/*.default-release/places.sqlite`                             |
+| Firefox  | Windows             | `%APPDATA%\Mozilla\Firefox\Profiles\*.default-release\places.sqlite`             |
+| Safari   | macOS               | `~/Library/Safari/Bookmarks.plist` (binary plist, parsed via `plutil`)           |
+| Opera    | macOS               | `~/Library/Application Support/com.operasoftware.Opera/Bookmarks` (JSON)         |
+| Opera    | Linux               | `~/.config/opera/Bookmarks` (JSON)                                               |
+| Opera    | Windows             | `%APPDATA%\Opera Software\Opera Stable\Bookmarks` (JSON)                         |
+| Edge     | macOS/Linux/Windows | Chromium JSON format, browser-specific paths                                     |
+| Brave    | macOS/Linux/Windows | Chromium JSON format, browser-specific paths                                     |
 
 Chromium-based browsers (Chrome, Opera, Edge, Brave, Vivaldi, Arc) share the same JSON format — only the file path differs.
 
@@ -335,10 +335,10 @@ The ingest flow uses REST throughout (CLI POSTs bookmark data, Angular fetches t
 
 ## Service Layer
 
-| Service | Responsibility |
-|---------|---------------|
+| Service           | Responsibility                                                                                                                                                                                       |
+|-------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `BookmarkService` | Bookmark CRUD, folder CRUD, tree traversal, cycle detection on `moveFolder` (recursive CTE ancestor walk — returns GraphQL error "Cannot move a folder into its own descendant"), reordering, export |
-| `IngestService` | Parse browser formats (Chrome JSON, Firefox SQLite, Safari plist), URL normalization, diff against existing bookmarks, generate and store preview, apply committed resolutions |
+| `IngestService`   | Parse browser formats (Chrome JSON, Firefox SQLite, Safari plist), URL normalization, diff against existing bookmarks, generate and store preview, apply committed resolutions                       |
 
 ## Future Work
 

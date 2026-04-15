@@ -592,12 +592,12 @@ git add terraform/lambda.tf terraform/variables.tf terraform/terraform.tfvars.ex
 
 ## Summary Table
 
-| Task | Description | Key Files |
-|------|-------------|-----------|
-| 1 | SSM SDK dependency | `build.gradle.kts` |
-| 2 | InternalApiKeyFilter | `config/InternalApiKeyFilter.kt`, `SecurityConfig.kt` |
-| 3 | InternalSyncController (feeds + YouTube) | `sync/controller/InternalSyncController.kt` |
-| 4 | Video download internal endpoint + yt-dlp auto-update | `InternalSyncController.kt` |
-| 5 | LambdaVideoDownloader (SSM dispatch) | `youtube/service/LambdaVideoDownloader.kt`, `AwsConfig.kt` |
-| 6 | Python Lambda functions | `lambdas/feed-sync/`, `lambdas/youtube-sync/` |
-| 7 | Terraform Lambda + EventBridge | `terraform/lambda.tf`, `terraform/variables.tf` |
+| Task  | Description                                           | Key Files                                                  |
+|-------|-------------------------------------------------------|------------------------------------------------------------|
+| 1     | SSM SDK dependency                                    | `build.gradle.kts`                                         |
+| 2     | InternalApiKeyFilter                                  | `config/InternalApiKeyFilter.kt`, `SecurityConfig.kt`      |
+| 3     | InternalSyncController (feeds + YouTube)              | `sync/controller/InternalSyncController.kt`                |
+| 4     | Video download internal endpoint + yt-dlp auto-update | `InternalSyncController.kt`                                |
+| 5     | LambdaVideoDownloader (SSM dispatch)                  | `youtube/service/LambdaVideoDownloader.kt`, `AwsConfig.kt` |
+| 6     | Python Lambda functions                               | `lambdas/feed-sync/`, `lambdas/youtube-sync/`              |
+| 7     | Terraform Lambda + EventBridge                        | `terraform/lambda.tf`, `terraform/variables.tf`            |

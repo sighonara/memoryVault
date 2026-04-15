@@ -17,7 +17,7 @@
 **Files:**
 - Modify: `build.gradle.kts`
 
-- [ ] **Step 1: Add AWS SDK BOM and dependencies**
+- [x] **Step 1: Add AWS SDK BOM and dependencies**
 
 In `build.gradle.kts`, add after the RSS dependencies block (line ~53):
 
@@ -28,7 +28,7 @@ implementation("software.amazon.awssdk:s3")
 implementation("software.amazon.awssdk:cloudwatchlogs")
 ```
 
-- [ ] **Step 2: Verify it compiles**
+- [x] **Step 2: Verify it compiles**
 
 ```bash
 ./gradlew compileKotlin
@@ -36,7 +36,7 @@ implementation("software.amazon.awssdk:cloudwatchlogs")
 
 Expected: BUILD SUCCESSFUL
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add build.gradle.kts && git commit -m "feat: add AWS SDK v2 dependencies (S3, CloudWatch Logs)"
@@ -51,7 +51,7 @@ Create a Spring configuration class that provides `S3Client` and `CloudWatchLogs
 **Files:**
 - Create: `src/main/kotlin/org/sightech/memoryvault/config/AwsConfig.kt`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `src/test/kotlin/org/sightech/memoryvault/config/AwsConfigTest.kt`:
 
@@ -80,7 +80,7 @@ class AwsConfigTest {
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 ./gradlew test --tests "*AwsConfigTest"
@@ -88,7 +88,7 @@ class AwsConfigTest {
 
 Expected: FAIL — `AwsConfig` class doesn't exist yet.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Create `src/main/kotlin/org/sightech/memoryvault/config/AwsConfig.kt`:
 
@@ -125,7 +125,7 @@ class AwsConfig {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 ./gradlew test --tests "*AwsConfigTest"
@@ -133,7 +133,7 @@ class AwsConfig {
 
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/config/AwsConfig.kt src/test/kotlin/org/sightech/memoryvault/config/AwsConfigTest.kt && git commit -m "feat: add AwsConfig with S3Client and CloudWatchLogsClient beans"
@@ -149,7 +149,7 @@ Replace the stub with a working implementation using AWS SDK v2.
 - Modify: `src/main/kotlin/org/sightech/memoryvault/storage/S3StorageService.kt`
 - Create: `src/test/kotlin/org/sightech/memoryvault/storage/S3StorageServiceTest.kt`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `src/test/kotlin/org/sightech/memoryvault/storage/S3StorageServiceTest.kt`:
 
@@ -241,7 +241,7 @@ class S3StorageServiceTest {
 }
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 ```bash
 ./gradlew test --tests "*S3StorageServiceTest"
@@ -249,7 +249,7 @@ class S3StorageServiceTest {
 
 Expected: FAIL — S3StorageService constructor doesn't accept these parameters yet.
 
-- [ ] **Step 3: Implement S3StorageService**
+- [x] **Step 3: Implement S3StorageService**
 
 Replace the contents of `src/main/kotlin/org/sightech/memoryvault/storage/S3StorageService.kt`:
 
@@ -326,7 +326,7 @@ class S3StorageService(
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 ```bash
 ./gradlew test --tests "*S3StorageServiceTest"
@@ -334,7 +334,7 @@ class S3StorageService(
 
 Expected: PASS (all 6 tests)
 
-- [ ] **Step 5: Run all tests to verify nothing is broken**
+- [x] **Step 5: Run all tests to verify nothing is broken**
 
 ```bash
 ./gradlew test
@@ -342,7 +342,7 @@ Expected: PASS (all 6 tests)
 
 Expected: All tests pass. Existing tests use `@ActiveProfiles("test")` which loads `LocalStorageService` via `@Profile("local | test")`, so S3StorageService is never activated in tests.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/storage/S3StorageService.kt src/test/kotlin/org/sightech/memoryvault/storage/S3StorageServiceTest.kt && git commit -m "feat: implement S3StorageService with AWS SDK v2"
@@ -358,7 +358,7 @@ Replace the stub with a working implementation using CloudWatch Logs Insights.
 - Modify: `src/main/kotlin/org/sightech/memoryvault/logging/CloudWatchLogService.kt`
 - Create: `src/test/kotlin/org/sightech/memoryvault/logging/CloudWatchLogServiceTest.kt`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `src/test/kotlin/org/sightech/memoryvault/logging/CloudWatchLogServiceTest.kt`:
 
@@ -482,7 +482,7 @@ class CloudWatchLogServiceTest {
 }
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 ```bash
 ./gradlew test --tests "*CloudWatchLogServiceTest"
@@ -490,7 +490,7 @@ class CloudWatchLogServiceTest {
 
 Expected: FAIL — CloudWatchLogService constructor doesn't accept these parameters yet.
 
-- [ ] **Step 3: Implement CloudWatchLogService**
+- [x] **Step 3: Implement CloudWatchLogService**
 
 Replace the contents of `src/main/kotlin/org/sightech/memoryvault/logging/CloudWatchLogService.kt`:
 
@@ -584,7 +584,7 @@ class CloudWatchLogService(
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 ```bash
 ./gradlew test --tests "*CloudWatchLogServiceTest"
@@ -592,7 +592,7 @@ class CloudWatchLogService(
 
 Expected: PASS (all 5 tests)
 
-- [ ] **Step 5: Run all tests**
+- [x] **Step 5: Run all tests**
 
 ```bash
 ./gradlew test
@@ -600,7 +600,7 @@ Expected: PASS (all 5 tests)
 
 Expected: All tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/logging/CloudWatchLogService.kt src/test/kotlin/org/sightech/memoryvault/logging/CloudWatchLogServiceTest.kt && git commit -m "feat: implement CloudWatchLogService with Logs Insights queries"
@@ -615,11 +615,11 @@ Add the AWS-specific config properties to `application-prod.properties` so they'
 **Files:**
 - Modify: `src/main/resources/application-prod.properties`
 
-- [ ] **Step 1: Read current application-prod.properties**
+- [x] **Step 1: Read current application-prod.properties**
 
 Check what's already in the file.
 
-- [ ] **Step 2: Add AWS config properties**
+- [x] **Step 2: Add AWS config properties**
 
 Append to `src/main/resources/application-prod.properties`:
 
@@ -633,7 +633,7 @@ memoryvault.logging.cloudwatch-log-group=${MEMORYVAULT_LOGGING_CLOUDWATCH__LOG__
 memoryvault.logging.cloudwatch-region=${MEMORYVAULT_LOGGING_CLOUDWATCH__REGION:us-east-1}
 ```
 
-- [ ] **Step 3: Run all tests**
+- [x] **Step 3: Run all tests**
 
 ```bash
 ./gradlew test
@@ -641,7 +641,7 @@ memoryvault.logging.cloudwatch-region=${MEMORYVAULT_LOGGING_CLOUDWATCH__REGION:u
 
 Expected: All tests pass. Test profile doesn't load prod properties.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/main/resources/application-prod.properties && git commit -m "feat: add AWS S3 and CloudWatch config properties"
@@ -656,11 +656,11 @@ Mark 9C as complete in the design spec.
 **Files:**
 - Modify: `docs/plans/2026-04-03-phase-9-infrastructure-design.md`
 
-- [ ] **Step 1: Mark 9C complete**
+- [x] **Step 1: Mark 9C complete**
 
 Change the `## 9C: AWS Service Implementations` heading to `## 9C: AWS Service Implementations ✅`
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add docs/plans/2026-04-03-phase-9-infrastructure-design.md && git commit -m "docs: mark Phase 9C as complete"
@@ -670,11 +670,11 @@ git add docs/plans/2026-04-03-phase-9-infrastructure-design.md && git commit -m 
 
 ## Summary Table
 
-| Task | Description | Key Files |
-|------|-------------|-----------|
-| 1 | Add AWS SDK v2 dependencies | `build.gradle.kts` |
-| 2 | AWS SDK config class (S3Client, CloudWatchLogsClient beans) | `config/AwsConfig.kt` |
-| 3 | S3StorageService implementation | `storage/S3StorageService.kt`, `S3StorageServiceTest.kt` |
-| 4 | CloudWatchLogService implementation | `logging/CloudWatchLogService.kt`, `CloudWatchLogServiceTest.kt` |
-| 5 | AWS config properties in application-prod.properties | `application-prod.properties` |
-| 6 | Update design spec | `phase-9-infrastructure-design.md` |
+| Task  | Description                                                 | Key Files                                                        |
+|-------|-------------------------------------------------------------|------------------------------------------------------------------|
+| 1     | Add AWS SDK v2 dependencies                                 | `build.gradle.kts`                                               |
+| 2     | AWS SDK config class (S3Client, CloudWatchLogsClient beans) | `config/AwsConfig.kt`                                            |
+| 3     | S3StorageService implementation                             | `storage/S3StorageService.kt`, `S3StorageServiceTest.kt`         |
+| 4     | CloudWatchLogService implementation                         | `logging/CloudWatchLogService.kt`, `CloudWatchLogServiceTest.kt` |
+| 5     | AWS config properties in application-prod.properties        | `application-prod.properties`                                    |
+| 6     | Update design spec                                          | `phase-9-infrastructure-design.md`                               |

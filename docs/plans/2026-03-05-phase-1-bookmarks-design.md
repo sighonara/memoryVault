@@ -21,18 +21,18 @@ Single migration creates the full data model:
 
 ### Tables
 
-| Table | Notes |
-|-------|-------|
-| `users` | Seed "system" user inserted |
-| `tags` | `user_id` FK, `name`, `color` (nullable) |
-| `bookmarks` | `user_id` FK, `url`, `title`, no archival fields |
-| `bookmark_tags` | Composite PK, FKs to bookmarks + tags |
-| `feeds` | Full schema from design doc |
-| `feed_items` | `read_at` nullable timestamp |
-| `feed_item_tags` | Composite PK, FKs to feed_items + tags |
-| `youtube_lists` | Full schema from design doc |
-| `videos` | `removed_from_youtube` boolean |
-| `video_tags` | Composite PK, FKs to videos + tags |
+| Table            | Notes                                            |
+|------------------|--------------------------------------------------|
+| `users`          | Seed "system" user inserted                      |
+| `tags`           | `user_id` FK, `name`, `color` (nullable)         |
+| `bookmarks`      | `user_id` FK, `url`, `title`, no archival fields |
+| `bookmark_tags`  | Composite PK, FKs to bookmarks + tags            |
+| `feeds`          | Full schema from design doc                      |
+| `feed_items`     | `read_at` nullable timestamp                     |
+| `feed_item_tags` | Composite PK, FKs to feed_items + tags           |
+| `youtube_lists`  | Full schema from design doc                      |
+| `videos`         | `removed_from_youtube` boolean                   |
+| `video_tags`     | Composite PK, FKs to videos + tags               |
 
 All PKs are `UUID DEFAULT gen_random_uuid()`. Soft-deletable entities have `deleted_at TIMESTAMPTZ` and `version BIGINT`.
 
@@ -99,13 +99,13 @@ src/main/kotlin/org/sightech/memoryvault/
 
 ### BookmarkTools.kt
 
-| Tool | Signature | Description |
-|------|-----------|-------------|
-| `addBookmark` | `(url: String, title: String?, tags: List<String>?)` → `String` | Save a URL with optional title and tags |
-| `listBookmarks` | `(query: String?, tags: List<String>?)` → `String` | Search/filter by text or tags |
-| `tagBookmark` | `(bookmarkId: String, tags: List<String>)` → `String` | Replace tags on a bookmark |
-| `deleteBookmark` | `(bookmarkId: String)` → `String` | Soft-delete a bookmark |
-| `exportBookmarks` | `(format: String?)` → `String` | Export as Netscape HTML |
+| Tool              | Signature                                                       | Description                             |
+|-------------------|-----------------------------------------------------------------|-----------------------------------------|
+| `addBookmark`     | `(url: String, title: String?, tags: List<String>?)` → `String` | Save a URL with optional title and tags |
+| `listBookmarks`   | `(query: String?, tags: List<String>?)` → `String`              | Search/filter by text or tags           |
+| `tagBookmark`     | `(bookmarkId: String, tags: List<String>)` → `String`           | Replace tags on a bookmark              |
+| `deleteBookmark`  | `(bookmarkId: String)` → `String`                               | Soft-delete a bookmark                  |
+| `exportBookmarks` | `(format: String?)` → `String`                                  | Export as Netscape HTML                 |
 
 All tools return formatted strings for Claude readability. Tools accept `String` for IDs (parsed to UUID internally).
 

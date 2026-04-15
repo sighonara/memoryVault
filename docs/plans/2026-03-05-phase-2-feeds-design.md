@@ -104,15 +104,15 @@ memoryvault.feeds.sync-cron=-
 
 ### FeedTools.kt — 7 tools
 
-| Tool | Signature | Description |
-|------|-----------|-------------|
-| `addFeed` | `(url: String)` | Subscribe to an RSS feed |
-| `listFeeds` | `()` | List feeds with unread counts |
-| `getFeedItems` | `(feedId: String, limit: Int?, unreadOnly: Boolean?)` | Browse items from a feed |
-| `markItemRead` | `(itemId: String)` | Mark one item as read |
-| `markItemUnread` | `(itemId: String)` | Mark one item as unread |
-| `markFeedRead` | `(feedId: String)` | Mark all items in a feed as read |
-| `refreshFeed` | `(feedId: String?)` | Trigger feed sync |
+| Tool             | Signature                                             | Description                      |
+|------------------|-------------------------------------------------------|----------------------------------|
+| `addFeed`        | `(url: String)`                                       | Subscribe to an RSS feed         |
+| `listFeeds`      | `()`                                                  | List feeds with unread counts    |
+| `getFeedItems`   | `(feedId: String, limit: Int?, unreadOnly: Boolean?)` | Browse items from a feed         |
+| `markItemRead`   | `(itemId: String)`                                    | Mark one item as read            |
+| `markItemUnread` | `(itemId: String)`                                    | Mark one item as unread          |
+| `markFeedRead`   | `(feedId: String)`                                    | Mark all items in a feed as read |
+| `refreshFeed`    | `(feedId: String?)`                                   | Trigger feed sync                |
 
 ## Testing
 

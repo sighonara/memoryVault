@@ -11,12 +11,12 @@ Add cross-cutting features that span all content domains: full-text search, syst
 
 Four new MCP tools:
 
-| Tool | Purpose |
-|---|---|
-| `search(query, types?)` | Full-text search across bookmarks, feed items, videos |
-| `getStats()` | Content counts, storage usage, sync health |
-| `listJobs(type?, limit?)` | Job execution history with metadata |
-| `getLogs(level?, service?, limit?)` | Retrieve structured logs |
+| Tool                                | Purpose                                               |
+|-------------------------------------|-------------------------------------------------------|
+| `search(query, types?)`             | Full-text search across bookmarks, feed items, videos |
+| `getStats()`                        | Content counts, storage usage, sync health            |
+| `listJobs(type?, limit?)`           | Job execution history with metadata                   |
+| `getLogs(level?, service?, limit?)` | Retrieve structured logs                              |
 
 **Not in scope (deferred to Phase 6):**
 - `get_aws_cost` — requires AWS Cost Explorer API
@@ -33,16 +33,16 @@ Add a `search_vector` column (`tsvector`) to `bookmarks`, `feed_items`, and `vid
 
 ### Weight configuration
 
-| Table | Field | Weight |
-|---|---|---|
-| `bookmarks` | `title` | A |
-| `bookmarks` | `url` | B |
-| `feed_items` | `title` | A |
-| `feed_items` | `content` | B |
-| `feed_items` | `author` | C |
-| `videos` | `title` | A |
-| `videos` | `channel_name` | B |
-| `videos` | `description` | C |
+| Table        | Field          | Weight  |
+|--------------|----------------|---------|
+| `bookmarks`  | `title`        | A       |
+| `bookmarks`  | `url`          | B       |
+| `feed_items` | `title`        | A       |
+| `feed_items` | `content`      | B       |
+| `feed_items` | `author`       | C       |
+| `videos`     | `title`        | A       |
+| `videos`     | `channel_name` | B       |
+| `videos`     | `description`  | C       |
 
 ### Query pattern
 

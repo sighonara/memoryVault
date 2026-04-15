@@ -64,13 +64,13 @@ Spring for GraphQL (`spring-boot-starter-graphql`) with `.graphqls` schema files
 
 Located in `src/main/resources/graphql/`:
 
-| File | Content |
-|---|---|
-| `schema.graphqls` | Query/Mutation root types, shared scalars, pagination types |
-| `bookmarks.graphqls` | Bookmark type, queries (list, search), mutations (add, tag, delete, export) |
-| `feeds.graphqls` | Feed, FeedItem types, queries (list feeds, get items), mutations (add, mark read/unread, refresh) |
-| `youtube.graphqls` | YoutubeList, Video types, queries (list, browse, status), mutations (add, refresh, delete) |
-| `admin.graphqls` | SyncJob, LogEntry, SystemStats types, queries (listJobs, getLogs, getStats, search) |
+| File                 | Content                                                                                           |
+|----------------------|---------------------------------------------------------------------------------------------------|
+| `schema.graphqls`    | Query/Mutation root types, shared scalars, pagination types                                       |
+| `bookmarks.graphqls` | Bookmark type, queries (list, search), mutations (add, tag, delete, export)                       |
+| `feeds.graphqls`     | Feed, FeedItem types, queries (list feeds, get items), mutations (add, mark read/unread, refresh) |
+| `youtube.graphqls`   | YoutubeList, Video types, queries (list, browse, status), mutations (add, refresh, delete)        |
+| `admin.graphqls`     | SyncJob, LogEntry, SystemStats types, queries (listJobs, getLogs, getStats, search)               |
 
 ### Resolvers
 
@@ -92,14 +92,14 @@ Located in `src/main/kotlin/org/sightech/memoryvault/graphql/`:
 
 ### Pages
 
-| Route | Page | Description |
-|---|---|---|
-| `/login` | Login | Email + password form, public |
-| `/` | Reader | Google Reader-style feed reader (home/default, auth required) |
-| `/bookmarks` | Bookmarks | List, add, tag, delete, export (auth required) |
-| `/youtube` | YouTube | Playlists, video archive browser (auth required) |
-| `/admin` | Admin | Jobs history, log viewer, system stats (auth required) |
-| `/search` | Search Results | Cross-entity FTS results grouped by type (auth required) |
+| Route        | Page           | Description                                                   |
+|--------------|----------------|---------------------------------------------------------------|
+| `/login`     | Login          | Email + password form, public                                 |
+| `/`          | Reader         | Google Reader-style feed reader (home/default, auth required) |
+| `/bookmarks` | Bookmarks      | List, add, tag, delete, export (auth required)                |
+| `/youtube`   | YouTube        | Playlists, video archive browser (auth required)              |
+| `/admin`     | Admin          | Jobs history, log viewer, system stats (auth required)        |
+| `/search`    | Search Results | Cross-entity FTS results grouped by type (auth required)      |
 
 ### Reader page (home)
 

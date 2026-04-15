@@ -102,10 +102,10 @@ Open http://localhost:4200
 
 ### Local Login
 
-| Field | Value |
-|---|---|
-| Email | `system@memoryvault.local` |
-| Password | `memoryvault` |
+| Field    | Value                      |
+|----------|----------------------------|
+| Email    | `system@memoryvault.local` |
+| Password | `memoryvault`              |
 
 This seed user is created by the V2 + V4 Flyway migrations and has the `OWNER` role. JWT tokens expire after 24 hours. If the app starts returning errors after leaving it open, log out and back in.
 

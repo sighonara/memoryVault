@@ -708,11 +708,11 @@ git add src/main/kotlin/org/sightech/memoryvault/mcp/CostTools.kt src/test/kotli
 
 ## Summary Table
 
-| Task | Description | Key Files |
-|------|-------------|-----------|
-| 1 | Cost Explorer SDK + migration | `build.gradle.kts`, `V7__aws_cost_records.sql` |
-| 2 | AwsCostRecord entity + repository | `cost/entity/AwsCostRecord.kt`, `cost/repository/AwsCostRecordRepository.kt` |
-| 3 | CostService interface + LocalCostService | `cost/service/CostService.kt`, `cost/service/LocalCostService.kt` |
-| 4 | AwsCostService (Cost Explorer integration) | `cost/service/AwsCostService.kt`, `config/AwsConfig.kt` |
-| 5 | CostController + scheduled refresh | `cost/controller/CostController.kt` |
-| 6 | MCP CostTools | `mcp/CostTools.kt` |
+| Task  | Description                                | Key Files                                                                    |
+|-------|--------------------------------------------|------------------------------------------------------------------------------|
+| 1     | Cost Explorer SDK + migration              | `build.gradle.kts`, `V7__aws_cost_records.sql`                               |
+| 2     | AwsCostRecord entity + repository          | `cost/entity/AwsCostRecord.kt`, `cost/repository/AwsCostRecordRepository.kt` |
+| 3     | CostService interface + LocalCostService   | `cost/service/CostService.kt`, `cost/service/LocalCostService.kt`            |
+| 4     | AwsCostService (Cost Explorer integration) | `cost/service/AwsCostService.kt`, `config/AwsConfig.kt`                      |
+| 5     | CostController + scheduled refresh         | `cost/controller/CostController.kt`                                          |
+| 6     | MCP CostTools                              | `mcp/CostTools.kt`                                                           |

@@ -56,14 +56,14 @@ Rather than designing the backend first and wiring AI on top, the MCP tool suite
 ### Install from skills.sh
 These cover ground that doesn't need custom work:
 
-| Skill | Source | Purpose |
-|---|---|---|
-| `mcp-builder` | `anthropics/skills` | MCP server design patterns |
-| `kotlin-springboot` | `github/awesome-copilot` | Kotlin + Spring Boot conventions |
-| `python-testing-patterns` | `wshobson/agents` | Python content processor testing |
-| `async-python-patterns` | `wshobson/agents` | Async patterns for content processor |
-| `pytest-coverage` | `github/awesome-copilot` | pytest for content processor |
-| `webapp-testing` | `anthropics/skills` | End-to-end testing guidance |
+| Skill                     | Source                   | Purpose                              |
+|---------------------------|--------------------------|--------------------------------------|
+| `mcp-builder`             | `anthropics/skills`      | MCP server design patterns           |
+| `kotlin-springboot`       | `github/awesome-copilot` | Kotlin + Spring Boot conventions     |
+| `python-testing-patterns` | `wshobson/agents`        | Python content processor testing     |
+| `async-python-patterns`   | `wshobson/agents`        | Async patterns for content processor |
+| `pytest-coverage`         | `github/awesome-copilot` | pytest for content processor         |
+| `webapp-testing`          | `anthropics/skills`      | End-to-end testing guidance          |
 
 ### Custom skills to build (Phase 0)
 These are project-specific and have no off-the-shelf equivalent:

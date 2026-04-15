@@ -2053,20 +2053,20 @@ git commit -m "feat: add test-youtube.sh script"
 
 ## Summary
 
-| Task | Component | Tests |
-|------|-----------|-------|
-| 1 | Config properties | — |
-| 2 | YoutubeList + Video entities | — |
-| 3 | Repositories | — |
-| 4 | StorageService + LocalStorageService + S3 stub | 5 unit |
-| 5 | YtDlpService | 4 unit |
-| 6 | VideoDownloader + Local + Lambda stub | — |
-| 7 | VideoSyncService | 6 unit |
-| 8 | YoutubeListService + VideoService | 12 unit |
-| 9 | YoutubeSyncRegistrar | — |
-| 10 | YoutubeTools (6 MCP tools) | 11 unit |
-| 11 | YoutubeController stub | — |
-| 12 | Integration tests | 6 integration |
-| 13 | Test script | — |
+| Task  | Component                                      | Tests         |
+|-------|------------------------------------------------|---------------|
+| 1     | Config properties                              | —             |
+| 2     | YoutubeList + Video entities                   | —             |
+| 3     | Repositories                                   | —             |
+| 4     | StorageService + LocalStorageService + S3 stub | 5 unit        |
+| 5     | YtDlpService                                   | 4 unit        |
+| 6     | VideoDownloader + Local + Lambda stub          | —             |
+| 7     | VideoSyncService                               | 6 unit        |
+| 8     | YoutubeListService + VideoService              | 12 unit       |
+| 9     | YoutubeSyncRegistrar                           | —             |
+| 10    | YoutubeTools (6 MCP tools)                     | 11 unit       |
+| 11    | YoutubeController stub                         | —             |
+| 12    | Integration tests                              | 6 integration |
+| 13    | Test script                                    | —             |
 
 **Total: 13 tasks, ~44 tests**

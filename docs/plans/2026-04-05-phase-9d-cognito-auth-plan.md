@@ -692,11 +692,11 @@ git add src/main/resources/application-prod.properties terraform/templates/user_
 
 ## Summary Table
 
-| Task | Description | Key Files |
-|------|-------------|-----------|
-| 1 | Cognito User Pool Terraform | `terraform/cognito.tf`, `terraform/outputs.tf` |
-| 2 | Seed user script | `scripts/cognito-seed-user.sh` |
-| 3 | CognitoJwtFilter + CognitoTokenValidator | `config/CognitoJwtFilter.kt`, `config/CognitoTokenValidator.kt`, `SecurityConfig.kt` |
-| 4 | StompTokenValidator interface for WebSocket | `config/StompTokenValidator.kt`, `LocalStompTokenValidator.kt`, `CognitoStompTokenValidator.kt`, `WebSocketAuthInterceptor.kt` |
-| 5 | Angular Cognito login | `auth.service.ts`, `cognito-auth.service.ts`, environment files |
-| 6 | Cognito config properties + Terraform wiring | `application-prod.properties`, `user_data.sh`, `ec2.tf` |
+| Task  | Description                                  | Key Files                                                                                                                      |
+|-------|----------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| 1     | Cognito User Pool Terraform                  | `terraform/cognito.tf`, `terraform/outputs.tf`                                                                                 |
+| 2     | Seed user script                             | `scripts/cognito-seed-user.sh`                                                                                                 |
+| 3     | CognitoJwtFilter + CognitoTokenValidator     | `config/CognitoJwtFilter.kt`, `config/CognitoTokenValidator.kt`, `SecurityConfig.kt`                                           |
+| 4     | StompTokenValidator interface for WebSocket  | `config/StompTokenValidator.kt`, `LocalStompTokenValidator.kt`, `CognitoStompTokenValidator.kt`, `WebSocketAuthInterceptor.kt` |
+| 5     | Angular Cognito login                        | `auth.service.ts`, `cognito-auth.service.ts`, environment files                                                                |
+| 6     | Cognito config properties + Terraform wiring | `application-prod.properties`, `user_data.sh`, `ec2.tf`                                                                        |
