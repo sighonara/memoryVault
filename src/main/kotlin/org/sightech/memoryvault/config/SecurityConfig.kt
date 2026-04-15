@@ -34,6 +34,9 @@ class SecurityConfig(
                     .requestMatchers("/graphiql/**").permitAll()
                     .requestMatchers("/ws/**").permitAll()
                     .requestMatchers("/", "/index.html", "/*.js", "/*.css", "/*.ico", "/*.png", "/*.svg", "/*.woff2", "/assets/**", "/media/**").permitAll()
+                    // Angular client-side routes — must be permitted so requests fall through to the SPA
+                    // index.html fallback (SpaWebConfig 404 handler). Auth is enforced by the Angular authGuard.
+                    .requestMatchers("/login", "/reader", "/bookmarks/**", "/youtube/**", "/admin/**", "/search/**").permitAll()
                     .anyRequest().authenticated()
             }
             .exceptionHandling { ex ->

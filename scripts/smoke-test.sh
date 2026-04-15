@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# When adding a new top-level Angular route, update BOTH:
+#   1. SecurityConfig.kt — add the path to the SPA-routes permitAll line
+#   2. This file — add a `check "SPA route /<path> serves HTML" "$BASE_URL/<path>"` line
+# Spring Security evaluates auth per path, so a working `/` does NOT prove other SPA routes work.
 set -euo pipefail
 
 BASE_URL="${1:-http://localhost:8085}"
@@ -29,6 +33,9 @@ echo ""
 echo "-- Public endpoints --"
 check "Health endpoint" "$BASE_URL/actuator/health"
 check "Home page serves HTML" "$BASE_URL/"
+check "SPA route /login serves HTML" "$BASE_URL/login"
+check "SPA route /reader serves HTML" "$BASE_URL/reader"
+check "SPA route /bookmarks serves HTML" "$BASE_URL/bookmarks"
 check "GraphQL rejects unauthenticated" "$BASE_URL/graphql" 401
 
 # --- Login flow ---
