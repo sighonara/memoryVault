@@ -1,11 +1,12 @@
 package org.sightech.memoryvault.auth.service
 
 import org.sightech.memoryvault.auth.dto.LoginResponse
+import org.springframework.context.annotation.Profile
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
 
-// TODO(phase-9d): Re-add @Profile("local | test") once Cognito auth ships. See AuthController.
 @Service
+@Profile("local | test")
 class AuthService(
     private val userService: UserService,
     private val jwtService: JwtService,
