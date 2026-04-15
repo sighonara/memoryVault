@@ -33,10 +33,12 @@ When implementing this phase:
 
 ### Task 1: Cognito User Pool Terraform
 
+> **Implementation note (2026-04-15):** `admin_create_user_config { allow_admin_create_user_only = true }` was added to `aws_cognito_user_pool` to enforce the invite-only model from the "User creation model" section above. It's not in the HCL snippet below but is required.
+
 **Files:**
 - Create: `terraform/cognito.tf`
 
-- [ ] **Step 1: Create cognito.tf**
+- [x] **Step 1: Create cognito.tf**
 
 ```hcl
 resource "aws_cognito_user_pool" "main" {
@@ -92,7 +94,7 @@ resource "aws_cognito_user_pool_client" "spa" {
 }
 ```
 
-- [ ] **Step 2: Add Cognito outputs**
+- [x] **Step 2: Add Cognito outputs**
 
 Append to `terraform/outputs.tf`:
 
@@ -108,13 +110,13 @@ output "cognito_client_id" {
 }
 ```
 
-- [ ] **Step 3: Validate**
+- [x] **Step 3: Validate**
 
 ```bash
 cd terraform && terraform fmt -check && cd ..
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add terraform/cognito.tf terraform/outputs.tf && git commit -m "feat: add Terraform Cognito User Pool and SPA client"
@@ -129,7 +131,7 @@ Create a one-time script to create the initial admin user in Cognito.
 **Files:**
 - Create: `scripts/cognito-seed-user.sh`
 
-- [ ] **Step 1: Create the script**
+- [x] **Step 1: Create the script**
 
 ```bash
 #!/usr/bin/env bash
@@ -172,13 +174,13 @@ echo "SAVE THIS PASSWORD — it will not be shown again."
 echo "You can change it later via: aws cognito-idp admin-set-user-password"
 ```
 
-- [ ] **Step 2: Make executable**
+- [x] **Step 2: Make executable**
 
 ```bash
 chmod +x scripts/cognito-seed-user.sh
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add scripts/cognito-seed-user.sh && git commit -m "feat: add Cognito seed user script"
@@ -190,13 +192,21 @@ git add scripts/cognito-seed-user.sh && git commit -m "feat: add Cognito seed us
 
 Add a Cognito JWT validation filter that activates under the `aws` profile.
 
+> **Implementation notes (2026-04-15):**
+> - **Marker interface instead of raw `OncePerRequestFilter` injection.** The plan originally had `SecurityConfig` inject `OncePerRequestFilter` directly (Step 6). That is fragile — it only works as long as *no other* `OncePerRequestFilter` bean exists in the context (e.g. metrics, CORS, request logging). We introduced `AppAuthenticationFilter` (an `abstract class` extending `OncePerRequestFilter`) as a marker. `JwtAuthenticationFilter` and `CognitoJwtFilter` both extend it, and `SecurityConfig` injects the marker type. This is isolated to our two auth filters and can't collide with unrelated filter beans.
+> - **`UserRepository.findByEmail(...)` does not exist.** The plan's filter code calls `userRepository.findByEmail(claims.email)`, but the actual repository method is `findByEmailAndDeletedAtIsNull(...)`. The correct method is used in the implementation — it also excludes soft-deleted users from authenticating, which is the desired behavior. A test case covers the missing/soft-deleted-user path.
+> - **`SecurityContextHolder.getContext().authentication` is nullable in Kotlin.** The plan's test asserts `assertEquals(userId.toString(), auth.principal)` without `!!`; Kotlin requires a non-null assertion to access `.principal`.
+
 **Files:**
+- Create: `src/main/kotlin/org/sightech/memoryvault/config/AppAuthenticationFilter.kt` (marker abstract class)
 - Create: `src/main/kotlin/org/sightech/memoryvault/config/CognitoJwtFilter.kt`
+- Create: `src/main/kotlin/org/sightech/memoryvault/config/CognitoTokenValidator.kt`
 - Create: `src/test/kotlin/org/sightech/memoryvault/config/CognitoJwtFilterTest.kt`
-- Modify: `src/main/kotlin/org/sightech/memoryvault/config/SecurityConfig.kt`
+- Modify: `src/main/kotlin/org/sightech/memoryvault/config/JwtAuthenticationFilter.kt` (extend `AppAuthenticationFilter`, add `@Profile("local | test")`)
+- Modify: `src/main/kotlin/org/sightech/memoryvault/config/SecurityConfig.kt` (inject `AppAuthenticationFilter` instead of `JwtAuthenticationFilter`)
 - Modify: `build.gradle.kts`
 
-- [ ] **Step 1: Add nimbus-jose-jwt dependency**
+- [x] **Step 1: Add nimbus-jose-jwt dependency**
 
 In `build.gradle.kts`, add after the AWS SDK dependencies:
 
@@ -205,7 +215,7 @@ In `build.gradle.kts`, add after the AWS SDK dependencies:
 implementation("com.nimbusds:nimbus-jose-jwt:10.3")
 ```
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 Create `src/test/kotlin/org/sightech/memoryvault/config/CognitoJwtFilterTest.kt`:
 
@@ -279,7 +289,7 @@ class CognitoJwtFilterTest {
 }
 ```
 
-- [ ] **Step 3: Create CognitoClaims and CognitoTokenValidator**
+- [x] **Step 3: Create CognitoClaims and CognitoTokenValidator**
 
 Create `src/main/kotlin/org/sightech/memoryvault/config/CognitoTokenValidator.kt`:
 
@@ -341,7 +351,7 @@ class CognitoTokenValidator(
 }
 ```
 
-- [ ] **Step 4: Create CognitoJwtFilter**
+- [x] **Step 4: Create CognitoJwtFilter**
 
 Create `src/main/kotlin/org/sightech/memoryvault/config/CognitoJwtFilter.kt`:
 
@@ -365,7 +375,7 @@ import org.springframework.web.filter.OncePerRequestFilter
 class CognitoJwtFilter(
     private val tokenValidator: CognitoTokenValidator,
     private val userRepository: UserRepository
-) : OncePerRequestFilter() {
+) : AppAuthenticationFilter() {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -379,7 +389,7 @@ class CognitoJwtFilter(
             val token = header.substring(7)
             val claims = tokenValidator.validate(token)
             if (claims != null) {
-                val user = userRepository.findByEmail(claims.email)
+                val user = userRepository.findByEmailAndDeletedAtIsNull(claims.email)
                 if (user != null) {
                     val authorities = listOf(SimpleGrantedAuthority("ROLE_${claims.role}"))
                     val auth = UsernamePasswordAuthenticationToken(user.id.toString(), null, authorities)
@@ -394,30 +404,28 @@ class CognitoJwtFilter(
 }
 ```
 
-- [ ] **Step 5: Add @Profile("local | test") to JwtAuthenticationFilter**
+- [x] **Step 5: Gate JwtAuthenticationFilter to local/test and extend the marker**
 
-In `src/main/kotlin/org/sightech/memoryvault/config/JwtAuthenticationFilter.kt`, add:
+In `src/main/kotlin/org/sightech/memoryvault/config/JwtAuthenticationFilter.kt`:
+1. Add `@Profile("local | test")` above the class declaration (alongside the existing `@Component`).
+2. Change `: OncePerRequestFilter()` to `: AppAuthenticationFilter()` so `SecurityConfig` can inject the marker type uniformly across profiles.
 
-```kotlin
-@Profile("local | test")
-```
+Also remove the now-unused `OncePerRequestFilter` import.
 
-above the class declaration (alongside the existing `@Component`).
+- [x] **Step 6: Update SecurityConfig to inject the marker type**
 
-- [ ] **Step 6: Update SecurityConfig to accept either filter**
-
-In `SecurityConfig.kt`, change the `jwtAuthenticationFilter` injection to accept a generic `OncePerRequestFilter` bean. Since only one filter will be active per profile (either `JwtAuthenticationFilter` on local/test or `CognitoJwtFilter` on aws), Spring will inject the correct one.
-
-Change the constructor parameter:
+Create `AppAuthenticationFilter` as an abstract marker class extending `OncePerRequestFilter`. Have both `JwtAuthenticationFilter` and `CognitoJwtFilter` extend it. Then in `SecurityConfig.kt`, inject the marker rather than the concrete class:
 
 ```kotlin
 // Old
 private val jwtAuthenticationFilter: JwtAuthenticationFilter
 // New
-private val jwtAuthenticationFilter: OncePerRequestFilter
+private val jwtAuthenticationFilter: AppAuthenticationFilter
 ```
 
-- [ ] **Step 7: Run tests**
+Rationale: injecting `OncePerRequestFilter` directly would break if any unrelated filter bean existed in the context. A purpose-built marker interface keeps the injection unambiguous.
+
+- [x] **Step 7: Run tests**
 
 ```bash
 ./gradlew test --tests "*CognitoJwtFilterTest"
@@ -431,10 +439,10 @@ Expected: PASS
 
 Expected: All tests pass.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
-git add build.gradle.kts src/main/kotlin/org/sightech/memoryvault/config/CognitoTokenValidator.kt src/main/kotlin/org/sightech/memoryvault/config/CognitoJwtFilter.kt src/main/kotlin/org/sightech/memoryvault/config/JwtAuthenticationFilter.kt src/main/kotlin/org/sightech/memoryvault/config/SecurityConfig.kt src/test/kotlin/org/sightech/memoryvault/config/CognitoJwtFilterTest.kt && git commit -m "feat: add CognitoJwtFilter for AWS profile JWT validation"
+git add build.gradle.kts src/main/kotlin/org/sightech/memoryvault/config/AppAuthenticationFilter.kt src/main/kotlin/org/sightech/memoryvault/config/CognitoTokenValidator.kt src/main/kotlin/org/sightech/memoryvault/config/CognitoJwtFilter.kt src/main/kotlin/org/sightech/memoryvault/config/JwtAuthenticationFilter.kt src/main/kotlin/org/sightech/memoryvault/config/SecurityConfig.kt src/test/kotlin/org/sightech/memoryvault/config/CognitoJwtFilterTest.kt && git commit -m "feat: add CognitoJwtFilter for AWS profile JWT validation"
 ```
 
 ---
@@ -443,6 +451,11 @@ git add build.gradle.kts src/main/kotlin/org/sightech/memoryvault/config/Cognito
 
 Extract WebSocket JWT validation into an interface with local and Cognito implementations.
 
+> **Implementation notes (2026-04-15):**
+> - `LocalStompTokenValidator` uses `jwtService.validateToken(token)` which returns `Map<String, String>?` (claims), not a userId string. The plan's snippet implied a direct string return. The real implementation extracts the `userId` key from the claims map and wraps it in a `Principal`.
+> - The existing `WebSocketAuthInterceptorTest` had to be updated: it mocked `JwtService` directly, but the interceptor now depends on `StompTokenValidator`. Tests mock the validator instead and return a `Principal { userId }` from `validate(...)`.
+> - `CognitoStompTokenValidator.validate(...)` uses `findByEmailAndDeletedAtIsNull` (same reasoning as Task 3 — soft-delete-aware lookup).
+
 **Files:**
 - Create: `src/main/kotlin/org/sightech/memoryvault/config/StompTokenValidator.kt`
 - Create: `src/main/kotlin/org/sightech/memoryvault/config/LocalStompTokenValidator.kt`
@@ -450,7 +463,7 @@ Extract WebSocket JWT validation into an interface with local and Cognito implem
 - Modify: `src/main/kotlin/org/sightech/memoryvault/config/WebSocketAuthInterceptor.kt`
 - Create: `src/test/kotlin/org/sightech/memoryvault/config/CognitoStompTokenValidatorTest.kt`
 
-- [ ] **Step 1: Create StompTokenValidator interface**
+- [x] **Step 1: Create StompTokenValidator interface**
 
 ```kotlin
 package org.sightech.memoryvault.config
@@ -462,7 +475,7 @@ interface StompTokenValidator {
 }
 ```
 
-- [ ] **Step 2: Create LocalStompTokenValidator**
+- [x] **Step 2: Create LocalStompTokenValidator**
 
 ```kotlin
 package org.sightech.memoryvault.config
@@ -488,7 +501,7 @@ class LocalStompTokenValidator(
 }
 ```
 
-- [ ] **Step 3: Create CognitoStompTokenValidator**
+- [x] **Step 3: Create CognitoStompTokenValidator**
 
 ```kotlin
 package org.sightech.memoryvault.config
@@ -512,11 +525,11 @@ class CognitoStompTokenValidator(
 }
 ```
 
-- [ ] **Step 4: Update WebSocketAuthInterceptor to use StompTokenValidator**
+- [x] **Step 4: Update WebSocketAuthInterceptor to use StompTokenValidator**
 
 Replace the `JwtService` dependency with `StompTokenValidator`. Change the token validation logic to use `validator.validate(token)` and set the result as the user `Principal`.
 
-- [ ] **Step 5: Write tests for CognitoStompTokenValidator**
+- [x] **Step 5: Write tests for CognitoStompTokenValidator**
 
 ```kotlin
 package org.sightech.memoryvault.config
@@ -561,7 +574,7 @@ class CognitoStompTokenValidatorTest {
 }
 ```
 
-- [ ] **Step 6: Run all tests**
+- [x] **Step 6: Run all tests**
 
 ```bash
 ./gradlew test
@@ -569,7 +582,7 @@ class CognitoStompTokenValidatorTest {
 
 Expected: All tests pass.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/config/StompTokenValidator.kt src/main/kotlin/org/sightech/memoryvault/config/LocalStompTokenValidator.kt src/main/kotlin/org/sightech/memoryvault/config/CognitoStompTokenValidator.kt src/main/kotlin/org/sightech/memoryvault/config/WebSocketAuthInterceptor.kt src/test/kotlin/org/sightech/memoryvault/config/CognitoStompTokenValidatorTest.kt && git commit -m "feat: extract StompTokenValidator interface, add Cognito WebSocket auth"
@@ -581,19 +594,23 @@ git add src/main/kotlin/org/sightech/memoryvault/config/StompTokenValidator.kt s
 
 Replace the Angular auth flow with Cognito's `amazon-cognito-identity-js`.
 
+> **Implementation notes (2026-04-15):**
+> - **Lazy `CognitoUserPool` construction.** Constructing `new CognitoUserPool({...})` at service-field-init time throws when `userPoolId`/`clientId` are empty (the default in local dev). That broke every spec that instantiates `AuthService` via `TestBed.inject`. The fix: gate the pool behind a `get userPool()` that creates it on first access. `logout()` early-returns when the pool was never constructed.
+> - **Do not add `tap(setToken)` inside `AuthService.login`.** The existing login component (`login.ts:32`) already calls `setToken(response.token)` on success; adding a `tap` in the service duplicates the call and silently changes the contract for any other caller. Kept the plan's "delegate and return" pattern intact.
+
 **Files:**
 - Modify: `client/src/app/auth/auth.service.ts`
 - Modify: `client/src/environments/environment.ts`
 - Modify: `client/src/environments/environment.prod.ts`
 - Modify: `client/package.json`
 
-- [ ] **Step 1: Install amazon-cognito-identity-js**
+- [x] **Step 1: Install amazon-cognito-identity-js**
 
 ```bash
 cd client && npm install amazon-cognito-identity-js
 ```
 
-- [ ] **Step 2: Add Cognito config to environment files**
+- [x] **Step 2: Add Cognito config to environment files**
 
 In `environment.ts` (local dev — not used, kept for type consistency):
 
@@ -615,7 +632,7 @@ cognito: {
 }
 ```
 
-- [ ] **Step 3: Create CognitoAuthService**
+- [x] **Step 3: Create CognitoAuthService**
 
 Create `client/src/app/auth/cognito-auth.service.ts`:
 
@@ -626,13 +643,13 @@ A new service that implements the same public interface as `AuthService` but use
 - `getToken()`, `clearToken()`, `isAuthenticated()`, `isTokenExpired()` — same logic
 - `logout()` → `cognitoUser.signOut()` + clear localStorage
 
-- [ ] **Step 4: Conditional service based on environment**
+- [x] **Step 4: Conditional service based on environment**
 
 In `auth.service.ts`, check if `environment.cognito.userPoolId` is set. If it is, delegate to Cognito auth flow. If not (local dev), use the existing REST login.
 
 This keeps a single `AuthService` that switches behavior based on environment config, avoiding the need for Angular DI profile switching.
 
-- [ ] **Step 5: Run frontend tests**
+- [x] **Step 5: Run frontend tests**
 
 ```bash
 cd client && npm test
@@ -640,7 +657,7 @@ cd client && npm test
 
 Expected: All tests pass (local tests use empty cognito config, so existing REST path is used).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd client && git add -A && git commit -m "feat: add Cognito auth support to Angular AuthService"
@@ -652,10 +669,14 @@ cd client && git add -A && git commit -m "feat: add Cognito auth support to Angu
 
 Add Cognito-specific properties to the Spring Boot prod config.
 
+> **Implementation notes (2026-04-15):**
+> - Also completed the "Pre-existing cleanup required" items: restored `@Profile("local | test")` on `AuthController` and `AuthService`, and removed the `TODO(phase-9d)` markers.
+> - `scripts/smoke-test.sh` previously hardcoded `system@memoryvault.local / memoryvault` — that password was rotated out-of-band (stopgap before Cognito). Updated the script to read `SMOKE_EMAIL` and `SMOKE_PASSWORD` env vars with sensible local defaults, so CI can inject prod creds without editing the file. Full Cognito-based auth path for the smoke test is still TODO once the prod env has a live Cognito pool + seeded user.
+
 **Files:**
 - Modify: `src/main/resources/application-prod.properties`
 
-- [ ] **Step 1: Add Cognito properties**
+- [x] **Step 1: Add Cognito properties**
 
 Append to `application-prod.properties`:
 
@@ -665,7 +686,7 @@ memoryvault.cognito.region=${MEMORYVAULT_COGNITO_REGION:us-east-1}
 memoryvault.cognito.user-pool-id=${MEMORYVAULT_COGNITO_USER__POOL__ID}
 ```
 
-- [ ] **Step 2: Update user_data env file**
+- [x] **Step 2: Update user_data env file**
 
 Add to the env file block in `terraform/templates/user_data.sh`:
 
@@ -674,7 +695,7 @@ MEMORYVAULT_COGNITO_REGION=${region}
 MEMORYVAULT_COGNITO_USER__POOL__ID=${cognito_user_pool_id}
 ```
 
-- [ ] **Step 3: Update ec2.tf templatefile variables**
+- [x] **Step 3: Update ec2.tf templatefile variables**
 
 Add to the `templatefile()` call in `terraform/ec2.tf`:
 
@@ -682,7 +703,7 @@ Add to the `templatefile()` call in `terraform/ec2.tf`:
 cognito_user_pool_id = aws_cognito_user_pool.main.id
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/main/resources/application-prod.properties terraform/templates/user_data.sh terraform/ec2.tf && git commit -m "feat: add Cognito config properties and Terraform wiring"

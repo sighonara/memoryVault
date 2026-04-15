@@ -57,6 +57,9 @@ dependencies {
     implementation("software.amazon.awssdk:s3")
     implementation("software.amazon.awssdk:cloudwatchlogs")
 
+    // Cognito JWT validation (JWKS)
+    implementation("com.nimbusds:nimbus-jose-jwt:10.3")
+
     // Dev
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     developmentOnly("org.springframework.boot:spring-boot-docker-compose")

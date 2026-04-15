@@ -38,6 +38,7 @@
     "@ngrx/signals": "^21.0.1",
     "@stomp/rx-stomp": "^2.3.0",
     "@stomp/stompjs": "^7.3.0",
+    "amazon-cognito-identity-js": "^6.3.16",
     "apollo-angular": "^13.0.0",
     "graphql": "^16.13.1",
     "rxjs": "~7.8.0",

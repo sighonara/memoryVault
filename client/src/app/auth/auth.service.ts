@@ -1,6 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { CognitoAuthService } from './cognito-auth.service';
 
 export interface LoginResponse {
   token: string;
@@ -12,9 +14,16 @@ export interface LoginResponse {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
+  private cognitoAuth = inject(CognitoAuthService);
+
+  private get useCognito(): boolean {
+    return !!environment.cognito?.userPoolId && !!environment.cognito?.clientId;
+  }
 
   login(email: string, password: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>('/api/auth/login', { email, password });
+    return this.useCognito
+      ? this.cognitoAuth.login(email, password)
+      : this.http.post<LoginResponse>('/api/auth/login', { email, password });
   }
 
   getToken(): string | null {
@@ -30,6 +39,9 @@ export class AuthService {
   }
 
   logout(): void {
+    if (this.useCognito) {
+      this.cognitoAuth.logout();
+    }
     this.clearToken();
   }
 
