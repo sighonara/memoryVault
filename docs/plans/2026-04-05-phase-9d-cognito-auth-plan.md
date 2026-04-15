@@ -451,6 +451,11 @@ git add build.gradle.kts src/main/kotlin/org/sightech/memoryvault/config/AppAuth
 
 Extract WebSocket JWT validation into an interface with local and Cognito implementations.
 
+> **Implementation notes (2026-04-15):**
+> - `LocalStompTokenValidator` uses `jwtService.validateToken(token)` which returns `Map<String, String>?` (claims), not a userId string. The plan's snippet implied a direct string return. The real implementation extracts the `userId` key from the claims map and wraps it in a `Principal`.
+> - The existing `WebSocketAuthInterceptorTest` had to be updated: it mocked `JwtService` directly, but the interceptor now depends on `StompTokenValidator`. Tests mock the validator instead and return a `Principal { userId }` from `validate(...)`.
+> - `CognitoStompTokenValidator.validate(...)` uses `findByEmailAndDeletedAtIsNull` (same reasoning as Task 3 — soft-delete-aware lookup).
+
 **Files:**
 - Create: `src/main/kotlin/org/sightech/memoryvault/config/StompTokenValidator.kt`
 - Create: `src/main/kotlin/org/sightech/memoryvault/config/LocalStompTokenValidator.kt`
@@ -589,6 +594,10 @@ git add src/main/kotlin/org/sightech/memoryvault/config/StompTokenValidator.kt s
 
 Replace the Angular auth flow with Cognito's `amazon-cognito-identity-js`.
 
+> **Implementation notes (2026-04-15):**
+> - **Lazy `CognitoUserPool` construction.** Constructing `new CognitoUserPool({...})` at service-field-init time throws when `userPoolId`/`clientId` are empty (the default in local dev). That broke every spec that instantiates `AuthService` via `TestBed.inject`. The fix: gate the pool behind a `get userPool()` that creates it on first access. `logout()` early-returns when the pool was never constructed.
+> - **Do not add `tap(setToken)` inside `AuthService.login`.** The existing login component (`login.ts:32`) already calls `setToken(response.token)` on success; adding a `tap` in the service duplicates the call and silently changes the contract for any other caller. Kept the plan's "delegate and return" pattern intact.
+
 **Files:**
 - Modify: `client/src/app/auth/auth.service.ts`
 - Modify: `client/src/environments/environment.ts`
@@ -659,6 +668,10 @@ cd client && git add -A && git commit -m "feat: add Cognito auth support to Angu
 ### Task 6: Cognito Config Properties
 
 Add Cognito-specific properties to the Spring Boot prod config.
+
+> **Implementation notes (2026-04-15):**
+> - Also completed the "Pre-existing cleanup required" items: restored `@Profile("local | test")` on `AuthController` and `AuthService`, and removed the `TODO(phase-9d)` markers.
+> - `scripts/smoke-test.sh` previously hardcoded `system@memoryvault.local / memoryvault` — that password was rotated out-of-band (stopgap before Cognito). Updated the script to read `SMOKE_EMAIL` and `SMOKE_PASSWORD` env vars with sensible local defaults, so CI can inject prod creds without editing the file. Full Cognito-based auth path for the smoke test is still TODO once the prod env has a live Cognito pool + seeded user.
 
 **Files:**
 - Modify: `src/main/resources/application-prod.properties`
