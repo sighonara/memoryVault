@@ -33,10 +33,12 @@ When implementing this phase:
 
 ### Task 1: Cognito User Pool Terraform
 
+> **Implementation note (2026-04-15):** `admin_create_user_config { allow_admin_create_user_only = true }` was added to `aws_cognito_user_pool` to enforce the invite-only model from the "User creation model" section above. It's not in the HCL snippet below but is required.
+
 **Files:**
 - Create: `terraform/cognito.tf`
 
-- [ ] **Step 1: Create cognito.tf**
+- [x] **Step 1: Create cognito.tf**
 
 ```hcl
 resource "aws_cognito_user_pool" "main" {
@@ -190,10 +192,18 @@ git add scripts/cognito-seed-user.sh && git commit -m "feat: add Cognito seed us
 
 Add a Cognito JWT validation filter that activates under the `aws` profile.
 
+> **Implementation notes (2026-04-15):**
+> - **Marker interface instead of raw `OncePerRequestFilter` injection.** The plan originally had `SecurityConfig` inject `OncePerRequestFilter` directly (Step 6). That is fragile — it only works as long as *no other* `OncePerRequestFilter` bean exists in the context (e.g. metrics, CORS, request logging). We introduced `AppAuthenticationFilter` (an `abstract class` extending `OncePerRequestFilter`) as a marker. `JwtAuthenticationFilter` and `CognitoJwtFilter` both extend it, and `SecurityConfig` injects the marker type. This is isolated to our two auth filters and can't collide with unrelated filter beans.
+> - **`UserRepository.findByEmail(...)` does not exist.** The plan's filter code calls `userRepository.findByEmail(claims.email)`, but the actual repository method is `findByEmailAndDeletedAtIsNull(...)`. The correct method is used in the implementation — it also excludes soft-deleted users from authenticating, which is the desired behavior. A test case covers the missing/soft-deleted-user path.
+> - **`SecurityContextHolder.getContext().authentication` is nullable in Kotlin.** The plan's test asserts `assertEquals(userId.toString(), auth.principal)` without `!!`; Kotlin requires a non-null assertion to access `.principal`.
+
 **Files:**
+- Create: `src/main/kotlin/org/sightech/memoryvault/config/AppAuthenticationFilter.kt` (marker abstract class)
 - Create: `src/main/kotlin/org/sightech/memoryvault/config/CognitoJwtFilter.kt`
+- Create: `src/main/kotlin/org/sightech/memoryvault/config/CognitoTokenValidator.kt`
 - Create: `src/test/kotlin/org/sightech/memoryvault/config/CognitoJwtFilterTest.kt`
-- Modify: `src/main/kotlin/org/sightech/memoryvault/config/SecurityConfig.kt`
+- Modify: `src/main/kotlin/org/sightech/memoryvault/config/JwtAuthenticationFilter.kt` (extend `AppAuthenticationFilter`, add `@Profile("local | test")`)
+- Modify: `src/main/kotlin/org/sightech/memoryvault/config/SecurityConfig.kt` (inject `AppAuthenticationFilter` instead of `JwtAuthenticationFilter`)
 - Modify: `build.gradle.kts`
 
 - [ ] **Step 1: Add nimbus-jose-jwt dependency**
@@ -365,7 +375,7 @@ import org.springframework.web.filter.OncePerRequestFilter
 class CognitoJwtFilter(
     private val tokenValidator: CognitoTokenValidator,
     private val userRepository: UserRepository
-) : OncePerRequestFilter() {
+) : AppAuthenticationFilter() {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -379,7 +389,7 @@ class CognitoJwtFilter(
             val token = header.substring(7)
             val claims = tokenValidator.validate(token)
             if (claims != null) {
-                val user = userRepository.findByEmail(claims.email)
+                val user = userRepository.findByEmailAndDeletedAtIsNull(claims.email)
                 if (user != null) {
                     val authorities = listOf(SimpleGrantedAuthority("ROLE_${claims.role}"))
                     val auth = UsernamePasswordAuthenticationToken(user.id.toString(), null, authorities)
@@ -394,28 +404,26 @@ class CognitoJwtFilter(
 }
 ```
 
-- [ ] **Step 5: Add @Profile("local | test") to JwtAuthenticationFilter**
+- [ ] **Step 5: Gate JwtAuthenticationFilter to local/test and extend the marker**
 
-In `src/main/kotlin/org/sightech/memoryvault/config/JwtAuthenticationFilter.kt`, add:
+In `src/main/kotlin/org/sightech/memoryvault/config/JwtAuthenticationFilter.kt`:
+1. Add `@Profile("local | test")` above the class declaration (alongside the existing `@Component`).
+2. Change `: OncePerRequestFilter()` to `: AppAuthenticationFilter()` so `SecurityConfig` can inject the marker type uniformly across profiles.
 
-```kotlin
-@Profile("local | test")
-```
+Also remove the now-unused `OncePerRequestFilter` import.
 
-above the class declaration (alongside the existing `@Component`).
+- [ ] **Step 6: Update SecurityConfig to inject the marker type**
 
-- [ ] **Step 6: Update SecurityConfig to accept either filter**
-
-In `SecurityConfig.kt`, change the `jwtAuthenticationFilter` injection to accept a generic `OncePerRequestFilter` bean. Since only one filter will be active per profile (either `JwtAuthenticationFilter` on local/test or `CognitoJwtFilter` on aws), Spring will inject the correct one.
-
-Change the constructor parameter:
+Create `AppAuthenticationFilter` as an abstract marker class extending `OncePerRequestFilter`. Have both `JwtAuthenticationFilter` and `CognitoJwtFilter` extend it. Then in `SecurityConfig.kt`, inject the marker rather than the concrete class:
 
 ```kotlin
 // Old
 private val jwtAuthenticationFilter: JwtAuthenticationFilter
 // New
-private val jwtAuthenticationFilter: OncePerRequestFilter
+private val jwtAuthenticationFilter: AppAuthenticationFilter
 ```
+
+Rationale: injecting `OncePerRequestFilter` directly would break if any unrelated filter bean existed in the context. A purpose-built marker interface keeps the injection unambiguous.
 
 - [ ] **Step 7: Run tests**
 
@@ -434,7 +442,7 @@ Expected: All tests pass.
 - [ ] **Step 8: Commit**
 
 ```bash
-git add build.gradle.kts src/main/kotlin/org/sightech/memoryvault/config/CognitoTokenValidator.kt src/main/kotlin/org/sightech/memoryvault/config/CognitoJwtFilter.kt src/main/kotlin/org/sightech/memoryvault/config/JwtAuthenticationFilter.kt src/main/kotlin/org/sightech/memoryvault/config/SecurityConfig.kt src/test/kotlin/org/sightech/memoryvault/config/CognitoJwtFilterTest.kt && git commit -m "feat: add CognitoJwtFilter for AWS profile JWT validation"
+git add build.gradle.kts src/main/kotlin/org/sightech/memoryvault/config/AppAuthenticationFilter.kt src/main/kotlin/org/sightech/memoryvault/config/CognitoTokenValidator.kt src/main/kotlin/org/sightech/memoryvault/config/CognitoJwtFilter.kt src/main/kotlin/org/sightech/memoryvault/config/JwtAuthenticationFilter.kt src/main/kotlin/org/sightech/memoryvault/config/SecurityConfig.kt src/test/kotlin/org/sightech/memoryvault/config/CognitoJwtFilterTest.kt && git commit -m "feat: add CognitoJwtFilter for AWS profile JWT validation"
 ```
 
 ---
