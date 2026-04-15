@@ -3,19 +3,19 @@ package org.sightech.memoryvault.config
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
-import org.sightech.memoryvault.auth.service.JwtService
 import org.springframework.messaging.Message
 import org.springframework.messaging.MessageChannel
 import org.springframework.messaging.simp.stomp.StompCommand
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor
 import org.springframework.messaging.support.MessageBuilder
+import java.security.Principal
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class WebSocketAuthInterceptorTest {
 
-    private val jwtService = mockk<JwtService>()
-    private val interceptor = WebSocketAuthInterceptor(jwtService)
+    private val tokenValidator = mockk<StompTokenValidator>()
+    private val interceptor = WebSocketAuthInterceptor(tokenValidator)
     private val channel = mockk<MessageChannel>()
 
     private fun buildConnectMessage(token: String?): Message<ByteArray> {
@@ -29,11 +29,8 @@ class WebSocketAuthInterceptorTest {
 
     @Test
     fun `accepts valid JWT and sets principal`() {
-        every { jwtService.validateToken("valid-token") } returns mapOf(
-            "userId" to "00000000-0000-0000-0000-000000000001",
-            "email" to "test@test.com",
-            "role" to "OWNER"
-        )
+        every { tokenValidator.validate("valid-token") } returns
+            Principal { "00000000-0000-0000-0000-000000000001" }
 
         val message = buildConnectMessage("valid-token")
         val result = interceptor.preSend(message, channel)
@@ -46,7 +43,7 @@ class WebSocketAuthInterceptorTest {
 
     @Test
     fun `rejects invalid JWT`() {
-        every { jwtService.validateToken("bad-token") } returns null
+        every { tokenValidator.validate("bad-token") } returns null
 
         val message = buildConnectMessage("bad-token")
         val result = interceptor.preSend(message, channel)
