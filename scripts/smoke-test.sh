@@ -29,6 +29,19 @@ PASS=0
 FAIL=0
 TOKEN=""
 
+# Probe /api/config to detect whether the backend is using Cognito. When
+# Cognito is configured, REST /api/auth/login is disabled — attempting it
+# here would false-fail every prod run. Bash can't do the SRP auth flow
+# Cognito requires, so we skip the authenticated block entirely in that
+# case. To cover authenticated endpoints against prod, extend ssm.py or
+# add a Cognito-aware smoke client.
+CONFIG_JSON=$(curl -s "$BASE_URL/api/config" || echo "")
+if echo "$CONFIG_JSON" | grep -q '"userPoolId":"[^"]\+"'; then
+  COGNITO_ACTIVE=1
+else
+  COGNITO_ACTIVE=0
+fi
+
 check() {
   local name="$1"
   local url="$2"
@@ -77,6 +90,15 @@ check_spa "SPA route /bookmarks serves HTML" "$BASE_URL/bookmarks"
 check "GraphQL rejects unauthenticated" "$BASE_URL/graphql" 401
 
 # --- Login flow ---
+if [ "$COGNITO_ACTIVE" -eq 1 ]; then
+  echo ""
+  echo "  SKIP  Authentication checks (backend uses Cognito; REST /api/auth/login is disabled)"
+  echo ""
+  echo "=== Results: $PASS passed, $FAIL failed ==="
+  [ "$FAIL" -eq 0 ] || exit 1
+  exit 0
+fi
+
 if [ -z "$SMOKE_PASSWORD" ]; then
   echo ""
   echo "  SKIP  Authentication checks (SMOKE_PASSWORD not set)"
