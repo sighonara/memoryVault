@@ -38,7 +38,11 @@ resource "aws_cognito_user_pool_client" "spa" {
 
   generate_secret = false
 
+  # amazon-cognito-identity-js (used by the SPA) defaults to USER_SRP_AUTH —
+  # the password is never sent to Cognito; SRP challenges are exchanged
+  # instead. Without this, the SDK's login call returns 400 from cognito-idp.
   explicit_auth_flows = [
+    "ALLOW_USER_SRP_AUTH",
     "ALLOW_USER_PASSWORD_AUTH",
     "ALLOW_REFRESH_TOKEN_AUTH"
   ]
