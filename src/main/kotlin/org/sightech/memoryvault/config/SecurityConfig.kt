@@ -1,5 +1,6 @@
 package org.sightech.memoryvault.config
 
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -18,6 +19,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @EnableWebSecurity
 class SecurityConfig(
     private val jwtAuthenticationFilter: AppAuthenticationFilter,
+    private val internalApiKeyFilterProvider: ObjectProvider<InternalApiKeyFilter>,
     @Value("\${memoryvault.cors.allowed-origins}") private val allowedOrigins: String
 ) {
 
@@ -32,6 +34,9 @@ class SecurityConfig(
                     .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/config").permitAll()
+                    // Auth for /api/internal/** is enforced by InternalApiKeyFilter (aws profile only),
+                    // not by JWT. Permit here so the chain reaches the filter instead of short-circuiting.
+                    .requestMatchers("/api/internal/**").permitAll()
                     .requestMatchers("/graphiql/**").permitAll()
                     .requestMatchers("/ws/**").permitAll()
                     .requestMatchers("/", "/index.html", "/*.js", "/*.css", "/*.ico", "/*.png", "/*.svg", "/*.woff2", "/assets/**", "/media/**").permitAll()
@@ -46,6 +51,11 @@ class SecurityConfig(
                 }
             }
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
+
+        internalApiKeyFilterProvider.ifAvailable { filter ->
+            http.addFilterBefore(filter, UsernamePasswordAuthenticationFilter::class.java)
+        }
+
         return http.build()
     }
 
