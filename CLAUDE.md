@@ -116,6 +116,10 @@ Located in `lambdas/` (created in Phase 6+).
 - **IaC**: Terraform (`terraform/`)
 - **CI/CD**: GitHub Actions (Phase 6)
 
+### Terraform skills
+
+When editing any file under `terraform/**` or proposing a `terraform apply`, invoke the installed `terraform-specialist` and `terraform-conventions` skills. The specialist covers state management, drift recovery, replacement semantics, and security gotchas; the conventions skill covers style, modularity, sensitive-variable handling, and required pre-commit tooling (`terraform fmt`, `validate`). These are not optional — they're the mechanism that protects against the category of failure ("user_data edits don't replace the instance", "forgot to run apply before pushing") that has bitten this project.
+
 ### Infra-vs-code change rules
 
 Changes to `terraform/**` are **not** delivered by `git push`. The deploy workflow only rebuilds the app image and redeploys the container onto whatever EC2 instance already exists — it never re-runs Terraform. To actually change AWS state you must run `terraform apply` locally.
