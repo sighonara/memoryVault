@@ -6,7 +6,16 @@ set -euo pipefail
 # Prerequisites: AWS CLI configured, terraform outputs available.
 
 REGION="${AWS_REGION:-us-east-1}"
-USER_POOL_ID="${1:?Usage: $0 <user-pool-id> [email]}"
+
+# Pool ID: arg 1 wins, else read from terraform output (authoritative).
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+USER_POOL_ID="${1:-$(terraform -chdir="$REPO_ROOT/terraform" output -raw cognito_user_pool_id 2>/dev/null || true)}"
+if [ -z "$USER_POOL_ID" ]; then
+  echo "Error: could not determine user pool ID." >&2
+  echo "Pass it as arg 1, or run from a machine with terraform state access." >&2
+  exit 1
+fi
+
 EMAIL="${2:-system@memoryvault.local}"
 PASSWORD=$(openssl rand -base64 24)
 

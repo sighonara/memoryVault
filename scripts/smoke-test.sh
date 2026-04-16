@@ -8,11 +8,19 @@
 set -euo pipefail
 
 BASE_URL="${1:-http://localhost:8085}"
-# Credentials for the /api/auth/login smoke check. Override via env vars for
-# prod (where the seed password has been rotated out-of-band). If
-# SMOKE_PASSWORD is unset the authenticated section is skipped gracefully
-# rather than failing, so the script is still useful against environments
-# where only public endpoints should be exercised.
+
+# Load credentials from .env at repo root if present (gitignored).
+# See .env.sample for the expected keys.
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+if [ -f "$REPO_ROOT/.env" ]; then
+  set -a
+  # shellcheck disable=SC1091
+  . "$REPO_ROOT/.env"
+  set +a
+fi
+
+# Credentials for the /api/auth/login smoke check. Override via env vars or
+# .env for prod (where the seed password has been rotated out-of-band).
 SMOKE_EMAIL="${SMOKE_EMAIL:-system@memoryvault.local}"
 SMOKE_PASSWORD="${SMOKE_PASSWORD:-memoryvault}"
 PASS=0

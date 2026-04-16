@@ -116,6 +116,18 @@ Located in `lambdas/` (created in Phase 6+).
 - **IaC**: Terraform (`terraform/`)
 - **CI/CD**: GitHub Actions (Phase 6)
 
+### Infra-vs-code change rules
+
+Changes to `terraform/**` are **not** delivered by `git push`. The deploy workflow only rebuilds the app image and redeploys the container onto whatever EC2 instance already exists — it never re-runs Terraform. To actually change AWS state you must run `terraform apply` locally.
+
+When recommending a fix that touches `terraform/**`, the sequence is:
+1. `terraform plan` — confirm expected drift (especially EC2 replacement, which forces EIP reassociation and brief downtime).
+2. `terraform apply` — apply to AWS.
+3. Wait for the new instance's status checks to pass.
+4. Then commit/push the code change.
+
+Label every recovery step by what it touches: *code* (`git push`), *AWS state* (`terraform apply`), or *automation* (workflow run). Do not assume one implies another.
+
 ---
 
 ## Skills
