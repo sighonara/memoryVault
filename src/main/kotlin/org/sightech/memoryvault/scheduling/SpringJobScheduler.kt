@@ -49,14 +49,15 @@ class SpringJobScheduler(
 
     private fun executeWithTracking(jobName: String, triggeredBy: TriggerSource) {
         val registration = jobs[jobName] ?: return
-        val syncJob = syncJobService.recordStart(registration.jobType, triggeredBy, CurrentUser.SYSTEM_USER_ID)
-
         try {
-            val metadata = registration.task()
-            syncJobService.recordSuccess(syncJob.id, metadata)
+            syncJobService.runTracked(
+                registration.jobType,
+                triggeredBy,
+                CurrentUser.SYSTEM_USER_ID,
+                registration.task
+            )
         } catch (e: Exception) {
             logger.error("Job '{}' failed: {}", jobName, e.message, e)
-            syncJobService.recordFailure(syncJob.id, e.message ?: "Unknown error")
         }
     }
 }
