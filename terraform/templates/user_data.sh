@@ -86,6 +86,7 @@ MEMORYVAULT_LOGGING_CLOUDWATCH__REGION=${region}
 INTERNAL_API_KEY=${internal_api_key}
 MEMORYVAULT_COGNITO_REGION=${region}
 MEMORYVAULT_COGNITO_USER__POOL__ID=${cognito_user_pool_id}
+MEMORYVAULT_COGNITO_CLIENT__ID=${cognito_client_id}
 ENVFILE
 chmod 600 /etc/memoryvault/env
 

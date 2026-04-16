@@ -19,10 +19,12 @@ if [ -f "$REPO_ROOT/.env" ]; then
   set +a
 fi
 
-# Credentials for the /api/auth/login smoke check. Override via env vars or
-# .env for prod (where the seed password has been rotated out-of-band).
+# Credentials for the /api/auth/login smoke check. Set via env vars or
+# .env. If SMOKE_PASSWORD is empty, the login check is skipped — this lets
+# CI run against envs where REST /api/auth/login is gated off (prod on
+# `aws` profile uses Cognito instead of the REST endpoint).
 SMOKE_EMAIL="${SMOKE_EMAIL:-system@memoryvault.local}"
-SMOKE_PASSWORD="${SMOKE_PASSWORD:-memoryvault}"
+SMOKE_PASSWORD="${SMOKE_PASSWORD:-}"
 PASS=0
 FAIL=0
 TOKEN=""
@@ -75,12 +77,18 @@ check_spa "SPA route /bookmarks serves HTML" "$BASE_URL/bookmarks"
 check "GraphQL rejects unauthenticated" "$BASE_URL/graphql" 401
 
 # --- Login flow ---
+if [ -z "$SMOKE_PASSWORD" ]; then
+  echo ""
+  echo "  SKIP  Authentication checks (SMOKE_PASSWORD not set)"
+  echo ""
+  echo "=== Results: $PASS passed, $FAIL failed ==="
+  [ "$FAIL" -eq 0 ] || exit 1
+  exit 0
+fi
+
 echo ""
 echo "-- Authentication --"
-LOGIN_RESPONSE=$(curl -s -w "\n%{http_code}" \
-  -X POST "$BASE_URL/api/auth/login" \
-  -H "Content-Type: application/json" \
-  -d "{\"email\":\"$SMOKE_EMAIL\",\"password\":\"$SMOKE_PASSWORD\"}")
+LOGIN_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/api/auth/login" -H "Content-Type: application/json" -d "{\"email\":\"$SMOKE_EMAIL\",\"password\":\"$SMOKE_PASSWORD\"}")
 
 LOGIN_STATUS=$(echo "$LOGIN_RESPONSE" | tail -1)
 LOGIN_BODY=$(echo "$LOGIN_RESPONSE" | sed '$d')

@@ -2,6 +2,17 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { AuthService, LoginResponse } from './auth.service';
+import { ConfigService } from '../shared/config';
+
+class MockConfigService {
+  cognito = { userPoolId: '', clientId: '', region: 'us-east-1' };
+  get useCognito() {
+    return !!this.cognito.userPoolId && !!this.cognito.clientId;
+  }
+  load() {
+    return Promise.resolve();
+  }
+}
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -10,7 +21,11 @@ describe('AuthService', () => {
   beforeEach(() => {
     localStorage.clear();
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: ConfigService, useClass: MockConfigService },
+      ],
     });
     service = TestBed.inject(AuthService);
     httpMock = TestBed.inject(HttpTestingController);

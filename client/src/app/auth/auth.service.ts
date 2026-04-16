@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { ConfigService } from '../shared/config';
 import { CognitoAuthService } from './cognito-auth.service';
 
 export interface LoginResponse {
@@ -15,9 +15,10 @@ export interface LoginResponse {
 export class AuthService {
   private http = inject(HttpClient);
   private cognitoAuth = inject(CognitoAuthService);
+  private config = inject(ConfigService);
 
   private get useCognito(): boolean {
-    return !!environment.cognito?.userPoolId && !!environment.cognito?.clientId;
+    return this.config.useCognito;
   }
 
   login(email: string, password: string): Observable<LoginResponse> {

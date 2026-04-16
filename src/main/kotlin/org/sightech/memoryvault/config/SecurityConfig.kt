@@ -31,6 +31,7 @@ class SecurityConfig(
                 auth
                     .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                     .requestMatchers("/api/auth/**").permitAll()
+                    .requestMatchers("/api/config").permitAll()
                     .requestMatchers("/graphiql/**").permitAll()
                     .requestMatchers("/ws/**").permitAll()
                     .requestMatchers("/", "/index.html", "/*.js", "/*.css", "/*.ico", "/*.png", "/*.svg", "/*.woff2", "/assets/**", "/media/**").permitAll()

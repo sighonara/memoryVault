@@ -249,7 +249,7 @@ Open self-service account creation via Cognito-hosted signup, gated behind a pay
 
 - **Jackson 3.x `asText()`/`textValue()` deprecation warnings** — 27 compiler warnings across `IngestService.kt`, `LocalLogService.kt`, and `YtDlpService.kt`. Jackson 3.x (bundled with Spring Boot 4.x) deprecated `JsonNode.asText()` and `textValue()`. Migrate to the replacement API.
 - **scaffold-entity skill modified in-place** — entity design conventions (enums, JSONB, field patterns) were added directly to `.claude/skills/scaffold-entity.md`, which is an externally installed skill. Extract into a project-owned skill or doc so upstream updates don't conflict.
-- **Cognito IDs baked into Angular bundle** — `client/src/environments/environment.prod.ts` currently hardcodes `userPoolId` and `clientId`. A Cognito pool recreation would silently break login until someone edits the file and redeploys. Replace with a `GET /api/config` endpoint (backend already has the values via env vars) that Angular fetches at bootstrap, and remove the static IDs from `environment.prod.ts`. Single source of truth = backend env vars.
+- ~~**Cognito IDs baked into Angular bundle**~~ — Resolved 2026-04-15. `GET /api/config` now returns Cognito IDs from backend env vars; Angular fetches it via `provideAppInitializer` before bootstrap (`ConfigService`). `environment.prod.ts` no longer carries Cognito IDs. Single source of truth = terraform → EC2 env file.
 
 ---
 

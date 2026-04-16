@@ -54,6 +54,7 @@ resource "aws_instance" "app" {
     cloudwatch_log_group = aws_cloudwatch_log_group.app.name
     internal_api_key     = var.internal_api_key
     cognito_user_pool_id = aws_cognito_user_pool.main.id
+    cognito_client_id    = aws_cognito_user_pool_client.spa.id
   })
 
   tags = {

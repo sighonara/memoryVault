@@ -1,22 +1,23 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
   AuthenticationDetails,
   CognitoUser,
   CognitoUserPool,
 } from 'amazon-cognito-identity-js';
-import { environment } from '../../environments/environment';
+import { ConfigService } from '../shared/config';
 import { LoginResponse } from './auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class CognitoAuthService {
+  private config = inject(ConfigService);
   private _userPool: CognitoUserPool | null = null;
 
   private get userPool(): CognitoUserPool {
     if (!this._userPool) {
       this._userPool = new CognitoUserPool({
-        UserPoolId: environment.cognito.userPoolId,
-        ClientId: environment.cognito.clientId,
+        UserPoolId: this.config.cognito.userPoolId,
+        ClientId: this.config.cognito.clientId,
       });
     }
     return this._userPool;
