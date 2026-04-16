@@ -65,9 +65,10 @@ dnf install -y python3-pip
 # yt-dlp works without ffmpeg (just can't merge formats)
 pip3 install yt-dlp
 
-# --- SSM Agent (usually pre-installed on Amazon Linux 2023) ---
-systemctl enable amazon-ssm-agent
-systemctl start amazon-ssm-agent
+# --- SSM Agent (pre-installed on standard AL2023 AMI) ---
+# Non-fatal: SSM is operational tooling, not required for the app to run.
+systemctl enable amazon-ssm-agent || echo "WARN: SSM agent enable failed"
+systemctl start amazon-ssm-agent || echo "WARN: SSM agent start failed"
 
 # --- Environment file for app container (reused by deploy script) ---
 mkdir -p /etc/memoryvault
