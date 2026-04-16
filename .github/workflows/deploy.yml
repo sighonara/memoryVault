@@ -35,10 +35,21 @@ jobs:
           docker push "$ECR_REPO:${{ github.sha }}"
           docker push "$ECR_REPO:latest"
 
+      - name: Resolve EC2 instance ID from tags
+        id: ec2
+        run: |
+          id=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=memoryvault-app" "Name=instance-state-name,Values=running" --query "Reservations[0].Instances[0].InstanceId" --output text)
+          if [ -z "$id" ] || [ "$id" = "None" ]; then
+            echo "No running instance tagged memoryvault-app found." >&2
+            exit 1
+          fi
+          echo "Resolved instance: $id"
+          echo "instance_id=$id" >> "$GITHUB_OUTPUT"
+
       - name: Deploy to EC2 via SSM
         env:
           ECR_REPO: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/memoryvault
-          INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
+          INSTANCE_ID: ${{ steps.ec2.outputs.instance_id }}
           REGION: ${{ secrets.AWS_REGION }}
           ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
         run: |

@@ -128,6 +128,17 @@ When recommending a fix that touches `terraform/**`, the sequence is:
 
 Label every recovery step by what it touches: *code* (`git push`), *AWS state* (`terraform apply`), or *automation* (workflow run). Do not assume one implies another.
 
+### Where configuration lives
+
+Before fixing a broken value, ask: is it in the right *kind* of place? Categories:
+
+- **GitHub Actions secrets** — long-lived credentials and account-level constants (AWS keys, account ID, region). Never put anything terraform outputs or recreates here (e.g. instance IDs, pool IDs) — those must be discovered at runtime.
+- **Runtime discovery in the workflow** (`aws ec2 describe-instances`, `terraform output`) — for any identifier that changes when infrastructure is replaced.
+- **`.env` (gitignored) + `.env.sample` (committed)** — per-developer config and rotated secrets for local scripts (smoke test credentials, etc).
+- **`CLAUDE.md` / `docs/plans/`** — project rules, architectural decisions, phase plans.
+
+When a value breaks, default to checking the *category* first, not just the value.
+
 ---
 
 ## Skills

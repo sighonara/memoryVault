@@ -17,7 +17,9 @@ if [ -z "$USER_POOL_ID" ]; then
 fi
 
 EMAIL="${2:-system@memoryvault.local}"
-PASSWORD=$(openssl rand -base64 24)
+# Append Aa1! to guarantee the Cognito policy's upper/lower/number/symbol
+# requirements are met, regardless of what openssl produced.
+PASSWORD="$(openssl rand -base64 24)Aa1!"
 
 echo "=== Creating Cognito seed user ==="
 echo "Pool: $USER_POOL_ID"
