@@ -33,3 +33,21 @@ type SystemStats {
     feedsWithFailures: Int!
     youtubeListsWithFailures: Int!
 }
+
+type CostRecord {
+    id: UUID!
+    billingDate: String!
+    serviceCosts: String!
+    totalCostUsd: String!
+    fetchedAt: Instant!
+}
+
+type CostSummary {
+    current: CostRecord
+    monthlyTotals: [MonthlyCost!]!
+}
+
+type MonthlyCost {
+    month: String!
+    totalCostUsd: String!
+}

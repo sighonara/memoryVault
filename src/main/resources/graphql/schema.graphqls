@@ -28,6 +28,7 @@ type Query {
     jobs(type: String, limit: Int): [SyncJob!]!
     logs(level: String, service: String, limit: Int): [LogEntry!]!
     stats: SystemStats!
+    costs(months: Int): CostSummary!
 
     # Ingest
     pendingIngests: [IngestPreview!]!
@@ -75,4 +76,7 @@ type Mutation {
     addYoutubeList(url: String!): YoutubeListAddResult!
     deleteYoutubeList(listId: UUID!): YoutubeList
     refreshYoutubeList(listId: UUID): [SyncResult!]!
+
+    # Costs
+    refreshCosts: CostRecord
 }
