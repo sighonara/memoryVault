@@ -6,7 +6,7 @@ import kotlin.test.assertEquals
 
 class YtDlpServiceTest {
 
-    private val service = YtDlpService(ObjectMapper())
+    private val service = YtDlpService(ObjectMapper(), downloadTimeoutMinutes = 30)
     private val sampleJson = this::class.java.classLoader.getResource("fixtures/sample-playlist.json")!!.readText()
 
     @Test
