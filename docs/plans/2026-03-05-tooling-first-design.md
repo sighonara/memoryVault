@@ -249,6 +249,7 @@ Open self-service account creation via Cognito-hosted signup, gated behind a pay
 
 - **Jackson 3.x `asText()`/`textValue()` deprecation warnings** — 27 compiler warnings across `IngestService.kt`, `LocalLogService.kt`, and `YtDlpService.kt`. Jackson 3.x (bundled with Spring Boot 4.x) deprecated `JsonNode.asText()` and `textValue()`. Migrate to the replacement API.
 - **scaffold-entity skill modified in-place** — entity design conventions (enums, JSONB, field patterns) were added directly to `.claude/skills/scaffold-entity.md`, which is an externally installed skill. Extract into a project-owned skill or doc so upstream updates don't conflict.
+- **`download_error` column on `videos` table** — Phase 9E made video downloads `@Async`, so per-video failures no longer flow back to `VideoSyncService`. Today a failed download leaves `filePath = null` and only logs the reason, so admin UI can't distinguish "not yet downloaded" from "tried and failed." Add a nullable `download_error TEXT` column (backward-compatible migration), set it from `AsyncVideoDownloader` on failure paths, clear it on success, and surface it in the admin view.
 - ~~**Cognito IDs baked into Angular bundle**~~ — Resolved 2026-04-15. `GET /api/config` now returns Cognito IDs from backend env vars; Angular fetches it via `provideAppInitializer` before bootstrap (`ConfigService`). `environment.prod.ts` no longer carries Cognito IDs. Single source of truth = terraform → EC2 env file.
 
 ---
