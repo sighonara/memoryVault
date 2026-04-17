@@ -152,7 +152,7 @@ memoryvault.internal.api-key=${INTERNAL_API_KEY}
 ./gradlew test
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/config/InternalApiKeyFilter.kt src/test/kotlin/org/sightech/memoryvault/config/InternalApiKeyFilterTest.kt src/main/kotlin/org/sightech/memoryvault/config/SecurityConfig.kt src/main/resources/application-prod.properties
@@ -169,11 +169,11 @@ REST controller that Lambda functions call to trigger sync operations. Feed + Yo
 - Create: `src/main/kotlin/org/sightech/memoryvault/sync/controller/InternalSyncController.kt`
 - Create: `src/test/kotlin/org/sightech/memoryvault/sync/controller/InternalSyncControllerTest.kt`
 
-- [ ] **Step 1: Verify service method names**
+- [x] **Step 1: Verify service method names**
 
 Before writing tests, confirm the exact method names on `FeedService` and `VideoSyncService` that refresh all feeds and all YouTube lists respectively. If no "refresh all" method exists on one of them, add it — it should iterate its domain entities and call the per-item refresh already in use.
 
-- [ ] **Step 2: Write failing tests**
+- [x] **Step 2: Write failing tests**
 
 ```kotlin
 package org.sightech.memoryvault.sync.controller
@@ -209,7 +209,7 @@ class InternalSyncControllerTest {
 
 Substitute the actual method names verified in Step 1.
 
-- [ ] **Step 3: Implement InternalSyncController — wrap in SyncJobService**
+- [x] **Step 3: Implement InternalSyncController — wrap in SyncJobService**
 
 Each endpoint must wrap its work in `SyncJobService.recordStart/recordSuccess/recordFailure` so the admin dashboard's job history stays complete. Without this wrapper, Lambda-triggered syncs bypass the `sync_jobs` audit table entirely.
 
@@ -274,13 +274,13 @@ Key semantics:
 
 Tests in Step 2 must also verify `syncJobService.recordStart`/`recordSuccess` are called on happy path and `recordFailure` on exception.
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 ```bash
 ./gradlew test --tests "*InternalSyncControllerTest"
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/sync/controller/InternalSyncController.kt src/test/kotlin/org/sightech/memoryvault/sync/controller/InternalSyncControllerTest.kt
@@ -312,7 +312,7 @@ No AWS-specific code. `LocalVideoDownloader` is renamed to `AsyncVideoDownloader
 - Modify: `src/main/kotlin/org/sightech/memoryvault/youtube/service/YtDlpService.kt` (add bounded `Process.waitFor(timeout, unit)` — 30min default, configurable)
 - Modify tests: references to `LocalVideoDownloader` → `AsyncVideoDownloader`
 
-- [ ] **Step 1: Add the executor bean with back-pressure**
+- [x] **Step 1: Add the executor bean with back-pressure**
 
 Create `src/main/kotlin/org/sightech/memoryvault/config/VideoDownloadAsyncConfig.kt`:
 
@@ -349,7 +349,7 @@ class VideoDownloadAsyncConfig {
 
 `setWaitForTasksToCompleteOnShutdown(true)` gives in-flight downloads up to 60s to finish on JVM shutdown. Partial-download cleanup on hard termination is outside scope; temp files live under `/tmp` and get reaped on reboot.
 
-- [ ] **Step 2: Async uncaught exception handler**
+- [x] **Step 2: Async uncaught exception handler**
 
 In the existing `AsyncConfig.kt` (Phase 8), ensure `AsyncConfigurer.getAsyncUncaughtExceptionHandler()` is implemented and logs at ERROR with the method name and args (videoId in our case). Swallowed exceptions in `@Async void` methods are the #1 cause of silent failures — this is non-negotiable.
 
@@ -362,7 +362,7 @@ override fun getAsyncUncaughtExceptionHandler(): AsyncUncaughtExceptionHandler {
 }
 ```
 
-- [ ] **Step 3: Rewrite AsyncVideoDownloader to own its DB write**
+- [x] **Step 3: Rewrite AsyncVideoDownloader to own its DB write**
 
 ```kotlin
 @Component
@@ -403,17 +403,17 @@ Notes:
 - `video.error` / `video.filePath` field names are illustrative — confirm against the entity in pre-flight.
 - If the Video was deleted between scheduling and execution (soft-delete), we log and bail — no orphan write.
 
-- [ ] **Step 4: Update VideoSyncService to stop consuming the return**
+- [x] **Step 4: Update VideoSyncService to stop consuming the return**
 
 Find every caller of `videoDownloader.download(...)`. Today, at least one reads the return value and updates the Video. Remove that logic — the downloader owns that write now. The caller just schedules: `videoDownloader.download(url, videoId)` and moves on.
 
-- [ ] **Step 5: Subprocess timeout on yt-dlp**
+- [x] **Step 5: Subprocess timeout on yt-dlp**
 
 In `YtDlpService.downloadVideo(...)`, replace `process.waitFor()` with `process.waitFor(timeoutMinutes, TimeUnit.MINUTES)`. On `false` return (timeout), `process.destroyForcibly()` and return `DownloadResult(success=false, error="yt-dlp timed out after ${timeoutMinutes}min")`. Make the timeout configurable via `memoryvault.youtube.download-timeout-minutes` with default `30`.
 
 This is correct independent of `@Async` — a hung yt-dlp should never wedge a thread indefinitely.
 
-- [ ] **Step 6: Tests**
+- [x] **Step 6: Tests**
 
 - Update any existing `LocalVideoDownloader*` tests to use `AsyncVideoDownloader`. Mock `VideoRepository`; verify the entity is updated with `filePath` on success and with `error` on failure. Use `CompletableFuture`-based test assertions OR make the test invoke `download(...)` directly (bypass proxy) to keep it synchronous — prefer the latter for unit tests.
 - Add a unit test: async method returns before work finishes. Inject a custom `SyncTaskExecutor` in the test context so `@Async` runs synchronously; assert behavior.
@@ -421,13 +421,13 @@ This is correct independent of `@Async` — a hung yt-dlp should never wedge a t
 - Add a `VideoDownloadAsyncConfig` bean wiring test (`@SpringBootTest`, autowire `videoDownloadExecutor`, assert `corePoolSize == 2` and rejection handler is `CallerRunsPolicy`).
 - Add a test that exercises `AsyncUncaughtExceptionHandler`: throw from a test `@Async` method, verify log output via a `ListAppender`.
 
-- [ ] **Step 7: Run tests**
+- [x] **Step 7: Run tests**
 
 ```bash
 ./gradlew test
 ```
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add -A
@@ -446,7 +446,7 @@ Two tiny Python handlers. Stdlib only — no `requirements.txt` needed beyond a 
 - Create: `lambdas/youtube-sync/handler.py`
 - Create: `lambdas/youtube-sync/requirements.txt` (empty/comment)
 
-- [ ] **Step 1: Create feed-sync handler**
+- [x] **Step 1: Create feed-sync handler**
 
 `lambdas/feed-sync/handler.py`:
 
@@ -476,11 +476,11 @@ def handler(event, context):
         raise
 ```
 
-- [ ] **Step 2: Create youtube-sync handler**
+- [x] **Step 2: Create youtube-sync handler**
 
 `lambdas/youtube-sync/handler.py` — identical to feed-sync but with `/api/internal/sync/youtube`.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add lambdas/
@@ -509,7 +509,7 @@ Three EventBridge rules: feed sync (every 30 min → feed-sync Lambda), YouTube 
 - Possibly modify: `terraform/templates/user_data.sh` (if yt-dlp missing per pre-flight check #1)
 - Possibly modify: `terraform/iam.tf` (if S3 perms missing per pre-flight check #2)
 
-- [ ] **Step 1: Lambda scheduler infrastructure (VPC-attached)**
+- [x] **Step 1: Lambda scheduler infrastructure (VPC-attached)**
 
 In `terraform/lambda.tf`:
 - IAM role for Lambda execution: managed policies `AWSLambdaBasicExecutionRole` (CloudWatch Logs) + `AWSLambdaVPCAccessExecutionRole` (ENI management for VPC-attached Lambdas)
@@ -531,7 +531,7 @@ Important: `INTERNAL_API_KEY` is generated by Terraform (`random_password`) and 
 
 **EC2 replacement note:** Referencing `aws_instance.app.private_ip` in the Lambda env creates a Terraform dependency — if the EC2 is replaced, Terraform will re-deploy the Lambdas with the new IP. Good (no stale IP drift).
 
-- [ ] **Step 2: Daily yt-dlp upgrade**
+- [x] **Step 2: Daily yt-dlp upgrade**
 
 In `terraform/yt-dlp-upgrade.tf`:
 - `aws_cloudwatch_event_rule` `yt_dlp_upgrade` with `schedule_expression = "rate(1 day)"`
@@ -539,7 +539,7 @@ In `terraform/yt-dlp-upgrade.tf`:
 - Target includes a `run_command_targets` block selecting the EC2 by tag `Name=memoryvault-app`
 - IAM role for EventBridge to invoke SSM with `ssm:SendCommand` on the `AWS-RunShellScript` document and on the tagged instance
 
-- [ ] **Step 3: Plumb INTERNAL_API_KEY to EC2**
+- [x] **Step 3: Plumb INTERNAL_API_KEY to EC2**
 
 - Generate in `terraform/ec2.tf` (or a dedicated secrets file): `resource "random_password" "internal_api_key" { length = 48; special = false }`
 - Add `internal_api_key = random_password.internal_api_key.result` to the `templatefile()` vars
@@ -548,7 +548,7 @@ In `terraform/yt-dlp-upgrade.tf`:
 - Mark the random resource output as `sensitive = true`.
 - Because this changes `user_data`, the EC2 must be replaced: add `user_data_replace_on_change = true` is already on the instance (from last session). Verify; run `terraform plan` and expect instance replacement.
 
-- [ ] **Step 4: Variables**
+- [x] **Step 4: Variables**
 
 ```hcl
 variable "feed_sync_schedule" {
@@ -564,7 +564,7 @@ variable "youtube_sync_schedule" {
 }
 ```
 
-- [ ] **Step 5: Validate**
+- [x] **Step 5: Validate**
 
 ```bash
 cd terraform && terraform fmt && terraform validate && terraform plan
@@ -574,7 +574,7 @@ Plan expectations:
 - New Lambda functions, IAM role, 3 EventBridge rules, 3 targets, 2 Lambda permissions, 1 `random_password`
 - EC2 replacement due to `user_data` change (brief downtime, same as Phase 9D)
 
-- [ ] **Step 6: Apply and verify**
+- [x] **Step 6: Apply and verify**
 
 ```bash
 cd terraform && terraform apply
@@ -586,7 +586,7 @@ After apply:
 - Wait for one scheduled firing to confirm EventBridge → Lambda → EC2 is end-to-end healthy
 - After a day, verify the yt-dlp upgrade ran (SSM command history or EC2 log)
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add terraform/
@@ -599,9 +599,9 @@ git commit -m "feat: Terraform Lambda + EventBridge for sync schedules and yt-dl
 
 The existing `FeedSyncRegistrar` schedules via `memoryvault.feeds.sync-cron`. Under the `aws` profile, we now rely on Lambda — the in-process cron should not also fire.
 
-- [ ] **Step 1:** In `application-prod.properties`, set `memoryvault.feeds.sync-cron=` (empty, disabling in-process cron) and add a comment explaining EventBridge owns this in AWS mode.
-- [ ] **Step 2:** Same for any YouTube-side cron if present.
-- [ ] **Step 3:** Commit.
+- [x] **Step 1:** In `application-prod.properties`, set `memoryvault.feeds.sync-cron=` (empty, disabling in-process cron) and add a comment explaining EventBridge owns this in AWS mode.
+- [x] **Step 2:** Same for any YouTube-side cron if present.
+- [x] **Step 3:** Commit.
 
 ---
 
@@ -609,7 +609,7 @@ The existing `FeedSyncRegistrar` schedules via `memoryvault.feeds.sync-cron`. Un
 
 The existing `scripts/smoke-test.sh` probes public endpoints. Add a local-only check that the internal endpoints are wired (it won't pass on prod because the tester lacks the API key, and that's fine — assert 401 when no key is provided, confirming the filter is live).
 
-- [ ] **Step 1:** In `scripts/smoke-test.sh`, after the existing public checks, add:
+- [x] **Step 1:** In `scripts/smoke-test.sh`, after the existing public checks, add:
 
 ```bash
 check "Internal endpoint requires API key" "$BASE_URL/api/internal/sync/feeds" 401 "-X POST"
@@ -617,21 +617,21 @@ check "Internal endpoint requires API key" "$BASE_URL/api/internal/sync/feeds" 4
 
 `check` already supports an `extra_args` param. Confirm it works with `-X POST`; if not, add a helper.
 
-- [ ] **Step 2:** Commit.
+- [x] **Step 2:** Commit.
 
 ---
 
 ## Summary Table
 
-| Task | Description                                               | Key Files                                                                                                                              |
-|------|-----------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|
-| 1    | InternalApiKeyFilter (timing-safe comparison)             | `config/InternalApiKeyFilter.kt`, `SecurityConfig.kt`, `application-prod.properties`                                                   |
-| 2    | InternalSyncController (feeds + YouTube) w/ SyncJob wrap  | `sync/controller/InternalSyncController.kt`                                                                                            |
-| 3    | `@Async` video dispatch, own-tx DB write, back-pressure   | `config/VideoDownloadAsyncConfig.kt`, `config/AsyncConfig.kt`, `AsyncVideoDownloader.kt` (renamed), `YtDlpService.kt`; delete `LambdaVideoDownloader.kt` |
-| 4    | Python Lambda handlers                                    | `lambdas/feed-sync/handler.py`, `lambdas/youtube-sync/handler.py`                                                                      |
-| 5    | Terraform — VPC-attached Lambda, EventBridge, yt-dlp upgrade | `terraform/lambda.tf`, `terraform/yt-dlp-upgrade.tf`, `terraform/ec2.tf`, `terraform/templates/user_data.sh`, `terraform/variables.tf` |
-| 6    | Disable in-process cron under `aws` profile               | `application-prod.properties`                                                                                                          |
-| 7    | Smoke-test extension for internal endpoint auth           | `scripts/smoke-test.sh`                                                                                                                |
+| Task | Description                                                  | Key Files                                                                                                                                                |
+|------|--------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1    | InternalApiKeyFilter (timing-safe comparison)                | `config/InternalApiKeyFilter.kt`, `SecurityConfig.kt`, `application-prod.properties`                                                                     |
+| 2    | InternalSyncController (feeds + YouTube) w/ SyncJob wrap     | `sync/controller/InternalSyncController.kt`                                                                                                              |
+| 3    | `@Async` video dispatch, own-tx DB write, back-pressure      | `config/VideoDownloadAsyncConfig.kt`, `config/AsyncConfig.kt`, `AsyncVideoDownloader.kt` (renamed), `YtDlpService.kt`; delete `LambdaVideoDownloader.kt` |
+| 4    | Python Lambda handlers                                       | `lambdas/feed-sync/handler.py`, `lambdas/youtube-sync/handler.py`                                                                                        |
+| 5    | Terraform — VPC-attached Lambda, EventBridge, yt-dlp upgrade | `terraform/lambda.tf`, `terraform/yt-dlp-upgrade.tf`, `terraform/ec2.tf`, `terraform/templates/user_data.sh`, `terraform/variables.tf`                   |
+| 6    | Disable in-process cron under `aws` profile                  | `application-prod.properties`                                                                                                                            |
+| 7    | Smoke-test extension for internal endpoint auth              | `scripts/smoke-test.sh`                                                                                                                                  |
 
 ---
 
