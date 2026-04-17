@@ -89,6 +89,11 @@ check_spa "SPA route /reader serves HTML" "$BASE_URL/reader"
 check_spa "SPA route /bookmarks serves HTML" "$BASE_URL/bookmarks"
 check "GraphQL rejects unauthenticated" "$BASE_URL/graphql" 401
 
+# Internal sync endpoint only exists under the aws profile (Cognito active = aws profile).
+if [ "$COGNITO_ACTIVE" -eq 1 ]; then
+  check "Internal sync rejects without key" "$BASE_URL/api/internal/sync/feeds" 401 "-X POST"
+fi
+
 # --- Login flow ---
 if [ "$COGNITO_ACTIVE" -eq 1 ]; then
   echo ""

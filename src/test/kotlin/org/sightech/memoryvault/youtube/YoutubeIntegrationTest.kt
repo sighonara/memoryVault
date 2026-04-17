@@ -135,7 +135,9 @@ class YoutubeIntegrationTest {
         videoSyncService.syncList(list, metadata)
 
         assertEquals(3L, videoRepository.countByYoutubeListIdAndUserId(list.id, userId))
-        // LocalVideoDownloader calls yt-dlp which won't be available in test — downloads fail gracefully
+        // AsyncVideoDownloader calls yt-dlp which isn't available in test; download fails
+        // and leaves filePath null. Under the test profile the executor is synchronous so
+        // the download attempt completes before this assertion runs.
         assertEquals(0L, videoRepository.countDownloadedByYoutubeListIdAndUserId(list.id, userId))
     }
 

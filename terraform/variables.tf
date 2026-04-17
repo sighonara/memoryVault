@@ -61,8 +61,20 @@ variable "jwt_secret" {
   sensitive   = true
 }
 
-variable "internal_api_key" {
-  description = "Shared API key for internal endpoints (Lambda -> EC2)"
+variable "feed_sync_schedule" {
+  description = "EventBridge schedule expression for feed-sync Lambda"
   type        = string
-  sensitive   = true
+  default     = "rate(30 minutes)"
+}
+
+variable "youtube_sync_schedule" {
+  description = "EventBridge schedule expression for youtube-sync Lambda"
+  type        = string
+  default     = "rate(6 hours)"
+}
+
+variable "yt_dlp_upgrade_schedule" {
+  description = "EventBridge schedule expression for daily yt-dlp upgrade"
+  type        = string
+  default     = "rate(1 day)"
 }

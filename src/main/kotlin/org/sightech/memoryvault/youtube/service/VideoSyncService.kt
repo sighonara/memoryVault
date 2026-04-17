@@ -4,12 +4,13 @@ import org.sightech.memoryvault.youtube.entity.Video
 import org.sightech.memoryvault.youtube.entity.YoutubeList
 import org.sightech.memoryvault.youtube.repository.VideoRepository
 import org.sightech.memoryvault.youtube.repository.YoutubeListRepository
-import org.sightech.memoryvault.websocket.VideoDownloadCompleted
 import org.slf4j.LoggerFactory
-import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import java.time.Instant
 
+// downloadSuccesses/downloadFailures reflect downloads *dispatched* — actual results
+// land asynchronously on the Video entity (filePath/downloadedAt) and via the
+// VideoDownloadCompleted event emitted by AsyncVideoDownloader.
 data class SyncResult(
     val list: YoutubeList,
     val newVideos: Int,
@@ -23,8 +24,7 @@ class VideoSyncService(
     private val ytDlpService: YtDlpService,
     private val videoRepository: VideoRepository,
     private val youtubeListRepository: YoutubeListRepository,
-    private val videoDownloader: VideoDownloader,
-    private val eventPublisher: ApplicationEventPublisher
+    private val videoDownloader: VideoDownloader
 ) {
 
     private val logger = LoggerFactory.getLogger(VideoSyncService::class.java)
@@ -72,26 +72,11 @@ class VideoSyncService(
             )
         }
 
-        // Download new videos
-        var downloadSuccesses = 0
-        var downloadFailures = 0
+        // Dispatch downloads asynchronously. AsyncVideoDownloader owns the post-download
+        // DB write (filePath, downloadedAt) and the VideoDownloadCompleted event. Callers
+        // see "dispatched" counts here, not completion counts.
         for (video in newVideos) {
-            val result = videoDownloader.download(video.youtubeUrl, video.id)
-            if (result.success && result.filePath != null) {
-                video.filePath = result.filePath
-                video.downloadedAt = Instant.now()
-                video.updatedAt = Instant.now()
-                videoRepository.save(video)
-                downloadSuccesses++
-            } else {
-                logger.warn("Failed to download video {}: {}", video.youtubeVideoId, result.error)
-                downloadFailures++
-            }
-            eventPublisher.publishEvent(VideoDownloadCompleted(
-                userId = list.userId, timestamp = Instant.now(),
-                videoId = video.id, listId = list.id,
-                success = result.success && result.filePath != null
-            ))
+            videoDownloader.download(video.youtubeUrl, video.id)
         }
 
         // Update list metadata
@@ -106,8 +91,8 @@ class VideoSyncService(
             list = currentList,
             newVideos = newVideos.size,
             removedVideos = removedVideos.size,
-            downloadSuccesses = downloadSuccesses,
-            downloadFailures = downloadFailures
+            downloadSuccesses = newVideos.size,
+            downloadFailures = 0
         )
     }
 }

@@ -7,7 +7,6 @@ import org.sightech.memoryvault.youtube.entity.Video
 import org.sightech.memoryvault.youtube.entity.YoutubeList
 import org.sightech.memoryvault.youtube.repository.VideoRepository
 import org.sightech.memoryvault.youtube.repository.YoutubeListRepository
-import org.springframework.context.ApplicationEventPublisher
 import java.util.Optional
 import java.util.UUID
 import kotlin.test.assertEquals
@@ -17,10 +16,9 @@ class VideoSyncServiceTest {
     private val ytDlpService = mockk<YtDlpService>()
     private val videoRepository = mockk<VideoRepository>()
     private val youtubeListRepository = mockk<YoutubeListRepository>()
-    private val videoDownloader = mockk<VideoDownloader>()
-    private val eventPublisher = mockk<ApplicationEventPublisher>(relaxed = true)
+    private val videoDownloader = mockk<VideoDownloader>(relaxed = true)
 
-    private val service = VideoSyncService(ytDlpService, videoRepository, youtubeListRepository, videoDownloader, eventPublisher)
+    private val service = VideoSyncService(ytDlpService, videoRepository, youtubeListRepository, videoDownloader)
 
     private val userId = UUID.fromString("00000000-0000-0000-0000-000000000001")
     private val list = YoutubeList(userId = userId, youtubeListId = "PLtest", url = "https://youtube.com/playlist?list=PLtest")
@@ -33,10 +31,9 @@ class VideoSyncServiceTest {
     }
 
     @Test
-    fun `syncList creates new video records and downloads them`() {
+    fun `syncList creates new video records and dispatches downloads`() {
         every { videoRepository.findByYoutubeListIdInAndYoutubeVideoIdIn(any(), any()) } returns emptyList()
         every { videoRepository.findByYoutubeListIdAndUserId(list.id, list.userId) } returns emptyList()
-        every { videoDownloader.download(any(), any()) } returns DownloadResult(success = true, filePath = "videos/test.mp4")
 
         val metadata = listOf(
             VideoMetadata("vid1", "Video 1", "https://youtube.com/watch?v=vid1", "Channel", 100, "desc")
@@ -46,8 +43,11 @@ class VideoSyncServiceTest {
 
         assertEquals(1, result.newVideos)
         assertEquals(0, result.removedVideos)
-        assertEquals(1, result.downloadSuccesses)
-        verify(exactly = 2) { videoRepository.save(any()) } // once for create, once for download update
+        assertEquals(1, result.downloadSuccesses) // dispatched count; actual outcome is async
+        verify(exactly = 1) { videoDownloader.download(any(), any()) }
+        // VideoSyncService only saves once per new video (the create). Download persistence
+        // lives on AsyncVideoDownloader.
+        verify(exactly = 1) { videoRepository.save(any()) }
     }
 
     @Test
@@ -64,11 +64,11 @@ class VideoSyncServiceTest {
             VideoMetadata("vid1", "Video 1", "https://youtube.com/watch?v=vid1", "Channel", 100, "desc"),
             VideoMetadata("vid2", "Video 2", "https://youtube.com/watch?v=vid2", "Channel", 200, "desc")
         )
-        every { videoDownloader.download(any(), any()) } returns DownloadResult(success = true, filePath = "videos/test.mp4")
 
         val result = service.syncList(list, metadata)
 
-        assertEquals(1, result.newVideos) // only vid2 is new
+        assertEquals(1, result.newVideos)
+        verify(exactly = 1) { videoDownloader.download(any(), any()) }
     }
 
     @Test
@@ -81,7 +81,6 @@ class VideoSyncServiceTest {
         every { videoRepository.findByYoutubeListIdInAndYoutubeVideoIdIn(any(), any()) } returns listOf(existingVideo)
         every { videoRepository.findByYoutubeListIdAndUserId(list.id, list.userId) } returns listOf(existingVideo)
 
-        // Empty metadata = vid1 was removed
         val result = service.syncList(list, emptyList())
 
         assertEquals(0, result.newVideos)
@@ -101,24 +100,7 @@ class VideoSyncServiceTest {
 
         val result = service.syncList(list, emptyList())
 
-        assertEquals(0, result.removedVideos) // already flagged, don't count again
-    }
-
-    @Test
-    fun `syncList handles download failures gracefully`() {
-        every { videoRepository.findByYoutubeListIdInAndYoutubeVideoIdIn(any(), any()) } returns emptyList()
-        every { videoRepository.findByYoutubeListIdAndUserId(list.id, list.userId) } returns emptyList()
-        every { videoDownloader.download(any(), any()) } returns DownloadResult(success = false, error = "network error")
-
-        val metadata = listOf(
-            VideoMetadata("vid1", "Video 1", "https://youtube.com/watch?v=vid1", "Channel", 100, "desc")
-        )
-
-        val result = service.syncList(list, metadata)
-
-        assertEquals(1, result.newVideos)
-        assertEquals(0, result.downloadSuccesses)
-        assertEquals(1, result.downloadFailures)
+        assertEquals(0, result.removedVideos)
     }
 
     @Test
@@ -129,7 +111,6 @@ class VideoSyncServiceTest {
         val metadata = listOf(
             VideoMetadata("vid1", "Video 1", "https://youtube.com/watch?v=vid1", "Channel", 100, "desc")
         )
-        every { videoDownloader.download(any(), any()) } returns DownloadResult(success = true, filePath = "videos/test.mp4")
 
         service.syncList(list, metadata)
 

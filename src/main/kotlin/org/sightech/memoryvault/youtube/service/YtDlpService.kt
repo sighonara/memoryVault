@@ -1,8 +1,10 @@
 package org.sightech.memoryvault.youtube.service
 
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import tools.jackson.databind.ObjectMapper
+import java.util.concurrent.TimeUnit
 
 data class VideoMetadata(
     val videoId: String,
@@ -20,7 +22,10 @@ data class DownloadResult(
 )
 
 @Service
-class YtDlpService(private val objectMapper: ObjectMapper) {
+class YtDlpService(
+    private val objectMapper: ObjectMapper,
+    @Value("\${memoryvault.youtube.download-timeout-minutes:30}") private val downloadTimeoutMinutes: Long
+) {
 
     private val logger = LoggerFactory.getLogger(YtDlpService::class.java)
 
@@ -79,8 +84,15 @@ class YtDlpService(private val objectMapper: ObjectMapper) {
             return DownloadResult(success = false, error = "yt-dlp not found or failed to start: ${e.message}")
         }
 
-        val exitCode = process.waitFor()
+        val finished = process.waitFor(downloadTimeoutMinutes, TimeUnit.MINUTES)
+        if (!finished) {
+            process.destroyForcibly()
+            val msg = "yt-dlp timed out after ${downloadTimeoutMinutes}min"
+            logger.error(msg)
+            return DownloadResult(success = false, error = msg)
+        }
 
+        val exitCode = process.exitValue()
         return if (exitCode == 0) {
             logger.info("Download complete: {}", outputPath)
             DownloadResult(success = true, filePath = outputPath)

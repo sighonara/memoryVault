@@ -8,6 +8,13 @@ resource "aws_cloudwatch_log_group" "app" {
   }
 }
 
+# Shared secret for Lambda -> EC2 internal sync calls.
+# Rotating this re-templates user_data and replaces the EC2 instance (brief downtime).
+resource "random_password" "internal_api_key" {
+  length  = 48
+  special = false
+}
+
 # Look up latest Amazon Linux 2023 AMI
 data "aws_ami" "amazon_linux" {
   most_recent = true
@@ -59,7 +66,7 @@ resource "aws_instance" "app" {
     domain_name          = var.domain_name
     s3_bucket            = aws_s3_bucket.content.id
     cloudwatch_log_group = aws_cloudwatch_log_group.app.name
-    internal_api_key     = var.internal_api_key
+    internal_api_key     = random_password.internal_api_key.result
     cognito_user_pool_id = aws_cognito_user_pool.main.id
     cognito_client_id    = aws_cognito_user_pool_client.spa.id
   })

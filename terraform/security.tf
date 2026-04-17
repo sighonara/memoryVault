@@ -30,6 +30,17 @@ resource "aws_security_group" "ec2" {
     description = "SSH access from admin IP"
   }
 
+  # Spring Boot app port (8085) — reachable only from the sync-scheduler Lambda SG.
+  # Caddy terminates TLS on :443 and reverse-proxies to :8085 locally, so public
+  # traffic never hits this port directly.
+  ingress {
+    from_port       = 8085
+    to_port         = 8085
+    protocol        = "tcp"
+    security_groups = [aws_security_group.lambda_sync.id]
+    description     = "Internal sync from Lambda schedulers"
+  }
+
   # All outbound traffic
   egress {
     from_port   = 0

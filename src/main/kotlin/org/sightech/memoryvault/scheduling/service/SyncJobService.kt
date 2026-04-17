@@ -52,6 +52,23 @@ class SyncJobService(
         ))
     }
 
+    fun runTracked(
+        jobType: JobType,
+        triggeredBy: TriggerSource,
+        userId: UUID,
+        task: () -> Map<String, Any>?
+    ): Map<String, Any>? {
+        val job = recordStart(jobType, triggeredBy, userId)
+        return try {
+            val metadata = task()
+            recordSuccess(job.id, metadata)
+            metadata
+        } catch (e: Exception) {
+            recordFailure(job.id, e.message ?: e.javaClass.simpleName)
+            throw e
+        }
+    }
+
     fun recordFailure(jobId: UUID, error: String) {
         val job = syncJobRepository.findById(jobId).orElse(null) ?: return
         val oldStatus = job.status.name
