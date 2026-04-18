@@ -1,12 +1,13 @@
-import { Component, input } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { SystemStats } from '../../shared/graphql/generated';
+import { SystemStats, CostSummary } from '../../shared/graphql/generated';
+import { CostCardComponent } from '../cost-card';
 
 @Component({
   selector: 'app-stats-panel',
   standalone: true,
-  imports: [CommonModule, MatIconModule],
+  imports: [CommonModule, MatIconModule, CostCardComponent],
   template: `
     @if (stats()) {
       <div class="stats-grid">
@@ -82,6 +83,14 @@ import { SystemStats } from '../../shared/graphql/generated';
             <span class="stat-label">Last YT Sync: {{ stats()!.lastYoutubeSync ? formatDate(stats()!.lastYoutubeSync) : 'Never' }}</span>
           </div>
         </div>
+
+        <app-cost-card
+          [costSummary]="costSummary()"
+          [months]="costMonths()"
+          [refreshing]="refreshingCosts()"
+          (onRefresh)="onRefreshCosts.emit()"
+          (onMonthsChange)="onCostMonthsChange.emit($event)"
+        />
       </div>
     } @else {
       <div class="empty">No stats available.</div>
@@ -110,6 +119,11 @@ import { SystemStats } from '../../shared/graphql/generated';
 })
 export class StatsPanelComponent {
   stats = input<SystemStats | null>(null);
+  costSummary = input<CostSummary | null>(null);
+  costMonths = input<number>(6);
+  refreshingCosts = input<boolean>(false);
+  onRefreshCosts = output<void>();
+  onCostMonthsChange = output<number>();
 
   formatBytes(bytes: number): string {
     if (bytes === 0) return '0 B';
