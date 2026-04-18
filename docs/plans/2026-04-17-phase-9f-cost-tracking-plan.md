@@ -22,7 +22,7 @@
 - Modify: `build.gradle.kts` (line ~58, after `cloudwatchlogs`)
 - Create: `src/main/resources/db/migration/V7__cost_records.sql`
 
-- [ ] **Step 1: Add Cost Explorer SDK dependency**
+- [x] **Step 1: Add Cost Explorer SDK dependency**
 
 In `build.gradle.kts`, add after line 58 (`implementation("software.amazon.awssdk:cloudwatchlogs")`):
 
@@ -30,7 +30,7 @@ In `build.gradle.kts`, add after line 58 (`implementation("software.amazon.awssd
 implementation("software.amazon.awssdk:costexplorer")
 ```
 
-- [ ] **Step 2: Create V7 migration**
+- [x] **Step 2: Create V7 migration**
 
 Create `src/main/resources/db/migration/V7__cost_records.sql`:
 
@@ -48,13 +48,13 @@ CREATE TABLE cost_records (
 CREATE INDEX idx_cost_records_billing_date ON cost_records(billing_date DESC);
 ```
 
-- [ ] **Step 3: Verify compilation and migration**
+- [x] **Step 3: Verify compilation and migration**
 
 ```bash
 ./gradlew compileKotlin
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add build.gradle.kts src/main/resources/db/migration/V7__cost_records.sql && git commit -m "feat: add Cost Explorer SDK and cost_records migration"
@@ -68,7 +68,7 @@ git add build.gradle.kts src/main/resources/db/migration/V7__cost_records.sql &&
 - Create: `src/main/kotlin/org/sightech/memoryvault/cost/entity/CostRecord.kt`
 - Create: `src/main/kotlin/org/sightech/memoryvault/cost/repository/CostRecordRepository.kt`
 
-- [ ] **Step 1: Create CostRecord entity**
+- [x] **Step 1: Create CostRecord entity**
 
 Create `src/main/kotlin/org/sightech/memoryvault/cost/entity/CostRecord.kt`:
 
@@ -110,7 +110,7 @@ class CostRecord(
 )
 ```
 
-- [ ] **Step 2: Create CostRecordRepository**
+- [x] **Step 2: Create CostRecordRepository**
 
 Create `src/main/kotlin/org/sightech/memoryvault/cost/repository/CostRecordRepository.kt`:
 
@@ -129,13 +129,13 @@ interface CostRecordRepository : JpaRepository<CostRecord, UUID> {
 }
 ```
 
-- [ ] **Step 3: Verify compilation**
+- [x] **Step 3: Verify compilation**
 
 ```bash
 ./gradlew compileKotlin
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/cost/ && git commit -m "feat: add CostRecord entity and repository"
@@ -150,7 +150,7 @@ git add src/main/kotlin/org/sightech/memoryvault/cost/ && git commit -m "feat: a
 - Create: `src/main/kotlin/org/sightech/memoryvault/cost/service/LocalCostService.kt`
 - Create: `src/test/kotlin/org/sightech/memoryvault/cost/service/LocalCostServiceTest.kt`
 
-- [ ] **Step 1: Write failing tests for LocalCostService**
+- [x] **Step 1: Write failing tests for LocalCostService**
 
 Create `src/test/kotlin/org/sightech/memoryvault/cost/service/LocalCostServiceTest.kt`:
 
@@ -188,7 +188,7 @@ class LocalCostServiceTest {
 }
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 ```bash
 ./gradlew test --tests "*LocalCostServiceTest" 2>&1 | tail -5
@@ -196,7 +196,7 @@ class LocalCostServiceTest {
 
 Expected: compilation failure (classes don't exist yet).
 
-- [ ] **Step 3: Create CostService interface**
+- [x] **Step 3: Create CostService interface**
 
 Create `src/main/kotlin/org/sightech/memoryvault/cost/service/CostService.kt`:
 
@@ -214,7 +214,7 @@ interface CostService {
 }
 ```
 
-- [ ] **Step 4: Create LocalCostService**
+- [x] **Step 4: Create LocalCostService**
 
 Create `src/main/kotlin/org/sightech/memoryvault/cost/service/LocalCostService.kt`:
 
@@ -246,7 +246,7 @@ class LocalCostService : CostService {
 }
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 ```bash
 ./gradlew test --tests "*LocalCostServiceTest"
@@ -254,7 +254,7 @@ class LocalCostService : CostService {
 
 Expected: all 4 tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/cost/service/ src/test/kotlin/org/sightech/memoryvault/cost/service/ && git commit -m "feat: add CostService interface and LocalCostService"
@@ -269,7 +269,7 @@ git add src/main/kotlin/org/sightech/memoryvault/cost/service/ src/test/kotlin/o
 - Create: `src/main/kotlin/org/sightech/memoryvault/cost/service/AwsCostService.kt`
 - Create: `src/test/kotlin/org/sightech/memoryvault/cost/service/AwsCostServiceTest.kt`
 
-- [ ] **Step 1: Write failing tests for AwsCostService**
+- [x] **Step 1: Write failing tests for AwsCostService**
 
 Create `src/test/kotlin/org/sightech/memoryvault/cost/service/AwsCostServiceTest.kt`:
 
@@ -416,7 +416,7 @@ class AwsCostServiceTest {
 }
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 ```bash
 ./gradlew test --tests "*AwsCostServiceTest" 2>&1 | tail -5
@@ -424,7 +424,7 @@ class AwsCostServiceTest {
 
 Expected: compilation failure (AwsCostService doesn't exist yet).
 
-- [ ] **Step 3: Add CostExplorerClient bean to AwsConfig**
+- [x] **Step 3: Add CostExplorerClient bean to AwsConfig**
 
 Modify `src/main/kotlin/org/sightech/memoryvault/config/AwsConfig.kt`. Add the import and bean:
 
@@ -469,7 +469,7 @@ class AwsConfig {
 
 Note: Cost Explorer is a global service, always called against `us-east-1`.
 
-- [ ] **Step 4: Implement AwsCostService**
+- [x] **Step 4: Implement AwsCostService**
 
 Create `src/main/kotlin/org/sightech/memoryvault/cost/service/AwsCostService.kt`:
 
@@ -569,7 +569,7 @@ class AwsCostService(
 }
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 ```bash
 ./gradlew test --tests "*AwsCostServiceTest"
@@ -577,7 +577,7 @@ class AwsCostService(
 
 Expected: all 6 tests pass.
 
-- [ ] **Step 6: Run full test suite**
+- [x] **Step 6: Run full test suite**
 
 ```bash
 ./gradlew test
@@ -585,7 +585,7 @@ Expected: all 6 tests pass.
 
 Expected: all tests pass.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/config/AwsConfig.kt src/main/kotlin/org/sightech/memoryvault/cost/service/AwsCostService.kt src/test/kotlin/org/sightech/memoryvault/cost/service/AwsCostServiceTest.kt && git commit -m "feat: implement AwsCostService with Cost Explorer integration"
@@ -601,7 +601,7 @@ git add src/main/kotlin/org/sightech/memoryvault/config/AwsConfig.kt src/main/ko
 - Create: `src/test/kotlin/org/sightech/memoryvault/cost/CostRefreshTaskTest.kt`
 - Modify: `src/main/kotlin/org/sightech/memoryvault/scheduling/controller/InternalSyncController.kt`
 
-- [ ] **Step 1: Write failing test for CostRefreshTask**
+- [x] **Step 1: Write failing test for CostRefreshTask**
 
 Create `src/test/kotlin/org/sightech/memoryvault/cost/CostRefreshTaskTest.kt`:
 
@@ -646,7 +646,7 @@ class CostRefreshTaskTest {
 }
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 ```bash
 ./gradlew test --tests "*CostRefreshTaskTest" 2>&1 | tail -5
@@ -654,7 +654,7 @@ class CostRefreshTaskTest {
 
 Expected: compilation failure.
 
-- [ ] **Step 3: Add @EnableScheduling to SchedulingConfig**
+- [x] **Step 3: Add @EnableScheduling to SchedulingConfig**
 
 Modify `src/main/kotlin/org/sightech/memoryvault/config/SchedulingConfig.kt`:
 
@@ -682,7 +682,7 @@ class SchedulingConfig {
 }
 ```
 
-- [ ] **Step 4: Create CostRefreshTask**
+- [x] **Step 4: Create CostRefreshTask**
 
 Create `src/main/kotlin/org/sightech/memoryvault/cost/CostRefreshTask.kt`:
 
@@ -714,7 +714,7 @@ class CostRefreshTask(private val costService: CostService) {
 }
 ```
 
-- [ ] **Step 5: Add cost refresh to InternalSyncController**
+- [x] **Step 5: Add cost refresh to InternalSyncController**
 
 Modify `src/main/kotlin/org/sightech/memoryvault/scheduling/controller/InternalSyncController.kt`. Add the `CostService` dependency and new endpoint.
 
@@ -750,7 +750,7 @@ fun refreshCosts(): ResponseEntity<Map<String, Any>> {
 
 Note: the `InternalSyncController` is `@RequestMapping("/api/internal/sync")`, so the full path is `/api/internal/sync/costs/refresh`. This is behind the existing `InternalApiKeyFilter`.
 
-- [ ] **Step 6: Run tests**
+- [x] **Step 6: Run tests**
 
 ```bash
 ./gradlew test --tests "*CostRefreshTaskTest"
@@ -759,7 +759,7 @@ Note: the `InternalSyncController` is `@RequestMapping("/api/internal/sync")`, s
 
 Expected: all tests pass. Existing `InternalSyncControllerTest` may need updating if it validates constructor params — check for compile errors.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/config/SchedulingConfig.kt src/main/kotlin/org/sightech/memoryvault/cost/CostRefreshTask.kt src/test/kotlin/org/sightech/memoryvault/cost/CostRefreshTaskTest.kt src/main/kotlin/org/sightech/memoryvault/scheduling/controller/InternalSyncController.kt && git commit -m "feat: add CostRefreshTask with @Scheduled and internal refresh endpoint"
@@ -775,7 +775,7 @@ git add src/main/kotlin/org/sightech/memoryvault/config/SchedulingConfig.kt src/
 - Create: `src/main/kotlin/org/sightech/memoryvault/graphql/CostResolver.kt`
 - Create: `src/test/kotlin/org/sightech/memoryvault/graphql/CostResolverTest.kt`
 
-- [ ] **Step 1: Write failing test for CostResolver**
+- [x] **Step 1: Write failing test for CostResolver**
 
 Create `src/test/kotlin/org/sightech/memoryvault/graphql/CostResolverTest.kt`:
 
@@ -847,7 +847,7 @@ class CostResolverTest {
 }
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 ```bash
 ./gradlew test --tests "*CostResolverTest" 2>&1 | tail -5
@@ -855,7 +855,7 @@ class CostResolverTest {
 
 Expected: compilation failure.
 
-- [ ] **Step 3: Add cost types to admin.graphqls**
+- [x] **Step 3: Add cost types to admin.graphqls**
 
 Append to `src/main/resources/graphql/admin.graphqls`:
 
@@ -881,7 +881,7 @@ type MonthlyCost {
 
 Note: `serviceCosts` is `String!` (JSON-serialized) since we don't have a `JSON` scalar. `totalCostUsd` is `String!` to preserve decimal precision (GraphQL `Float` would lose precision).
 
-- [ ] **Step 4: Add costs query and mutation to schema.graphqls**
+- [x] **Step 4: Add costs query and mutation to schema.graphqls**
 
 Add to the `Query` type in `src/main/resources/graphql/schema.graphqls`, after the `stats` line:
 
@@ -897,7 +897,7 @@ Add to the `Mutation` type, at the end:
     refreshCosts: CostRecord
 ```
 
-- [ ] **Step 5: Create CostResolver**
+- [x] **Step 5: Create CostResolver**
 
 Create `src/main/kotlin/org/sightech/memoryvault/graphql/CostResolver.kt`:
 
@@ -974,7 +974,7 @@ class CostResolver(
 }
 ```
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 6: Run tests to verify they pass**
 
 ```bash
 ./gradlew test --tests "*CostResolverTest"
@@ -983,7 +983,7 @@ class CostResolver(
 
 Expected: all tests pass.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/main/resources/graphql/admin.graphqls src/main/resources/graphql/schema.graphqls src/main/kotlin/org/sightech/memoryvault/graphql/CostResolver.kt src/test/kotlin/org/sightech/memoryvault/graphql/CostResolverTest.kt && git commit -m "feat: add GraphQL costs query, refreshCosts mutation, and CostResolver"
@@ -997,7 +997,7 @@ git add src/main/resources/graphql/admin.graphqls src/main/resources/graphql/sch
 - Create: `src/main/kotlin/org/sightech/memoryvault/mcp/CostTools.kt`
 - Create: `src/test/kotlin/org/sightech/memoryvault/mcp/CostToolsTest.kt`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Create `src/test/kotlin/org/sightech/memoryvault/mcp/CostToolsTest.kt`:
 
@@ -1075,7 +1075,7 @@ class CostToolsTest {
 }
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 ```bash
 ./gradlew test --tests "*CostToolsTest" 2>&1 | tail -5
@@ -1083,7 +1083,7 @@ class CostToolsTest {
 
 Expected: compilation failure.
 
-- [ ] **Step 3: Implement CostTools**
+- [x] **Step 3: Implement CostTools**
 
 Create `src/main/kotlin/org/sightech/memoryvault/mcp/CostTools.kt`:
 
@@ -1141,7 +1141,7 @@ class CostTools(private val costService: CostService) {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 ```bash
 ./gradlew test --tests "*CostToolsTest"
@@ -1150,7 +1150,7 @@ class CostTools(private val costService: CostService) {
 
 Expected: all tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/mcp/CostTools.kt src/test/kotlin/org/sightech/memoryvault/mcp/CostToolsTest.kt && git commit -m "feat: add getAwsCosts MCP tool"
@@ -1163,7 +1163,7 @@ git add src/main/kotlin/org/sightech/memoryvault/mcp/CostTools.kt src/test/kotli
 **Files:**
 - Modify: `terraform/iam.tf`
 
-- [ ] **Step 1: Add Cost Explorer IAM policy**
+- [x] **Step 1: Add Cost Explorer IAM policy**
 
 Add to `terraform/iam.tf`, after the `aws_iam_role_policy_attachment "ec2_ssm"` block (around line 99):
 
@@ -1188,7 +1188,7 @@ resource "aws_iam_role_policy" "ec2_cost_explorer" {
 }
 ```
 
-- [ ] **Step 2: Format and validate**
+- [x] **Step 2: Format and validate**
 
 ```bash
 cd terraform && terraform fmt && terraform validate
@@ -1196,7 +1196,7 @@ cd terraform && terraform fmt && terraform validate
 
 Expected: `Success! The configuration is valid.`
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add terraform/iam.tf && git commit -m "feat: add Cost Explorer IAM policy for EC2 instance role"
@@ -1211,7 +1211,7 @@ git add terraform/iam.tf && git commit -m "feat: add Cost Explorer IAM policy fo
 - Modify: `client/src/app/admin/admin.store.ts`
 - Regenerate: `client/src/app/shared/graphql/generated.ts`
 
-- [ ] **Step 1: Add GraphQL operations**
+- [x] **Step 1: Add GraphQL operations**
 
 Append to `client/src/app/admin/admin.graphql`:
 
@@ -1243,7 +1243,7 @@ mutation RefreshCosts {
 }
 ```
 
-- [ ] **Step 2: Regenerate GraphQL types**
+- [x] **Step 2: Regenerate GraphQL types**
 
 ```bash
 cd client && npx graphql-codegen
@@ -1251,7 +1251,7 @@ cd client && npx graphql-codegen
 
 Expected: `generated.ts` updated with `GetCostsDocument`, `RefreshCostsDocument`, `CostSummary`, `CostRecord`, `MonthlyCost` types.
 
-- [ ] **Step 3: Update admin store**
+- [x] **Step 3: Update admin store**
 
 Modify `client/src/app/admin/admin.store.ts`. Add to imports:
 
@@ -1327,7 +1327,7 @@ refreshCosts,
 setCostMonths: (months: number) => { patchState(store, { costMonths: months }); loadCosts(); },
 ```
 
-- [ ] **Step 4: Verify compilation**
+- [x] **Step 4: Verify compilation**
 
 ```bash
 cd client && npx ng build 2>&1 | tail -10
@@ -1335,7 +1335,7 @@ cd client && npx ng build 2>&1 | tail -10
 
 Expected: build succeeds.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 cd client && git add src/app/admin/admin.graphql src/app/admin/admin.store.ts src/app/shared/graphql/generated.ts && git commit -m "feat: add costs GraphQL operations and admin store methods"
@@ -1350,7 +1350,7 @@ cd client && git add src/app/admin/admin.graphql src/app/admin/admin.store.ts sr
 - Create: `client/src/app/admin/cost-card/index.ts`
 - Modify: `client/src/app/admin/stats-panel/stats-panel.ts`
 
-- [ ] **Step 1: Create cost-card component**
+- [x] **Step 1: Create cost-card component**
 
 Create `client/src/app/admin/cost-card/cost-card.ts`:
 
@@ -1513,7 +1513,7 @@ export class CostCardComponent {
 }
 ```
 
-- [ ] **Step 2: Create barrel export**
+- [x] **Step 2: Create barrel export**
 
 Create `client/src/app/admin/cost-card/index.ts`:
 
@@ -1521,7 +1521,7 @@ Create `client/src/app/admin/cost-card/index.ts`:
 export { CostCardComponent } from './cost-card';
 ```
 
-- [ ] **Step 3: Integrate into stats-panel**
+- [x] **Step 3: Integrate into stats-panel**
 
 Modify `client/src/app/admin/stats-panel/stats-panel.ts`. Add imports:
 
@@ -1564,7 +1564,7 @@ Add the cost card to the template, after the last `stat-item` div and before the
 />
 ```
 
-- [ ] **Step 4: Wire stats-panel outputs in admin.ts**
+- [x] **Step 4: Wire stats-panel outputs in admin.ts**
 
 Modify `client/src/app/admin/admin.ts`. Update the `app-stats-panel` in the template:
 
@@ -1601,7 +1601,7 @@ onTabChange(index: number) {
 }
 ```
 
-- [ ] **Step 5: Verify build**
+- [x] **Step 5: Verify build**
 
 ```bash
 cd client && npx ng build 2>&1 | tail -10
@@ -1609,7 +1609,7 @@ cd client && npx ng build 2>&1 | tail -10
 
 Expected: build succeeds.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd client && git add src/app/admin/cost-card/ src/app/admin/stats-panel/stats-panel.ts src/app/admin/admin.ts && git commit -m "feat: add expandable cost card to admin stats panel"
@@ -1624,7 +1624,7 @@ cd client && git add src/app/admin/cost-card/ src/app/admin/stats-panel/stats-pa
 - Modify: `docs/plans/2026-04-17-phase-9f-cost-tracking-plan.md` (mark steps complete)
 - Modify: `docs/plans/2026-03-05-tooling-first-design.md` (update master roadmap)
 
-- [ ] **Step 1: Add cost query to smoke test**
+- [x] **Step 1: Add cost query to smoke test**
 
 In `scripts/smoke-test.sh`, add after the internal sync check (the `if [ "$COGNITO_ACTIVE" -eq 1 ]` block around line 92), still inside that block:
 
@@ -1632,7 +1632,7 @@ In `scripts/smoke-test.sh`, add after the internal sync check (the `if [ "$COGNI
   check "Internal cost refresh rejects without key" "$BASE_URL/api/internal/sync/costs/refresh" 401 "-X POST"
 ```
 
-- [ ] **Step 2: Add authenticated cost query check**
+- [x] **Step 2: Add authenticated cost query check**
 
 In the authenticated endpoints section (inside the `if [ -n "$TOKEN" ]` block), after the REST endpoints loop, add:
 
@@ -1652,11 +1652,11 @@ In the authenticated endpoints section (inside the `if [ -n "$TOKEN" ]` block), 
   fi
 ```
 
-- [ ] **Step 3: Update master roadmap**
+- [x] **Step 3: Update master roadmap**
 
 In `docs/plans/2026-03-05-tooling-first-design.md`, update the Phase 9 description to note 9F is complete. Remove the `AwsCostRecord entity defined but not implemented` note if present. Add a note about cost tracking being live.
 
-- [ ] **Step 4: Run full test suite**
+- [x] **Step 4: Run full test suite**
 
 ```bash
 ./gradlew test
@@ -1664,7 +1664,7 @@ In `docs/plans/2026-03-05-tooling-first-design.md`, update the Phase 9 descripti
 
 Expected: all tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add scripts/smoke-test.sh docs/plans/ && git commit -m "feat: add cost tracking smoke tests and update roadmap"
