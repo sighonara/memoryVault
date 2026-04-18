@@ -29,6 +29,9 @@ class CognitoJwtFilter(
         if (header != null && header.startsWith("Bearer ")) {
             val token = header.substring(7)
             val claims = tokenValidator.validate(token)
+            if (claims == null) {
+                log.warn("Token validation returned null for request {} {}", request.method, request.requestURI)
+            }
             if (claims != null) {
                 val user = userRepository.findByEmailAndDeletedAtIsNull(claims.email)
                 if (user != null) {

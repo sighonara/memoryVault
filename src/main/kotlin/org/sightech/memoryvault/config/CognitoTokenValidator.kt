@@ -47,7 +47,7 @@ class CognitoTokenValidator(
             val role = claims.getStringClaim("custom:role") ?: "VIEWER"
             CognitoClaims(email, role)
         } catch (e: Exception) {
-            log.debug("Cognito token validation failed: {}", e.message)
+            log.warn("Cognito token validation failed: {}", e.message)
             null
         }
     }
