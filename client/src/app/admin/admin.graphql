@@ -39,3 +39,29 @@ query GetAdminStats {
     youtubeListsWithFailures
   }
 }
+
+query GetCosts($months: Int) {
+  costs(months: $months) {
+    current {
+      id
+      billingDate
+      serviceCosts
+      totalCostUsd
+      fetchedAt
+    }
+    monthlyTotals {
+      month
+      totalCostUsd
+    }
+  }
+}
+
+mutation RefreshCosts {
+  refreshCosts {
+    id
+    billingDate
+    serviceCosts
+    totalCostUsd
+    fetchedAt
+  }
+}
