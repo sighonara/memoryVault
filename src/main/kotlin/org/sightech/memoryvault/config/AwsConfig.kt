@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.cloudwatchlogs.CloudWatchLogsClient
+import software.amazon.awssdk.services.costexplorer.CostExplorerClient
 import software.amazon.awssdk.services.s3.S3Client
 
 @Configuration
@@ -26,5 +27,10 @@ class AwsConfig {
     @Bean
     fun cloudWatchLogsClient(): CloudWatchLogsClient = CloudWatchLogsClient.builder()
         .region(Region.of(cloudwatchRegion))
+        .build()
+
+    @Bean
+    fun costExplorerClient(): CostExplorerClient = CostExplorerClient.builder()
+        .region(Region.US_EAST_1)
         .build()
 }

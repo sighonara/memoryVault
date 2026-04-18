@@ -92,6 +92,7 @@ check "GraphQL rejects unauthenticated" "$BASE_URL/graphql" 401
 # Internal sync endpoint only exists under the aws profile (Cognito active = aws profile).
 if [ "$COGNITO_ACTIVE" -eq 1 ]; then
   check "Internal sync rejects without key" "$BASE_URL/api/internal/sync/feeds" 401 "-X POST"
+  check "Internal cost refresh rejects without key" "$BASE_URL/api/internal/sync/costs/refresh" 401 "-X POST"
 fi
 
 # --- Login flow ---
@@ -171,6 +172,20 @@ if [ -n "$TOKEN" ]; then
       FAIL=$((FAIL + 1))
     fi
   done
+
+  # GraphQL costs query
+  COST_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+    -X POST "$BASE_URL/graphql" \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d '{"query":"{ costs { current { totalCostUsd } monthlyTotals { month totalCostUsd } } }"}')
+  if [ "$COST_STATUS" -eq 200 ]; then
+    echo "  PASS  GraphQL costs query ($COST_STATUS)"
+    PASS=$((PASS + 1))
+  else
+    echo "  FAIL  GraphQL costs query (expected 200, got $COST_STATUS)"
+    FAIL=$((FAIL + 1))
+  fi
 else
   echo ""
   echo "  SKIP  Authenticated endpoint checks (no token)"

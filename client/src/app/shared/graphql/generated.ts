@@ -38,6 +38,21 @@ export type CommitResult = {
   undeleted: Scalars['Int']['output'];
 };
 
+export type CostRecord = {
+  __typename?: 'CostRecord';
+  billingDate: Scalars['String']['output'];
+  fetchedAt: Scalars['Instant']['output'];
+  id: Scalars['UUID']['output'];
+  serviceCosts: Scalars['String']['output'];
+  totalCostUsd: Scalars['String']['output'];
+};
+
+export type CostSummary = {
+  __typename?: 'CostSummary';
+  current?: Maybe<CostRecord>;
+  monthlyTotals: Array<MonthlyCost>;
+};
+
 export type Feed = {
   __typename?: 'Feed';
   categoryId?: Maybe<Scalars['UUID']['output']>;
@@ -182,6 +197,12 @@ export type LoginResponse = {
   token: Scalars['String']['output'];
 };
 
+export type MonthlyCost = {
+  __typename?: 'MonthlyCost';
+  month: Scalars['String']['output'];
+  totalCostUsd: Scalars['String']['output'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   addBookmark: Bookmark;
@@ -205,6 +226,7 @@ export type Mutation = {
   moveBookmark: Bookmark;
   moveFeedToCategory?: Maybe<Feed>;
   moveFolder: Folder;
+  refreshCosts?: Maybe<CostRecord>;
   refreshFeed: Array<FeedRefreshResult>;
   refreshYoutubeList: Array<SyncResult>;
   renameCategory?: Maybe<FeedCategory>;
@@ -378,6 +400,7 @@ export type MutationUpdateUserPreferencesArgs = {
 export type Query = {
   __typename?: 'Query';
   bookmarks: Array<Bookmark>;
+  costs: CostSummary;
   exportBookmarks: Scalars['String']['output'];
   exportFeeds: Scalars['String']['output'];
   feedCategories: Array<FeedCategoryWithFeeds>;
@@ -402,6 +425,11 @@ export type Query = {
 export type QueryBookmarksArgs = {
   query?: InputMaybe<Scalars['String']['input']>;
   tags?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+};
+
+
+export type QueryCostsArgs = {
+  months?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -587,6 +615,18 @@ export type GetAdminStatsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type GetAdminStatsQuery = { __typename?: 'Query', stats: { __typename?: 'SystemStats', bookmarkCount: number, feedCount: number, feedItemCount: number, unreadFeedItemCount: number, youtubeListCount: number, videoCount: number, downloadedVideoCount: number, removedVideoCount: number, tagCount: number, storageUsedBytes: number, lastFeedSync?: any | null, lastYoutubeSync?: any | null, feedsWithFailures: number, youtubeListsWithFailures: number } };
+
+export type GetCostsQueryVariables = Exact<{
+  months?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetCostsQuery = { __typename?: 'Query', costs: { __typename?: 'CostSummary', current?: { __typename?: 'CostRecord', id: any, billingDate: string, serviceCosts: string, totalCostUsd: string, fetchedAt: any } | null, monthlyTotals: Array<{ __typename?: 'MonthlyCost', month: string, totalCostUsd: string }> } };
+
+export type RefreshCostsMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type RefreshCostsMutation = { __typename?: 'Mutation', refreshCosts?: { __typename?: 'CostRecord', id: any, billingDate: string, serviceCosts: string, totalCostUsd: string, fetchedAt: any } | null };
 
 export type GetBookmarksQueryVariables = Exact<{
   query?: InputMaybe<Scalars['String']['input']>;
@@ -932,6 +972,56 @@ export const GetAdminStatsDocument = gql`
   })
   export class GetAdminStatsGQL extends Apollo.Query<GetAdminStatsQuery, GetAdminStatsQueryVariables> {
     document = GetAdminStatsDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const GetCostsDocument = gql`
+    query GetCosts($months: Int) {
+  costs(months: $months) {
+    current {
+      id
+      billingDate
+      serviceCosts
+      totalCostUsd
+      fetchedAt
+    }
+    monthlyTotals {
+      month
+      totalCostUsd
+    }
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class GetCostsGQL extends Apollo.Query<GetCostsQuery, GetCostsQueryVariables> {
+    document = GetCostsDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const RefreshCostsDocument = gql`
+    mutation RefreshCosts {
+  refreshCosts {
+    id
+    billingDate
+    serviceCosts
+    totalCostUsd
+    fetchedAt
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class RefreshCostsGQL extends Apollo.Mutation<RefreshCostsMutation, RefreshCostsMutationVariables> {
+    document = RefreshCostsDocument;
     
     constructor(apollo: Apollo.Apollo) {
       super(apollo);

@@ -56,6 +56,7 @@ dependencies {
     implementation(platform("software.amazon.awssdk:bom:2.31.17"))
     implementation("software.amazon.awssdk:s3")
     implementation("software.amazon.awssdk:cloudwatchlogs")
+    implementation("software.amazon.awssdk:costexplorer")
 
     // Cognito JWT validation (JWKS)
     implementation("com.nimbusds:nimbus-jose-jwt:10.3")

@@ -220,7 +220,7 @@ The theoldreader replacement. Introduces the Lambda pattern for scheduled fetchi
 Most complex: yt-dlp, S3 storage, long-running downloads. Built on Lambda patterns proven in Phase 2.
 
 ### Phase 4 — Cross-cutting
-PostgreSQL full-text search, system stats, job history tracking with SyncJob entity, structured logging with local file reader and CloudWatch stub. AWS cost tracking deferred to Phase 6.
+PostgreSQL full-text search, system stats, job history tracking with SyncJob entity, structured logging with local file reader and CloudWatch stub. AWS cost tracking deferred to Phase 9F.
 
 ### Phase 5 — Web UI + Auth
 JWT authentication (jjwt, BCrypt), Spring for GraphQL (schema-first), Angular 21 frontend (zoneless, Angular Material, NgRx Signal Store, Apollo Angular, graphql-codegen). Pages: login, feed reader, bookmarks, YouTube archive, admin (jobs/logs/stats), global search. Auth interceptor handles token injection and redirects to login on 401/403.
@@ -235,7 +235,7 @@ Feed categories (single-level with "Subscribed" default), OPML import/export, fu
 WebSocket + STOMP with lightweight signals (client refetches on signal). Spring ApplicationEvents → WebSocketEventRelay → STOMP broker → Angular client. Five event types: feed sync completion, job status changes, video download status, bookmark ingest ready, cross-tab content sync. JWT auth on STOMP CONNECT. Simple in-memory broker now, external broker (Amazon MQ) on AWS later. See `docs/plans/2026-03-29-phase-8-real-time-updates-design.md`.
 
 ### Phase 9 — Infrastructure
-Terraform, GitHub Actions CI/CD, production AWS deployment (EC2, RDS, S3, Lambda, EventBridge). AWS Cognito auth swap (CurrentUser abstraction is already in place), CloudWatch log retrieval (LocalLogService/CloudWatchLogService interface is stubbed), AWS cost tracking (AwsCostRecord entity defined but not implemented). Six sub-projects: 9A AWS Foundation + Terraform, 9B CI/CD Pipeline, 9C AWS Service Implementations, 9D Cognito Auth Swap, 9E Lambda Scheduling + Video Worker, 9F Cost Tracking. See `docs/plans/2026-04-03-phase-9-infrastructure-design.md`.
+Terraform, GitHub Actions CI/CD, production AWS deployment (EC2, RDS, S3, Lambda, EventBridge). AWS Cognito auth swap (CurrentUser abstraction is already in place), CloudWatch log retrieval (LocalLogService/CloudWatchLogService interface), AWS cost tracking (CostRecord entity with JSONB per-service breakdown, daily refresh via Cost Explorer API, admin UI card, MCP tool). Six sub-projects: 9A AWS Foundation + Terraform, 9B CI/CD Pipeline, 9C AWS Service Implementations, 9D Cognito Auth Swap, 9E Lambda Scheduling + Video Worker, 9F Cost Tracking. All complete. See `docs/plans/2026-04-03-phase-9-infrastructure-design.md`.
 
 ### Phase 10 — Cross-Platform Video Backup
 Archived YouTube videos are automatically backed up to a configurable secondary video platform (Rumble, Vimeo, etc.). If the video doesn't already exist on the target platform, MemoryVault uploads it. Ensures resilience against YouTube takedowns/deletions.

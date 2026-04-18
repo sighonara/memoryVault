@@ -25,7 +25,14 @@ import { LogViewerComponent } from './log-viewer/log-viewer';
 
       <mat-tab-group animationDuration="150ms" (selectedTabChange)="onTabChange($event.index)">
         <mat-tab label="Stats">
-          <app-stats-panel [stats]="store.stats()" />
+          <app-stats-panel
+            [stats]="store.stats()"
+            [costSummary]="store.costSummary()"
+            [costMonths]="store.costMonths()"
+            [refreshingCosts]="store.refreshingCosts()"
+            (onRefreshCosts)="store.refreshCosts()"
+            (onCostMonthsChange)="store.setCostMonths($event)"
+          />
         </mat-tab>
         <mat-tab label="Jobs">
           <app-jobs-table
@@ -66,10 +73,11 @@ export class AdminComponent implements OnInit {
     this.store.loadStats();
     this.store.loadJobs();
     this.store.loadLogs();
+    this.store.loadCosts();
   }
 
   onTabChange(index: number) {
-    if (index === 0) this.store.loadStats();
+    if (index === 0) { this.store.loadStats(); this.store.loadCosts(); }
     else if (index === 1) this.store.loadJobs();
     else if (index === 2) this.store.loadLogs();
 

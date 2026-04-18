@@ -2,6 +2,7 @@ package org.sightech.memoryvault.scheduling.controller
 
 import kotlinx.coroutines.runBlocking
 import org.sightech.memoryvault.auth.CurrentUser
+import org.sightech.memoryvault.cost.service.CostService
 import org.sightech.memoryvault.feed.service.FeedService
 import org.sightech.memoryvault.scheduling.entity.JobType
 import org.sightech.memoryvault.scheduling.entity.TriggerSource
@@ -20,7 +21,8 @@ import org.springframework.web.bind.annotation.RestController
 class InternalSyncController(
     private val feedService: FeedService,
     private val youtubeListService: YoutubeListService,
-    private val syncJobService: SyncJobService
+    private val syncJobService: SyncJobService,
+    private val costService: CostService
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -65,5 +67,19 @@ class InternalSyncController(
             )
         }
         return ResponseEntity.ok(metadata ?: emptyMap())
+    }
+
+    @PostMapping("/costs/refresh")
+    fun refreshCosts(): ResponseEntity<Map<String, Any>> {
+        log.info("Internal trigger: cost refresh")
+        val record = costService.refreshCosts()
+        return if (record != null) {
+            ResponseEntity.ok(mapOf(
+                "billingDate" to record.billingDate.toString(),
+                "totalCostUsd" to record.totalCostUsd.toString()
+            ))
+        } else {
+            ResponseEntity.noContent().build()
+        }
     }
 }

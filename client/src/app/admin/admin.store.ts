@@ -5,9 +5,12 @@ import {
   GetJobsDocument,
   GetLogsDocument,
   GetAdminStatsDocument,
+  GetCostsDocument,
+  RefreshCostsDocument,
   SyncJob,
   LogEntry,
   SystemStats,
+  CostSummary,
 } from '../shared/graphql/generated';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { pipe, switchMap, tap } from 'rxjs';
@@ -25,6 +28,9 @@ export interface AdminState {
   logLimit: number;
   jobLimit: number;
   followActive: boolean;
+  costSummary: CostSummary | null;
+  costMonths: number;
+  refreshingCosts: boolean;
 }
 
 const initialState: AdminState = {
@@ -38,6 +44,9 @@ const initialState: AdminState = {
   logLimit: 100,
   jobLimit: 50,
   followActive: false,
+  costSummary: null,
+  costMonths: 6,
+  refreshingCosts: false,
 };
 
 export const AdminStore = signalStore(
@@ -95,6 +104,36 @@ export const AdminStore = signalStore(
       )
     );
 
+    const loadCosts = rxMethod<void>(
+      pipe(
+        switchMap(() =>
+          apollo.query({
+            query: GetCostsDocument,
+            variables: { months: store.costMonths() },
+            fetchPolicy: 'network-only',
+          })
+        ),
+        tap((result: any) => {
+          patchState(store, { costSummary: result.data.costs });
+        })
+      )
+    );
+
+    const refreshCosts = rxMethod<void>(
+      pipe(
+        tap(() => patchState(store, { refreshingCosts: true })),
+        switchMap(() =>
+          apollo.mutate({
+            mutation: RefreshCostsDocument,
+          })
+        ),
+        tap(() => {
+          patchState(store, { refreshingCosts: false });
+          loadCosts();
+        })
+      )
+    );
+
     // WebSocket subscription for job updates
     ws.on('jobs').pipe(debounceTime(500)).subscribe(() => {
       loadJobs();
@@ -105,6 +144,9 @@ export const AdminStore = signalStore(
       loadStats,
       loadJobs,
       loadLogs,
+      loadCosts,
+      refreshCosts,
+      setCostMonths: (months: number) => { patchState(store, { costMonths: months }); loadCosts(); },
       setJobTypeFilter: (type: string | null) => { patchState(store, { jobTypeFilter: type }); loadJobs(); },
       setLogLevelFilter: (level: string | null) => { patchState(store, { logLevelFilter: level }); loadLogs(); },
       setLogServiceFilter: (service: string) => { patchState(store, { logServiceFilter: service || null }); loadLogs(); },

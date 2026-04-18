@@ -6,6 +6,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import org.junit.jupiter.api.Test
+import org.sightech.memoryvault.cost.service.CostService
 import org.sightech.memoryvault.feed.entity.Feed
 import org.sightech.memoryvault.feed.service.FeedService
 import org.sightech.memoryvault.scheduling.entity.JobStatus
@@ -26,7 +27,8 @@ class InternalSyncControllerTest {
     private val feedService = mockk<FeedService>()
     private val youtubeListService = mockk<YoutubeListService>()
     private val syncJobService = mockk<SyncJobService>()
-    private val controller = InternalSyncController(feedService, youtubeListService, syncJobService)
+    private val costService = mockk<CostService>()
+    private val controller = InternalSyncController(feedService, youtubeListService, syncJobService, costService)
 
     @Test
     fun `syncFeeds invokes feedService and returns 200 with metadata`() {

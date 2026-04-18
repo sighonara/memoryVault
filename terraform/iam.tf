@@ -98,6 +98,25 @@ resource "aws_iam_role_policy_attachment" "ec2_ssm" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
+# Cost Explorer read access for cost tracking
+resource "aws_iam_role_policy" "ec2_cost_explorer" {
+  name = "${var.project_name}-ec2-cost-explorer"
+  role = aws_iam_role.ec2.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ce:GetCostAndUsage",
+        ]
+        Resource = ["*"]
+      }
+    ]
+  })
+}
+
 # Instance profile (connects the role to EC2)
 resource "aws_iam_instance_profile" "ec2" {
   name = "${var.project_name}-ec2-profile"
