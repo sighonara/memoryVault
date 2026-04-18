@@ -38,11 +38,18 @@ class CognitoJwtFilter(
                     val authorities = listOf(SimpleGrantedAuthority("ROLE_${claims.role}"))
                     val auth = UsernamePasswordAuthenticationToken(user.id.toString(), null, authorities)
                     SecurityContextHolder.getContext().authentication = auth
+                    log.info("Auth set for {} {} user={}", request.method, request.requestURI, claims.email)
                 } else {
                     log.warn("Cognito user {} not found in database", claims.email)
                 }
             }
+        } else {
+            log.info("No Bearer token for {} {}", request.method, request.requestURI)
         }
         filterChain.doFilter(request, response)
+        val status = response.status
+        if (status == 401 || status == 403) {
+            log.warn("Response {} for {} {} authenticated={}", status, request.method, request.requestURI, SecurityContextHolder.getContext().authentication != null)
+        }
     }
 }
