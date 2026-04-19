@@ -52,6 +52,9 @@ class CognitoJwtFilter(
             log.error("Exception in filter chain for {} {}: {}", request.method, request.requestURI, e.message, e)
             throw e
         }
+        if (request.requestURI == "/graphql") {
+            log.info("GraphQL response: status={} committed={} authenticated={}", response.status, response.isCommitted, SecurityContextHolder.getContext().authentication != null)
+        }
         val status = response.status
         if (status == 401 || status == 403) {
             log.warn("Response {} for {} {} authenticated={}", status, request.method, request.requestURI, SecurityContextHolder.getContext().authentication != null)

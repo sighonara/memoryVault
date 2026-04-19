@@ -11,6 +11,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import jakarta.servlet.http.HttpServletResponse
+import org.slf4j.LoggerFactory
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
@@ -22,6 +23,8 @@ class SecurityConfig(
     private val internalApiKeyFilterProvider: ObjectProvider<InternalApiKeyFilter>,
     @Value("\${memoryvault.cors.allowed-origins}") private val allowedOrigins: String
 ) {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
@@ -46,7 +49,11 @@ class SecurityConfig(
                     .anyRequest().authenticated()
             }
             .exceptionHandling { ex ->
-                ex.authenticationEntryPoint { _, response, _ ->
+                ex.authenticationEntryPoint { request, response, authException ->
+                    log.warn("AuthEntryPoint fired: {} {} auth={} exception={}",
+                        request.method, request.requestURI,
+                        org.springframework.security.core.context.SecurityContextHolder.getContext().authentication != null,
+                        authException.message)
                     response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication required")
                 }
             }
