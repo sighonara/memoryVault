@@ -15,7 +15,7 @@ import { CostSummary } from '../../shared/graphql/generated';
         <mat-icon>payments</mat-icon>
         <div class="cost-body">
           @if (costSummary()?.current) {
-            <span class="stat-value">\${{ costSummary()!.current!.totalCostUsd }}</span>
+            <span class="stat-value">\${{ formatCost(costSummary()!.current!.totalCostUsd) }}</span>
             <span class="stat-label">{{ currentMonthLabel() }}</span>
             @if (trend()) {
               <span class="trend" [class.up]="trend()! > 0" [class.down]="trend()! < 0">
@@ -70,7 +70,7 @@ import { CostSummary } from '../../shared/graphql/generated';
                 @for (m of costSummary()!.monthlyTotals; track m.month) {
                   <tr>
                     <td>{{ m.month }}</td>
-                    <td class="amount">\${{ m.totalCostUsd }}</td>
+                    <td class="amount">\${{ formatCost(m.totalCostUsd) }}</td>
                   </tr>
                 }
               </table>
@@ -129,7 +129,7 @@ export class CostCardComponent {
     if (!current) return [];
     const costs: Record<string, string> = JSON.parse(current.serviceCosts);
     return Object.entries(costs)
-      .map(([name, cost]) => ({ name, cost }))
+      .map(([name, cost]) => ({ name, cost: parseFloat(cost).toFixed(2) }))
       .sort((a, b) => parseFloat(b.cost) - parseFloat(a.cost));
   });
 
@@ -148,6 +148,10 @@ export class CostCardComponent {
     if (previous === 0) return null;
     return ((current - previous) / previous) * 100;
   });
+
+  formatCost(value: string): string {
+    return parseFloat(value).toFixed(2);
+  }
 
   formatDate(ts: any): string {
     if (!ts) return 'Unknown';
