@@ -18,8 +18,6 @@ import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.web.socket.client.standard.StandardWebSocketClient
 import org.springframework.web.socket.messaging.WebSocketStompClient
-import org.springframework.web.socket.sockjs.client.SockJsClient
-import org.springframework.web.socket.sockjs.client.WebSocketTransport
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.postgresql.PostgreSQLContainer
@@ -70,8 +68,7 @@ class WebSocketIntegrationTest {
 
     @BeforeEach
     fun setup() {
-        val sockJsClient = SockJsClient(listOf(WebSocketTransport(StandardWebSocketClient())))
-        stompClient = WebSocketStompClient(sockJsClient)
+        stompClient = WebSocketStompClient(StandardWebSocketClient())
         stompClient.messageConverter = MappingJackson2MessageConverter()
     }
 
@@ -238,8 +235,7 @@ class WebSocketIntegrationTest {
 
     @Test
     fun `rejects connection without JWT`() {
-        val sockJsClient = SockJsClient(listOf(WebSocketTransport(StandardWebSocketClient())))
-        val client = WebSocketStompClient(sockJsClient)
+        val client = WebSocketStompClient(StandardWebSocketClient())
         client.messageConverter = MappingJackson2MessageConverter()
 
         val future = client.connectAsync(

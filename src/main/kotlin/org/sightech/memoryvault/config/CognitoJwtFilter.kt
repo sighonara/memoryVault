@@ -30,7 +30,7 @@ class CognitoJwtFilter(
             val token = header.substring(7)
             val claims = tokenValidator.validate(token)
             if (claims == null) {
-                log.warn("Token validation returned null for request {} {}", request.method, request.requestURI)
+                log.warn("Token validation returned null for {} {}", request.method, request.requestURI)
             }
             if (claims != null) {
                 val user = userRepository.findByEmailAndDeletedAtIsNull(claims.email)
@@ -38,26 +38,11 @@ class CognitoJwtFilter(
                     val authorities = listOf(SimpleGrantedAuthority("ROLE_${claims.role}"))
                     val auth = UsernamePasswordAuthenticationToken(user.id.toString(), null, authorities)
                     SecurityContextHolder.getContext().authentication = auth
-                    log.info("Auth set for {} {} user={}", request.method, request.requestURI, claims.email)
                 } else {
                     log.warn("Cognito user {} not found in database", claims.email)
                 }
             }
-        } else {
-            log.info("No Bearer token for {} {}", request.method, request.requestURI)
         }
-        try {
-            filterChain.doFilter(request, response)
-        } catch (e: Exception) {
-            log.error("Exception in filter chain for {} {}: {}", request.method, request.requestURI, e.message, e)
-            throw e
-        }
-        if (request.requestURI == "/graphql") {
-            log.info("GraphQL response: status={} committed={} authenticated={}", response.status, response.isCommitted, SecurityContextHolder.getContext().authentication != null)
-        }
-        val status = response.status
-        if (status == 401 || status == 403) {
-            log.warn("Response {} for {} {} authenticated={}", status, request.method, request.requestURI, SecurityContextHolder.getContext().authentication != null)
-        }
+        filterChain.doFilter(request, response)
     }
 }

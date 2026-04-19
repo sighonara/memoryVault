@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-# When adding a new top-level Angular route, update BOTH:
+# When adding a new top-level Angular route, update ALL THREE:
 #   1. SecurityConfig.kt — add the path to the SPA-routes permitAll line
-#   2. This file — add a `check_spa "SPA route /<path> serves HTML" "$BASE_URL/<path>"` line
+#   2. SpaWebConfig.kt — add the path to SpaForwardController's @GetMapping
+#   3. This file — add a `check "SPA route /<path> serves HTML" "$BASE_URL/<path>"` line
 # Spring Security evaluates auth per path, so a working `/` does NOT prove other SPA routes work.
-# SPA routes return 404 (ErrorPageRegistrar preserves the status while serving index.html),
-# so check_spa asserts the response body contains <app-root> rather than checking status.
 set -euo pipefail
 
 BASE_URL="${1:-http://localhost:8085}"
@@ -58,24 +57,8 @@ check() {
   fi
 }
 
-# SPA routes: Spring's ErrorPageRegistrar forwards the 404 to /index.html and
-# serves the Angular shell, but sendError preserves the 404 status code.
-# Browsers ignore the status and render the HTML; we assert the body is the
-# SPA shell (contains <app-root>) rather than checking the status code.
-check_spa() {
-  local name="$1"
-  local url="$2"
-
-  local response
-  response=$(curl -s "$url" || echo "")
-  if echo "$response" | grep -q "<app-root>"; then
-    echo "  PASS  $name (SPA shell served)"
-    PASS=$((PASS + 1))
-  else
-    echo "  FAIL  $name (response missing <app-root>)"
-    FAIL=$((FAIL + 1))
-  fi
-}
+# SPA routes: SpaForwardController forwards known Angular routes to /index.html
+# with a 200 status. The ErrorPageRegistrar handles truly unknown paths (404).
 
 echo "=== MemoryVault smoke test against $BASE_URL ==="
 echo ""
@@ -84,9 +67,9 @@ echo ""
 echo "-- Public endpoints --"
 check "Health endpoint" "$BASE_URL/actuator/health"
 check "Home page serves HTML" "$BASE_URL/"
-check_spa "SPA route /login serves HTML" "$BASE_URL/login"
-check_spa "SPA route /reader serves HTML" "$BASE_URL/reader"
-check_spa "SPA route /bookmarks serves HTML" "$BASE_URL/bookmarks"
+check "SPA route /login serves HTML" "$BASE_URL/login"
+check "SPA route /reader serves HTML" "$BASE_URL/reader"
+check "SPA route /bookmarks serves HTML" "$BASE_URL/bookmarks"
 check "GraphQL rejects unauthenticated" "$BASE_URL/graphql" 401
 
 # Internal sync endpoint only exists under the aws profile (Cognito active = aws profile).
