@@ -83,8 +83,21 @@ class OpmlService(
         val userId = CurrentUser.userId()
         val existingFeeds = feedRepository.findAllActiveByUserId(userId).map { it.url.lowercase() }.toSet()
 
-        val docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
-        val doc = docBuilder.parse(opmlContent.byteInputStream())
+        val dbf = DocumentBuilderFactory.newInstance().apply {
+            setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
+            setFeature("http://xml.org/sax/features/external-general-entities", false)
+            setFeature("http://xml.org/sax/features/external-parameter-entities", false)
+            setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
+            isXIncludeAware = false
+            isExpandEntityReferences = false
+        }
+        val docBuilder = dbf.newDocumentBuilder()
+        val doc = try {
+            docBuilder.parse(opmlContent.byteInputStream())
+        } catch (e: Exception) {
+            log.warn("Failed to parse OPML content: {}", e.message)
+            return ImportResult(0, 0, 0)
+        }
         val body = doc.getElementsByTagName("body").item(0) as? Element
             ?: return ImportResult(0, 0, 0)
 

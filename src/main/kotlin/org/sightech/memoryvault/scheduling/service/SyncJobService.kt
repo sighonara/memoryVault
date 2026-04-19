@@ -6,6 +6,7 @@ import org.sightech.memoryvault.scheduling.entity.SyncJob
 import org.sightech.memoryvault.scheduling.entity.TriggerSource
 import org.sightech.memoryvault.scheduling.repository.SyncJobRepository
 import org.sightech.memoryvault.websocket.JobStatusChanged
+import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import tools.jackson.databind.ObjectMapper
@@ -18,6 +19,8 @@ class SyncJobService(
     private val eventPublisher: ApplicationEventPublisher
 ) {
 
+    private val log = LoggerFactory.getLogger(javaClass)
+
     private val objectMapper = ObjectMapper()
 
     fun recordStart(type: JobType, triggeredBy: TriggerSource, userId: UUID): SyncJob {
@@ -28,6 +31,7 @@ class SyncJobService(
         )
         job.status = JobStatus.RUNNING
         val saved = syncJobRepository.save(job)
+        log.info("Job started type={} jobId={}", type, saved.id)
         eventPublisher.publishEvent(JobStatusChanged(
             userId = userId, timestamp = Instant.now(),
             jobId = saved.id, jobType = type.name,
@@ -45,6 +49,7 @@ class SyncJobService(
             job.metadata = objectMapper.writeValueAsString(metadata)
         }
         syncJobRepository.save(job)
+        log.info("Job succeeded jobId={}", jobId)
         eventPublisher.publishEvent(JobStatusChanged(
             userId = job.userId, timestamp = Instant.now(),
             jobId = jobId, jobType = job.type.name,
@@ -76,6 +81,7 @@ class SyncJobService(
         job.completedAt = Instant.now()
         job.errorMessage = error
         syncJobRepository.save(job)
+        log.warn("Job failed jobId={} error={}", jobId, error)
         eventPublisher.publishEvent(JobStatusChanged(
             userId = job.userId, timestamp = Instant.now(),
             jobId = jobId, jobType = job.type.name,

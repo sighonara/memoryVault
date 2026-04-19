@@ -2,6 +2,7 @@ package org.sightech.memoryvault.graphql
 
 import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.logging.LogEntry
+import org.slf4j.LoggerFactory
 import org.sightech.memoryvault.logging.LogService
 import org.sightech.memoryvault.scheduling.entity.JobType
 import org.sightech.memoryvault.scheduling.entity.SyncJob
@@ -24,10 +25,14 @@ class AdminResolver(
     private val searchService: SearchService
 ) {
 
+    private val log = LoggerFactory.getLogger(javaClass)
+
     @QueryMapping
     fun jobs(@Argument type: String?, @Argument limit: Int?): List<SyncJob> {
         val userId = CurrentUser.userId()
-        val jobType = type?.let { JobType.valueOf(it) }
+        val jobType = type?.let {
+            try { JobType.valueOf(it) } catch (e: IllegalArgumentException) { null }
+        }
         return syncJobService.listJobs(userId, jobType, limit ?: 20)
     }
 

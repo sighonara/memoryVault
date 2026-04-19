@@ -2,6 +2,7 @@ package org.sightech.memoryvault.graphql
 
 import org.sightech.memoryvault.bookmark.entity.*
 import org.sightech.memoryvault.bookmark.service.BookmarkService
+import org.slf4j.LoggerFactory
 import org.sightech.memoryvault.bookmark.service.IngestService
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.MutationMapping
@@ -18,6 +19,8 @@ class BookmarkResolver(
     private val bookmarkService: BookmarkService,
     private val ingestService: IngestService
 ) {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     @QueryMapping
     fun bookmarks(

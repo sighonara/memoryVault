@@ -91,6 +91,7 @@ class IngestService(
             previewId = previewEntity.id, itemCount = items.size
         ))
 
+        log.info("Generated ingest preview previewId={} itemCount={}", previewEntity.id, items.size)
         return IngestPreviewResult(previewId = previewEntity.id, items = items, summary = summary)
     }
 
@@ -98,6 +99,11 @@ class IngestService(
         val userId = CurrentUser.userId()
         val preview = ingestPreviewRepository.findActiveByIdAndUserId(previewId, userId)
             ?: throw IllegalArgumentException("Preview not found or expired")
+
+        if (preview.committed) {
+            log.warn("Ingest preview already committed previewId={}", previewId)
+            return CommitResult(accepted = 0, skipped = 0, undeleted = 0)
+        }
 
         val data = objectMapper.readTree(preview.previewData)
         val items = data["items"].map { node ->
@@ -183,6 +189,7 @@ class IngestService(
         preview.committed = true
         ingestPreviewRepository.save(preview)
 
+        log.info("Committed ingest previewId={} accepted={} skipped={} undeleted={}", previewId, accepted, skipped, undeleted)
         return CommitResult(accepted = accepted, skipped = skipped, undeleted = undeleted)
     }
 

@@ -4,6 +4,7 @@ import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.youtube.entity.YoutubeList
 import org.sightech.memoryvault.youtube.repository.VideoRepository
 import org.sightech.memoryvault.youtube.repository.YoutubeListRepository
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.util.UUID
@@ -21,6 +22,8 @@ class YoutubeListService(
     private val ytDlpService: YtDlpService,
     private val videoSyncService: VideoSyncService
 ) {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     fun addList(url: String): Pair<YoutubeList, SyncResult> {
         val userId = CurrentUser.userId()
@@ -41,6 +44,7 @@ class YoutubeListService(
         }
 
         val syncResult = videoSyncService.syncList(list, metadata)
+        log.info("Added YouTube list listId={}", list.id)
         return list to syncResult
     }
 
@@ -62,6 +66,7 @@ class YoutubeListService(
         val list = youtubeListRepository.findActiveByIdAndUserId(listId, userId) ?: return null
         list.deletedAt = Instant.now()
         list.updatedAt = Instant.now()
+        log.info("Soft-deleted YouTube list listId={}", listId)
         return youtubeListRepository.save(list)
     }
 
@@ -79,6 +84,7 @@ class YoutubeListService(
                 val metadata = ytDlpService.fetchPlaylistMetadata(list.url)
                 videoSyncService.syncList(list, metadata)
             } catch (e: Exception) {
+                log.warn("Refresh failed for list={}: {}", list.id, e.message)
                 val currentList = youtubeListRepository.findById(list.id).orElse(list)
                 currentList.failureCount++
                 currentList.updatedAt = Instant.now()

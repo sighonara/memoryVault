@@ -2,6 +2,7 @@ package org.sightech.memoryvault.mcp
 
 import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.logging.LogService
+import org.slf4j.LoggerFactory
 import org.sightech.memoryvault.scheduling.entity.JobType
 import org.sightech.memoryvault.scheduling.service.SyncJobService
 import org.sightech.memoryvault.search.ContentType
@@ -18,6 +19,8 @@ class CrossCuttingTools(
     private val syncJobService: SyncJobService,
     private val logService: LogService
 ) {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     @Tool(description = "Search across all content — bookmarks, feed items, and videos. Returns ranked results. Optionally filter by type: BOOKMARK, FEED_ITEM, VIDEO (comma-separated for multiple).")
     fun search(query: String, types: String?): String {

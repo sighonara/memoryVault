@@ -82,6 +82,7 @@ class FeedItemService(
     fun markFeedRead(feedId: UUID): Int {
         val userId = CurrentUser.userId()
         val count = feedItemRepository.markAllReadByFeedIdAndUserId(feedId, userId, Instant.now())
+        log.info("Marked feed read feedId={} count={}", feedId, count)
         if (count > 0) {
             eventPublisher.publishEvent(ContentMutated(
                 userId = userId, timestamp = Instant.now(),

@@ -27,7 +27,7 @@ class VideoSyncService(
     private val videoDownloader: VideoDownloader
 ) {
 
-    private val logger = LoggerFactory.getLogger(VideoSyncService::class.java)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     fun syncList(list: YoutubeList, metadata: List<VideoMetadata>): SyncResult {
         val currentList = youtubeListRepository.findById(list.id).orElse(list)
@@ -54,7 +54,11 @@ class VideoSyncService(
             video.removedDetectedAt = Instant.now()
             video.updatedAt = Instant.now()
             videoRepository.save(video)
-            logger.info("Video removed from YouTube: {} ({})", video.title, video.youtubeVideoId)
+            log.info("Video removed from YouTube: {} ({})", video.title, video.youtubeVideoId)
+        }
+
+        if (removedVideos.isNotEmpty()) {
+            log.info("Detected {} removed video(s) for listId={}", removedVideos.size, list.id)
         }
 
         // Save new video records
@@ -70,6 +74,10 @@ class VideoSyncService(
                     durationSeconds = meta.durationSeconds
                 )
             )
+        }
+
+        if (newVideos.isNotEmpty()) {
+            log.info("Saved {} new video(s) for listId={}", newVideos.size, list.id)
         }
 
         // Dispatch downloads asynchronously. AsyncVideoDownloader owns the post-download

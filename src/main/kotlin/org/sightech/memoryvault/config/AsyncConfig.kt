@@ -20,6 +20,8 @@ class AsyncConfig(
         val executor = ThreadPoolTaskExecutor()
         executor.corePoolSize = relayPoolSize
         executor.maxPoolSize = relayPoolSize
+        executor.queueCapacity = 500
+        executor.setRejectedExecutionHandler(java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy())
         executor.setThreadNamePrefix("ws-relay-")
         executor.initialize()
         return executor

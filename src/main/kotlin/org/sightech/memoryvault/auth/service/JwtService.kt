@@ -2,6 +2,7 @@ package org.sightech.memoryvault.auth.service
 
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.Date
@@ -13,6 +14,8 @@ class JwtService(
     @Value("\${memoryvault.jwt.secret}") private val secret: String,
     @Value("\${memoryvault.jwt.expiration-hours}") private val expirationHours: Long
 ) {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     private val key: SecretKey by lazy {
         Keys.hmacShaKeyFor(secret.toByteArray())
@@ -47,6 +50,7 @@ class JwtService(
                 "role" to (claims["role"] as String)
             )
         } catch (e: Exception) {
+            log.warn("JWT validation failed: {}", e.message)
             null
         }
     }

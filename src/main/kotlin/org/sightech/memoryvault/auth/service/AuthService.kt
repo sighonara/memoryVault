@@ -1,6 +1,7 @@
 package org.sightech.memoryvault.auth.service
 
 import org.sightech.memoryvault.auth.dto.LoginResponse
+import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
@@ -13,16 +14,23 @@ class AuthService(
     private val passwordEncoder: BCryptPasswordEncoder
 ) {
 
+    private val log = LoggerFactory.getLogger(javaClass)
+
     fun login(email: String, password: String): LoginResponse {
         val user = userService.findByEmail(email)
-            ?: throw IllegalArgumentException("Invalid credentials")
+        if (user == null) {
+            log.warn("Login failed for email={}: user not found", email)
+            throw IllegalArgumentException("Invalid credentials")
+        }
 
         if (user.passwordHash == null || !passwordEncoder.matches(password, user.passwordHash)) {
+            log.warn("Login failed for email={}: bad credentials", email)
             throw IllegalArgumentException("Invalid credentials")
         }
 
         val token = jwtService.generateToken(user.id, user.email, user.role.name)
 
+        log.info("Login successful for email={}", email)
         return LoginResponse(
             token = token,
             email = user.email,

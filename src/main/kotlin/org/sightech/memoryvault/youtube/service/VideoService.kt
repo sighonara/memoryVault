@@ -3,11 +3,14 @@ package org.sightech.memoryvault.youtube.service
 import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.youtube.entity.Video
 import org.sightech.memoryvault.youtube.repository.VideoRepository
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.UUID
 
 @Service
 class VideoService(private val videoRepository: VideoRepository) {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     fun getVideos(listId: UUID?, query: String?, removedOnly: Boolean): List<Video> {
         val userId = CurrentUser.userId()

@@ -16,15 +16,20 @@ class LocalStorageService(
     private val basePath: String
 ) : StorageService {
 
-    private val logger = LoggerFactory.getLogger(LocalStorageService::class.java)
+    private val log = LoggerFactory.getLogger(javaClass)
 
-    private fun resolve(key: String): Path = Path.of(basePath).resolve(key)
+    private fun resolve(key: String): Path {
+        val base = Path.of(basePath).normalize()
+        val target = base.resolve(key).normalize()
+        require(target.startsWith(base)) { "Invalid storage key" }
+        return target
+    }
 
     override fun store(key: String, inputStream: InputStream): String {
         val target = resolve(key)
         Files.createDirectories(target.parent)
         Files.copy(inputStream, target, StandardCopyOption.REPLACE_EXISTING)
-        logger.info("Stored file: {}", target)
+        log.info("Stored file: {}", target)
         return target.toString()
     }
 
@@ -36,7 +41,7 @@ class LocalStorageService(
     override fun delete(key: String) {
         val target = resolve(key)
         Files.deleteIfExists(target)
-        logger.info("Deleted file: {}", target)
+        log.info("Deleted file: {}", target)
     }
 
     override fun exists(key: String): Boolean {

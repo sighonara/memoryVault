@@ -59,6 +59,7 @@ class FeedService(
         val feed = feedRepository.findActiveByIdAndUserId(feedId, userId) ?: return null
         feed.deletedAt = Instant.now()
         feed.updatedAt = Instant.now()
+        log.info("Soft-deleted feed feedId={}", feedId)
         return feedRepository.save(feed)
     }
 

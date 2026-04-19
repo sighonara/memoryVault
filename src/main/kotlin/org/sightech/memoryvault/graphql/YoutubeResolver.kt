@@ -1,6 +1,7 @@
 package org.sightech.memoryvault.graphql
 
 import org.sightech.memoryvault.auth.CurrentUser
+import org.slf4j.LoggerFactory
 import org.sightech.memoryvault.youtube.entity.Video
 import org.sightech.memoryvault.youtube.entity.YoutubeList
 import org.sightech.memoryvault.youtube.service.SyncResult
@@ -17,6 +18,8 @@ class YoutubeResolver(
     private val youtubeListService: YoutubeListService,
     private val videoService: VideoService
 ) {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     @QueryMapping
     fun youtubeLists(): List<Map<String, Any?>> {

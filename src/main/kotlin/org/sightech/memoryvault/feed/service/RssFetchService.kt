@@ -6,6 +6,7 @@ import org.sightech.memoryvault.feed.entity.Feed
 import org.sightech.memoryvault.feed.entity.FeedItem
 import org.sightech.memoryvault.feed.repository.FeedItemRepository
 import org.sightech.memoryvault.feed.repository.FeedRepository
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.security.MessageDigest
 import java.time.Instant
@@ -19,13 +20,25 @@ class RssFetchService(
     private val rssParser: RssParser
 ) {
 
+    private val log = LoggerFactory.getLogger(javaClass)
+
     suspend fun fetchAndStore(feed: Feed): Int {
-        val channel = rssParser.getRssChannel(feed.url)
+        val channel = try {
+            rssParser.getRssChannel(feed.url)
+        } catch (e: Exception) {
+            log.warn("Failed to fetch RSS feed url={}: {}", feed.url, e.message)
+            return 0
+        }
         return processChannel(feed, channel)
     }
 
     suspend fun fetchAndStoreFromXml(feed: Feed, xml: String): Int {
-        val channel = rssParser.parse(xml)
+        val channel = try {
+            rssParser.parse(xml)
+        } catch (e: Exception) {
+            log.warn("Failed to parse RSS XML for feed={}: {}", feed.id, e.message)
+            return 0
+        }
         return processChannel(feed, channel)
     }
 
@@ -58,6 +71,7 @@ class RssFetchService(
             newCount++
         }
 
+        log.info("Processed feed feedId={}, newItems={}", feed.id, newCount)
         return newCount
     }
 
@@ -78,9 +92,11 @@ class RssFetchService(
         return try {
             ZonedDateTime.parse(dateStr, DateTimeFormatter.RFC_1123_DATE_TIME).toInstant()
         } catch (e: Exception) {
+            log.debug("RFC-1123 date parse failed for '{}': {}", dateStr, e.message)
             try {
                 Instant.parse(dateStr)
             } catch (e2: Exception) {
+                log.debug("ISO date parse failed for '{}': {}", dateStr, e2.message)
                 null
             }
         }

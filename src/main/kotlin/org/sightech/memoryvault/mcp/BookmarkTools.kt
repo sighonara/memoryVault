@@ -1,6 +1,7 @@
 package org.sightech.memoryvault.mcp
 
 import org.sightech.memoryvault.auth.CurrentUser
+import org.slf4j.LoggerFactory
 import org.springframework.ai.tool.annotation.Tool
 import org.springframework.stereotype.Component
 import org.sightech.memoryvault.bookmark.service.BookmarkService
@@ -8,6 +9,8 @@ import java.util.UUID
 
 @Component
 class BookmarkTools(private val bookmarkService: BookmarkService) {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     @Tool(description = "Save a URL as a bookmark. Use when the user wants to save, bookmark, or remember a web page. Optionally provide a title and tags.")
     fun addBookmark(url: String, title: String?, tags: List<String>?): String {

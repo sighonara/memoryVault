@@ -27,7 +27,7 @@ class YtDlpService(
     @Value("\${memoryvault.youtube.download-timeout-minutes:30}") private val downloadTimeoutMinutes: Long
 ) {
 
-    private val logger = LoggerFactory.getLogger(YtDlpService::class.java)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     fun fetchPlaylistMetadata(playlistUrl: String): List<VideoMetadata> {
         val process = try {
@@ -37,7 +37,7 @@ class YtDlpService(
                 .redirectErrorStream(false)
                 .start()
         } catch (e: java.io.IOException) {
-            logger.error("Failed to start yt-dlp: {}", e.message)
+            log.error("Failed to start yt-dlp: {}", e.message)
             throw RuntimeException("yt-dlp not found or failed to start: ${e.message}", e)
         }
 
@@ -46,7 +46,7 @@ class YtDlpService(
 
         if (exitCode != 0) {
             val error = process.errorStream.bufferedReader().readText()
-            logger.error("yt-dlp metadata fetch failed (exit {}): {}", exitCode, error)
+            log.error("yt-dlp metadata fetch failed (exit {}): {}", exitCode, error)
             throw RuntimeException("yt-dlp failed with exit code $exitCode: $error")
         }
 
@@ -56,22 +56,27 @@ class YtDlpService(
     fun parsePlaylistJson(ndjson: String): List<VideoMetadata> {
         return ndjson.lines()
             .filter { it.isNotBlank() }
-            .map { line ->
-                val node = objectMapper.readTree(line)
-                val id = node.get("id")?.asText() ?: error("Missing id in yt-dlp output")
-                VideoMetadata(
-                    videoId = id,
-                    title = node.get("title")?.asText(),
-                    url = node.get("url")?.asText() ?: "https://www.youtube.com/watch?v=$id",
-                    channel = node.get("channel")?.asText(),
-                    durationSeconds = node.get("duration")?.asInt(),
-                    description = node.get("description")?.asText()
-                )
+            .mapNotNull { line ->
+                try {
+                    val node = objectMapper.readTree(line)
+                    val id = node.get("id")?.asText() ?: return@mapNotNull null
+                    VideoMetadata(
+                        videoId = id,
+                        title = node.get("title")?.asText(),
+                        url = node.get("url")?.asText() ?: "https://www.youtube.com/watch?v=$id",
+                        channel = node.get("channel")?.asText(),
+                        durationSeconds = node.get("duration")?.asInt(),
+                        description = node.get("description")?.asText()
+                    )
+                } catch (e: Exception) {
+                    log.warn("Skipping malformed yt-dlp JSON line: {}", e.message)
+                    null
+                }
             }
     }
 
     fun downloadVideo(videoUrl: String, outputPath: String): DownloadResult {
-        logger.info("Downloading video: {} -> {}", videoUrl, outputPath)
+        log.info("Downloading video: {} -> {}", videoUrl, outputPath)
 
         val process = try {
             ProcessBuilder(
@@ -80,7 +85,7 @@ class YtDlpService(
                 .redirectErrorStream(false)
                 .start()
         } catch (e: java.io.IOException) {
-            logger.error("Failed to start yt-dlp: {}", e.message)
+            log.error("Failed to start yt-dlp: {}", e.message)
             return DownloadResult(success = false, error = "yt-dlp not found or failed to start: ${e.message}")
         }
 
@@ -88,17 +93,17 @@ class YtDlpService(
         if (!finished) {
             process.destroyForcibly()
             val msg = "yt-dlp timed out after ${downloadTimeoutMinutes}min"
-            logger.error(msg)
+            log.error(msg)
             return DownloadResult(success = false, error = msg)
         }
 
         val exitCode = process.exitValue()
         return if (exitCode == 0) {
-            logger.info("Download complete: {}", outputPath)
+            log.info("Download complete: {}", outputPath)
             DownloadResult(success = true, filePath = outputPath)
         } else {
             val error = process.errorStream.bufferedReader().readText()
-            logger.error("yt-dlp download failed (exit {}): {}", exitCode, error)
+            log.error("yt-dlp download failed (exit {}): {}", exitCode, error)
             DownloadResult(success = false, error = error)
         }
     }

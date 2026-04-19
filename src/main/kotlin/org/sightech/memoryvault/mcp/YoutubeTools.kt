@@ -1,6 +1,7 @@
 package org.sightech.memoryvault.mcp
 
 import org.sightech.memoryvault.auth.CurrentUser
+import org.slf4j.LoggerFactory
 import org.sightech.memoryvault.youtube.service.VideoService
 import org.sightech.memoryvault.youtube.service.YoutubeListService
 import org.springframework.ai.tool.annotation.Tool
@@ -12,6 +13,8 @@ class YoutubeTools(
     private val youtubeListService: YoutubeListService,
     private val videoService: VideoService
 ) {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     @Tool(description = "Subscribe to a YouTube playlist for archival. Immediately fetches metadata and queues all videos for download. Use when the user wants to archive or track a YouTube playlist.")
     fun addYoutubeList(url: String): String {

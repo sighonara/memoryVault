@@ -3,6 +3,7 @@ package org.sightech.memoryvault.mcp
 import org.sightech.memoryvault.feed.service.FeedCategoryService
 import org.sightech.memoryvault.feed.service.FeedItemService
 import org.sightech.memoryvault.feed.service.FeedService
+import org.slf4j.LoggerFactory
 import org.springframework.ai.tool.annotation.Tool
 import org.springframework.stereotype.Component
 import java.util.UUID
@@ -13,6 +14,8 @@ class FeedCategoryTools(
     private val feedService: FeedService,
     private val feedItemService: FeedItemService
 ) {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     @Tool(description = "Create a new feed category. Use when the user wants to organize feeds into groups like 'Tech', 'News', etc.")
     fun addCategory(name: String): String {
