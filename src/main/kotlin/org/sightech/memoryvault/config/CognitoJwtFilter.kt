@@ -46,7 +46,12 @@ class CognitoJwtFilter(
         } else {
             log.info("No Bearer token for {} {}", request.method, request.requestURI)
         }
-        filterChain.doFilter(request, response)
+        try {
+            filterChain.doFilter(request, response)
+        } catch (e: Exception) {
+            log.error("Exception in filter chain for {} {}: {}", request.method, request.requestURI, e.message, e)
+            throw e
+        }
         val status = response.status
         if (status == 401 || status == 403) {
             log.warn("Response {} for {} {} authenticated={}", status, request.method, request.requestURI, SecurityContextHolder.getContext().authentication != null)
