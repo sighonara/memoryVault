@@ -19,6 +19,7 @@ query GetVideos($listId: UUID, $query: String, $removedOnly: Boolean) {
     thumbnailPath
     removedFromYoutube
     downloadedAt
+    downloadError
   }
 }
 

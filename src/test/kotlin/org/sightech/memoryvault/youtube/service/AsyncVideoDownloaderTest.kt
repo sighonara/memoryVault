@@ -58,6 +58,7 @@ class AsyncVideoDownloaderTest {
             youtubeUrl = "https://youtube.com/watch?v=vid1"
         )
         every { videoRepository.findById(video.id) } returns Optional.of(video)
+        every { videoRepository.save(any<Video>()) } returnsArgument 0
         every { ytDlpService.downloadVideo(any(), any()) } returns DownloadResult(success = false, error = "no network")
 
         val eventSlot = slot<VideoDownloadCompleted>()
@@ -67,7 +68,8 @@ class AsyncVideoDownloaderTest {
 
         assertNull(video.filePath)
         assertNull(video.downloadedAt)
-        verify(exactly = 0) { videoRepository.save(any()) }
+        assertEquals("no network", video.downloadError)
+        verify(exactly = 1) { videoRepository.save(video) }
         assertNotNull(eventSlot.captured)
         assertEquals(false, eventSlot.captured.success)
         assertEquals(video.id, eventSlot.captured.videoId)

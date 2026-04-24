@@ -72,6 +72,9 @@ class YoutubeTools(
             lines.add("Status: Downloaded")
             lines.add("File: ${video.filePath}")
             lines.add("Downloaded at: ${video.downloadedAt}")
+        } else if (video.downloadError != null) {
+            lines.add("Status: Download failed")
+            lines.add("Error: ${video.downloadError}")
         } else {
             lines.add("Status: Pending download")
         }

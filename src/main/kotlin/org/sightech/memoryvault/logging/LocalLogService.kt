@@ -40,11 +40,11 @@ class LocalLogService(
         return try {
             val node = objectMapper.readTree(line)
             LogEntry(
-                timestamp = Instant.parse(node.get("timestamp").asText()),
-                level = node.get("level").asText(),
-                logger = node.get("logger").asText(),
-                message = node.get("message").asText(),
-                thread = node.get("thread").asText()
+                timestamp = Instant.parse(node.get("timestamp").stringValue()),
+                level = node.get("level").stringValue(),
+                logger = node.get("logger").stringValue(),
+                message = node.get("message").stringValue(),
+                thread = node.get("thread").stringValue()
             )
         } catch (_: Exception) {
             null

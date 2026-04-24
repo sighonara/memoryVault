@@ -557,6 +557,7 @@ export type Video = {
   channelName?: Maybe<Scalars['String']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   downloadedAt?: Maybe<Scalars['Instant']['output']>;
+  downloadError?: Maybe<Scalars['String']['output']>;
   durationSeconds?: Maybe<Scalars['Int']['output']>;
   filePath?: Maybe<Scalars['String']['output']>;
   id: Scalars['UUID']['output'];
@@ -876,7 +877,7 @@ export type GetVideosQueryVariables = Exact<{
 }>;
 
 
-export type GetVideosQuery = { __typename?: 'Query', videos: Array<{ __typename?: 'Video', id: any, title?: string | null, youtubeUrl: string, thumbnailPath?: string | null, removedFromYoutube: boolean, downloadedAt?: any | null }> };
+export type GetVideosQuery = { __typename?: 'Query', videos: Array<{ __typename?: 'Video', id: any, title?: string | null, youtubeUrl: string, thumbnailPath?: string | null, removedFromYoutube: boolean, downloadedAt?: any | null, downloadError?: string | null }> };
 
 export type AddYoutubeListMutationVariables = Exact<{
   url: Scalars['String']['input'];
@@ -1743,6 +1744,7 @@ export const GetVideosDocument = gql`
     thumbnailPath
     removedFromYoutube
     downloadedAt
+    downloadError
   }
 }
     `;

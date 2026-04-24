@@ -59,14 +59,14 @@ class YtDlpService(
             .mapNotNull { line ->
                 try {
                     val node = objectMapper.readTree(line)
-                    val id = node.get("id")?.asText() ?: return@mapNotNull null
+                    val id = node.get("id")?.stringValue() ?: return@mapNotNull null
                     VideoMetadata(
                         videoId = id,
-                        title = node.get("title")?.asText(),
-                        url = node.get("url")?.asText() ?: "https://www.youtube.com/watch?v=$id",
-                        channel = node.get("channel")?.asText(),
-                        durationSeconds = node.get("duration")?.asInt(),
-                        description = node.get("description")?.asText()
+                        title = node.get("title")?.stringValue(),
+                        url = node.get("url")?.stringValue() ?: "https://www.youtube.com/watch?v=$id",
+                        channel = node.get("channel")?.stringValue(),
+                        durationSeconds = node.get("duration")?.intValue(),
+                        description = node.get("description")?.stringValue()
                     )
                 } catch (e: Exception) {
                     log.warn("Skipping malformed yt-dlp JSON line: {}", e.message)

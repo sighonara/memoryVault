@@ -108,12 +108,12 @@ class IngestService(
         val data = objectMapper.readTree(preview.previewData)
         val items = data["items"].map { node ->
             IngestItem(
-                url = node["url"].asText(),
-                title = node["title"].asText(),
-                status = IngestStatus.valueOf(node["status"].asText()),
-                existingBookmarkId = node["existingBookmarkId"]?.textValue()?.let { UUID.fromString(it) },
-                suggestedFolderId = node["suggestedFolderId"]?.textValue()?.let { UUID.fromString(it) },
-                browserFolder = node["browserFolder"]?.textValue()
+                url = node["url"].stringValue(),
+                title = node["title"].stringValue(),
+                status = IngestStatus.valueOf(node["status"].stringValue()),
+                existingBookmarkId = node["existingBookmarkId"]?.stringValue()?.let { UUID.fromString(it) },
+                suggestedFolderId = node["suggestedFolderId"]?.stringValue()?.let { UUID.fromString(it) },
+                browserFolder = node["browserFolder"]?.stringValue()
             )
         }
 
@@ -199,12 +199,12 @@ class IngestService(
         val data = objectMapper.readTree(preview.previewData)
         val items = data["items"].map { node ->
             IngestItem(
-                url = node["url"].asText(),
-                title = node["title"].asText(),
-                status = IngestStatus.valueOf(node["status"].asText()),
-                existingBookmarkId = node["existingBookmarkId"]?.textValue()?.let { UUID.fromString(it) },
-                suggestedFolderId = node["suggestedFolderId"]?.textValue()?.let { UUID.fromString(it) },
-                browserFolder = node["browserFolder"]?.textValue()
+                url = node["url"].stringValue(),
+                title = node["title"].stringValue(),
+                status = IngestStatus.valueOf(node["status"].stringValue()),
+                existingBookmarkId = node["existingBookmarkId"]?.stringValue()?.let { UUID.fromString(it) },
+                suggestedFolderId = node["suggestedFolderId"]?.stringValue()?.let { UUID.fromString(it) },
+                browserFolder = node["browserFolder"]?.stringValue()
             )
         }
         val summary = IngestSummary(
@@ -223,12 +223,12 @@ class IngestService(
             val data = objectMapper.readTree(preview.previewData)
             val items = data["items"].map { node ->
                 IngestItem(
-                    url = node["url"].asText(),
-                    title = node["title"].asText(),
-                    status = IngestStatus.valueOf(node["status"].asText()),
-                    existingBookmarkId = node["existingBookmarkId"]?.textValue()?.let { UUID.fromString(it) },
-                    suggestedFolderId = node["suggestedFolderId"]?.textValue()?.let { UUID.fromString(it) },
-                    browserFolder = node["browserFolder"]?.textValue()
+                    url = node["url"].stringValue(),
+                    title = node["title"].stringValue(),
+                    status = IngestStatus.valueOf(node["status"].stringValue()),
+                    existingBookmarkId = node["existingBookmarkId"]?.stringValue()?.let { UUID.fromString(it) },
+                    suggestedFolderId = node["suggestedFolderId"]?.stringValue()?.let { UUID.fromString(it) },
+                    browserFolder = node["browserFolder"]?.stringValue()
                 )
             }
             val summary = IngestSummary(

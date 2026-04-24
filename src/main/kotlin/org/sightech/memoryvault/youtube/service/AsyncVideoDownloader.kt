@@ -40,12 +40,18 @@ class AsyncVideoDownloader(
             val dlResult = ytDlpService.downloadVideo(youtubeUrl, tempDir.resolve("%(id)s.%(ext)s").toString())
             if (!dlResult.success) {
                 log.warn("yt-dlp failed for video {}: {}", videoId, dlResult.error)
+                video.downloadError = dlResult.error ?: "yt-dlp download failed"
+                video.updatedAt = Instant.now()
+                videoRepository.save(video)
                 return
             }
 
             val downloadedFile = Files.list(tempDir).findFirst().orElse(null)
             if (downloadedFile == null) {
                 log.warn("No output file for video {} after yt-dlp reported success", videoId)
+                video.downloadError = "No output file after yt-dlp reported success"
+                video.updatedAt = Instant.now()
+                videoRepository.save(video)
                 return
             }
 
@@ -55,6 +61,7 @@ class AsyncVideoDownloader(
             val now = Instant.now()
             video.filePath = storageKey
             video.downloadedAt = now
+            video.downloadError = null
             video.updatedAt = now
             videoRepository.save(video)
             success = true

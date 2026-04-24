@@ -39,6 +39,9 @@ class Video(
     @Column(name = "downloaded_at")
     var downloadedAt: Instant? = null,
 
+    @Column(name = "download_error", columnDefinition = "TEXT")
+    var downloadError: String? = null,
+
     @Column(name = "duration_seconds")
     var durationSeconds: Int? = null,
 

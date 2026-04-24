@@ -81,6 +81,11 @@ import { YoutubeListDialogComponent } from './youtube-list-dialog';
                   @if (video.removedFromYoutube) {
                     <span class="removed-badge">REMOVED</span>
                   }
+                  @if (video.downloadError) {
+                    <span class="error-badge" [matTooltip]="video.downloadError">
+                      <mat-icon class="error-icon">error_outline</mat-icon> FAILED
+                    </span>
+                  }
                 </span>
               </div>
               <mat-icon class="play-icon">play_circle_outline</mat-icon>
@@ -159,6 +164,13 @@ import { YoutubeListDialogComponent } from './youtube-list-dialog';
       background: #ffebee; color: #c62828; padding: 1px 4px;
       border-radius: 2px; font-weight: 600; font-size: 0.6rem; margin-left: 6px;
     }
+    .error-badge {
+      display: inline-flex; align-items: center; gap: 2px;
+      background: #fff3e0; color: #e65100; padding: 1px 4px;
+      border-radius: 2px; font-weight: 600; font-size: 0.6rem; margin-left: 6px;
+      cursor: help;
+    }
+    .error-icon { font-size: 12px; width: 12px; height: 12px; }
     .play-icon { color: #80868b; font-size: 20px; width: 20px; height: 20px; flex-shrink: 0; }
     .video-row:hover .play-icon { color: #1a73e8; }
 
