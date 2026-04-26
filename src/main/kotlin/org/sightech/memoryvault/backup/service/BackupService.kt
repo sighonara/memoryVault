@@ -7,8 +7,10 @@ import org.sightech.memoryvault.backup.repository.BackupProviderRepository
 import org.sightech.memoryvault.backup.repository.BackupRecordRepository
 import org.sightech.memoryvault.crypto.EncryptionService
 import org.sightech.memoryvault.storage.StorageService
+import org.sightech.memoryvault.websocket.VideoDownloadCompleted
 import org.sightech.memoryvault.youtube.repository.VideoRepository
 import org.slf4j.LoggerFactory
+import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.util.UUID
@@ -157,6 +159,15 @@ class BackupService(
         }
         log.info("Backfill queued {} videos for userId={}", toBackfill.size, userId)
         return toBackfill.size
+    }
+
+    @EventListener
+    fun onVideoDownloadCompleted(event: VideoDownloadCompleted) {
+        if (!event.success) return
+
+        val primary = providerRepo.findPrimaryByUserId(event.userId) ?: return
+        createPendingRecord(event.videoId, primary.id)
+        log.info("Queued backup for newly downloaded video videoId={}", event.videoId)
     }
 
     fun getStats(userId: UUID): BackupStats {
