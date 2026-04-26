@@ -1,0 +1,24 @@
+type BackupProvider {
+    id: UUID!
+    type: String!
+    name: String!
+    isPrimary: Boolean!
+    createdAt: Instant!
+    updatedAt: Instant!
+}
+
+type BackupStats {
+    total: Int!
+    backedUp: Int!
+    pending: Int!
+    lost: Int!
+    failed: Int!
+}
+
+input BackupProviderInput {
+    type: String!
+    name: String!
+    accessKey: String!
+    secretKey: String!
+    isPrimary: Boolean!
+}

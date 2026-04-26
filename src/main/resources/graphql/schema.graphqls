@@ -30,6 +30,10 @@ type Query {
     stats: SystemStats!
     costs(months: Int): CostSummary!
 
+    # Backup
+    backupProviders: [BackupProvider!]!
+    backupStats: BackupStats!
+
     # Ingest
     pendingIngests: [IngestPreview!]!
 
@@ -79,4 +83,10 @@ type Mutation {
 
     # Costs
     refreshCosts: CostRecord
+
+    # Backup
+    addBackupProvider(input: BackupProviderInput!): BackupProvider!
+    updateBackupProvider(id: UUID!, input: BackupProviderInput!): BackupProvider
+    deleteBackupProvider(id: UUID!): Boolean!
+    triggerBackfill: Int!
 }
