@@ -242,6 +242,8 @@ New mutations:
 - `memoryvault.backup.health-check-failure-threshold` — consecutive failures before LOST (default: 3)
 - `MEMORYVAULT_ENCRYPTION_KEY` — env var for credential encryption
 
+All Spring properties go in `application.properties` (with profile overrides as needed). `MEMORYVAULT_ENCRYPTION_KEY` is added to `.env.sample` with a placeholder value and documentation comment. On AWS, it's plumbed through `user_data.sh` → EC2 env file, same pattern as existing env vars.
+
 ---
 
 ## Package Structure
