@@ -6,7 +6,7 @@ import org.hibernate.type.SqlTypes
 import java.time.Instant
 import java.util.UUID
 
-enum class JobType { RSS_FETCH, YT_SYNC, BOOKMARK_ARCHIVE }
+enum class JobType { RSS_FETCH, YT_SYNC, BOOKMARK_ARCHIVE, BACKUP_UPLOAD, BACKUP_HEALTH_CHECK }
 
 enum class JobStatus { PENDING, RUNNING, SUCCESS, FAILED }
 
