@@ -11,10 +11,14 @@ import org.springframework.graphql.data.method.annotation.MutationMapping
 import org.springframework.graphql.data.method.annotation.QueryMapping
 import org.springframework.graphql.data.method.annotation.SchemaMapping
 import org.springframework.stereotype.Controller
+import tools.jackson.databind.ObjectMapper
 import java.util.UUID
 
 @Controller
-class BackupResolver(private val backupService: BackupService) {
+class BackupResolver(
+    private val backupService: BackupService,
+    private val objectMapper: ObjectMapper
+) {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -50,7 +54,7 @@ class BackupResolver(private val backupService: BackupService) {
         val accessKey = input["accessKey"] as String
         val secretKey = input["secretKey"] as String
         val isPrimary = input["isPrimary"] as Boolean
-        val credentialsJson = """{"accessKey":"$accessKey","secretKey":"$secretKey"}"""
+        val credentialsJson = objectMapper.writeValueAsString(mapOf("accessKey" to accessKey, "secretKey" to secretKey))
         log.info("Adding backup provider name={} type={}", name, type)
         return backupService.addProvider(userId, type, name, credentialsJson, isPrimary)
     }
@@ -62,7 +66,7 @@ class BackupResolver(private val backupService: BackupService) {
         val accessKey = input["accessKey"] as? String
         val secretKey = input["secretKey"] as? String
         val credentialsJson = if (accessKey != null && secretKey != null) {
-            """{"accessKey":"$accessKey","secretKey":"$secretKey"}"""
+            objectMapper.writeValueAsString(mapOf("accessKey" to accessKey, "secretKey" to secretKey))
         } else null
         log.info("Updating backup provider id={}", id)
         return backupService.updateProvider(id, userId, name, credentialsJson)
