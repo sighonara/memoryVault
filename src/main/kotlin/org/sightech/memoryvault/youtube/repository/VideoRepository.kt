@@ -37,4 +37,7 @@ interface VideoRepository : JpaRepository<Video, UUID> {
     fun countByYoutubeListUserIdAndYoutubeListDeletedAtIsNullAndDownloadedAtIsNotNull(userId: UUID): Long
 
     fun countByYoutubeListUserIdAndYoutubeListDeletedAtIsNullAndRemovedFromYoutubeTrue(userId: UUID): Long
+
+    @Query("SELECT v.id FROM Video v WHERE v.youtubeList.userId = :userId AND v.youtubeList.deletedAt IS NULL AND v.downloadedAt IS NOT NULL")
+    fun findDownloadedVideoIdsByUserId(userId: UUID): List<UUID>
 }
