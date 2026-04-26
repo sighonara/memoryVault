@@ -20,6 +20,7 @@ query GetVideos($listId: UUID, $query: String, $removedOnly: Boolean) {
     removedFromYoutube
     downloadedAt
     downloadError
+    backupStatus
   }
 }
 

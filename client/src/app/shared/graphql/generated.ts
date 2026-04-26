@@ -19,6 +19,33 @@ export type Scalars = {
   UUID: { input: any; output: any; }
 };
 
+export type BackupProvider = {
+  __typename?: 'BackupProvider';
+  createdAt: Scalars['Instant']['output'];
+  id: Scalars['UUID']['output'];
+  isPrimary: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  type: Scalars['String']['output'];
+  updatedAt: Scalars['Instant']['output'];
+};
+
+export type BackupProviderInput = {
+  accessKey: Scalars['String']['input'];
+  isPrimary: Scalars['Boolean']['input'];
+  name: Scalars['String']['input'];
+  secretKey: Scalars['String']['input'];
+  type: Scalars['String']['input'];
+};
+
+export type BackupStats = {
+  __typename?: 'BackupStats';
+  backedUp: Scalars['Int']['output'];
+  failed: Scalars['Int']['output'];
+  lost: Scalars['Int']['output'];
+  pending: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+};
+
 export type Bookmark = {
   __typename?: 'Bookmark';
   createdAt: Scalars['Instant']['output'];
@@ -205,12 +232,14 @@ export type MonthlyCost = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  addBackupProvider: BackupProvider;
   addBookmark: Bookmark;
   addCategory: FeedCategory;
   addFeed: Feed;
   addYoutubeList: YoutubeListAddResult;
   commitIngest: CommitResult;
   createFolder: Folder;
+  deleteBackupProvider: Scalars['Boolean']['output'];
   deleteBookmark?: Maybe<Bookmark>;
   deleteCategory: Scalars['Boolean']['output'];
   deleteFeed?: Maybe<Feed>;
@@ -234,7 +263,14 @@ export type Mutation = {
   reorderBookmarks: Array<Bookmark>;
   reorderCategories: Array<FeedCategory>;
   tagBookmark?: Maybe<Bookmark>;
+  triggerBackfill: Scalars['Int']['output'];
+  updateBackupProvider?: Maybe<BackupProvider>;
   updateUserPreferences: UserPreferences;
+};
+
+
+export type MutationAddBackupProviderArgs = {
+  input: BackupProviderInput;
 };
 
 
@@ -271,6 +307,11 @@ export type MutationCommitIngestArgs = {
 export type MutationCreateFolderArgs = {
   name: Scalars['String']['input'];
   parentId?: InputMaybe<Scalars['UUID']['input']>;
+};
+
+
+export type MutationDeleteBackupProviderArgs = {
+  id: Scalars['UUID']['input'];
 };
 
 
@@ -392,6 +433,12 @@ export type MutationTagBookmarkArgs = {
 };
 
 
+export type MutationUpdateBackupProviderArgs = {
+  id: Scalars['UUID']['input'];
+  input: BackupProviderInput;
+};
+
+
 export type MutationUpdateUserPreferencesArgs = {
   sortOrder?: InputMaybe<Scalars['String']['input']>;
   viewMode?: InputMaybe<Scalars['String']['input']>;
@@ -399,6 +446,8 @@ export type MutationUpdateUserPreferencesArgs = {
 
 export type Query = {
   __typename?: 'Query';
+  backupProviders: Array<BackupProvider>;
+  backupStats: BackupStats;
   bookmarks: Array<Bookmark>;
   costs: CostSummary;
   exportBookmarks: Scalars['String']['output'];
@@ -554,10 +603,11 @@ export type UserPreferences = {
 
 export type Video = {
   __typename?: 'Video';
+  backupStatus?: Maybe<Scalars['String']['output']>;
   channelName?: Maybe<Scalars['String']['output']>;
   description?: Maybe<Scalars['String']['output']>;
-  downloadedAt?: Maybe<Scalars['Instant']['output']>;
   downloadError?: Maybe<Scalars['String']['output']>;
+  downloadedAt?: Maybe<Scalars['Instant']['output']>;
   durationSeconds?: Maybe<Scalars['Int']['output']>;
   filePath?: Maybe<Scalars['String']['output']>;
   id: Scalars['UUID']['output'];
@@ -877,7 +927,7 @@ export type GetVideosQueryVariables = Exact<{
 }>;
 
 
-export type GetVideosQuery = { __typename?: 'Query', videos: Array<{ __typename?: 'Video', id: any, title?: string | null, youtubeUrl: string, thumbnailPath?: string | null, removedFromYoutube: boolean, downloadedAt?: any | null, downloadError?: string | null }> };
+export type GetVideosQuery = { __typename?: 'Query', videos: Array<{ __typename?: 'Video', id: any, title?: string | null, youtubeUrl: string, thumbnailPath?: string | null, removedFromYoutube: boolean, downloadedAt?: any | null, downloadError?: string | null, backupStatus?: string | null }> };
 
 export type AddYoutubeListMutationVariables = Exact<{
   url: Scalars['String']['input'];
@@ -1745,6 +1795,7 @@ export const GetVideosDocument = gql`
     removedFromYoutube
     downloadedAt
     downloadError
+    backupStatus
   }
 }
     `;

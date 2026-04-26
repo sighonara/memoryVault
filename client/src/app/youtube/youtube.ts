@@ -65,6 +65,18 @@ import { YoutubeListDialogComponent } from './youtube-list-dialog';
           <mat-progress-bar mode="indeterminate"></mat-progress-bar>
         }
 
+        <details class="backup-legend">
+          <summary>Backup status legend</summary>
+          <div class="legend-items">
+            <span><mat-icon class="shield-icon shield-green">shield</mat-icon> Backed up (IA)</span>
+            <span><mat-icon class="shield-icon shield-green">verified_user</mat-icon> Backed up (IA + secondary)</span>
+            <span><mat-icon class="shield-icon shield-blue">shield</mat-icon> Backed up (secondary only)</span>
+            <span><mat-icon class="shield-icon shield-yellow">shield</mat-icon> Backup lost</span>
+            <span><mat-icon class="shield-icon shield-red">shield</mat-icon> Backup failed</span>
+            <span><mat-icon class="shield-icon shield-gray">shield</mat-icon> Backup pending</span>
+          </div>
+        </details>
+
         <div class="video-list">
           @for (video of store.videos(); track video.id) {
             <div class="video-row" (click)="openVideo(video.youtubeUrl)">
@@ -85,6 +97,19 @@ import { YoutubeListDialogComponent } from './youtube-list-dialog';
                     <span class="error-badge" [matTooltip]="video.downloadError">
                       <mat-icon class="error-icon">error_outline</mat-icon> FAILED
                     </span>
+                  }
+                  @if (video.backupStatus === 'BACKED_UP') {
+                    <mat-icon class="shield-icon shield-green" matTooltip="Backed up (IA)">shield</mat-icon>
+                  } @else if (video.backupStatus === 'BACKED_UP_BOTH') {
+                    <mat-icon class="shield-icon shield-green" matTooltip="Backed up (IA + secondary)">verified_user</mat-icon>
+                  } @else if (video.backupStatus === 'BACKED_UP_SECONDARY') {
+                    <mat-icon class="shield-icon shield-blue" matTooltip="Backed up (secondary only)">shield</mat-icon>
+                  } @else if (video.backupStatus === 'LOST') {
+                    <mat-icon class="shield-icon shield-yellow" matTooltip="Backup lost, queued for secondary">shield</mat-icon>
+                  } @else if (video.backupStatus === 'FAILED') {
+                    <mat-icon class="shield-icon shield-red" matTooltip="Backup failed">shield</mat-icon>
+                  } @else if (video.backupStatus === 'PENDING') {
+                    <mat-icon class="shield-icon shield-gray" matTooltip="Backup pending">shield</mat-icon>
                   }
                 </span>
               </div>
@@ -181,6 +206,25 @@ import { YoutubeListDialogComponent } from './youtube-list-dialog';
     }
     .empty-state mat-icon { font-size: 48px; width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.5; }
     .empty-state p { font-size: 0.8125rem; margin: 0; }
+
+    /* ── Shield icons ── */
+    .shield-icon { font-size: 14px; width: 14px; height: 14px; margin-left: 4px; vertical-align: middle; }
+    .shield-green { color: #2e7d32; }
+    .shield-blue { color: #1565c0; }
+    .shield-yellow { color: #f9a825; }
+    .shield-red { color: #c62828; }
+    .shield-gray { color: #9e9e9e; }
+
+    /* ── Backup legend ── */
+    .backup-legend {
+      padding: 4px 16px; font-size: 0.7rem; color: #5f6368;
+      border-bottom: 1px solid #f1f3f4;
+    }
+    .backup-legend summary { cursor: pointer; user-select: none; }
+    .legend-items {
+      display: flex; flex-wrap: wrap; gap: 12px; padding: 6px 0;
+    }
+    .legend-items span { display: inline-flex; align-items: center; gap: 2px; }
   `]
 })
 export class YoutubeComponent implements OnInit {
