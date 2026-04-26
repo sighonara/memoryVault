@@ -64,6 +64,16 @@ class WebSocketEventRelay(private val messagingTemplate: SimpMessagingTemplate) 
         ))
     }
 
+    @Async("websocketRelayExecutor")
+    @EventListener
+    fun onBackupLost(event: BackupLost) {
+        send("/topic/user/${event.userId}/backups", mapOf(
+            "eventType" to event.eventType.name,
+            "videoId" to event.videoId.toString(),
+            "providerId" to event.providerId.toString()
+        ))
+    }
+
     private fun send(topic: String, payload: Map<String, Any?>) {
         try {
             messagingTemplate.convertAndSend(topic, payload)

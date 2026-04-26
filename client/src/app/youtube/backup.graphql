@@ -1,0 +1,36 @@
+query GetBackupProviders {
+  backupProviders {
+    id
+    type
+    name
+    isPrimary
+    createdAt
+  }
+}
+
+query GetBackupStats {
+  backupStats {
+    total
+    backedUp
+    pending
+    lost
+    failed
+  }
+}
+
+mutation AddBackupProvider($input: BackupProviderInput!) {
+  addBackupProvider(input: $input) {
+    id
+    type
+    name
+    isPrimary
+  }
+}
+
+mutation DeleteBackupProvider($id: UUID!) {
+  deleteBackupProvider(id: $id)
+}
+
+mutation TriggerBackfill {
+  triggerBackfill
+}

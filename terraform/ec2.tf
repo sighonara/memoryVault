@@ -69,6 +69,7 @@ resource "aws_instance" "app" {
     internal_api_key     = random_password.internal_api_key.result
     cognito_user_pool_id = aws_cognito_user_pool.main.id
     cognito_client_id    = aws_cognito_user_pool_client.spa.id
+    encryption_key       = var.encryption_key
   })
 
   tags = {

@@ -8,7 +8,8 @@ enum class VaultEventType {
     JOB_STATUS_CHANGED,
     VIDEO_DOWNLOAD_COMPLETED,
     INGEST_READY,
-    CONTENT_MUTATED
+    CONTENT_MUTATED,
+    BACKUP_LOST
 }
 
 enum class ContentType {
@@ -73,4 +74,14 @@ data class ContentMutated(
     val entityId: UUID? = null
 ) : VaultEvent {
     override val eventType = VaultEventType.CONTENT_MUTATED
+}
+
+data class BackupLost(
+    override val userId: UUID,
+    override val timestamp: Instant,
+    val videoId: UUID,
+    val providerId: UUID,
+    val externalUrl: String?
+) : VaultEvent {
+    override val eventType = VaultEventType.BACKUP_LOST
 }

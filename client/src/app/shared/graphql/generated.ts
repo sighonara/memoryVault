@@ -19,6 +19,33 @@ export type Scalars = {
   UUID: { input: any; output: any; }
 };
 
+export type BackupProvider = {
+  __typename?: 'BackupProvider';
+  createdAt: Scalars['Instant']['output'];
+  id: Scalars['UUID']['output'];
+  isPrimary: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  type: Scalars['String']['output'];
+  updatedAt: Scalars['Instant']['output'];
+};
+
+export type BackupProviderInput = {
+  accessKey: Scalars['String']['input'];
+  isPrimary: Scalars['Boolean']['input'];
+  name: Scalars['String']['input'];
+  secretKey: Scalars['String']['input'];
+  type: Scalars['String']['input'];
+};
+
+export type BackupStats = {
+  __typename?: 'BackupStats';
+  backedUp: Scalars['Int']['output'];
+  failed: Scalars['Int']['output'];
+  lost: Scalars['Int']['output'];
+  pending: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+};
+
 export type Bookmark = {
   __typename?: 'Bookmark';
   createdAt: Scalars['Instant']['output'];
@@ -205,12 +232,14 @@ export type MonthlyCost = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  addBackupProvider: BackupProvider;
   addBookmark: Bookmark;
   addCategory: FeedCategory;
   addFeed: Feed;
   addYoutubeList: YoutubeListAddResult;
   commitIngest: CommitResult;
   createFolder: Folder;
+  deleteBackupProvider: Scalars['Boolean']['output'];
   deleteBookmark?: Maybe<Bookmark>;
   deleteCategory: Scalars['Boolean']['output'];
   deleteFeed?: Maybe<Feed>;
@@ -234,7 +263,14 @@ export type Mutation = {
   reorderBookmarks: Array<Bookmark>;
   reorderCategories: Array<FeedCategory>;
   tagBookmark?: Maybe<Bookmark>;
+  triggerBackfill: Scalars['Int']['output'];
+  updateBackupProvider?: Maybe<BackupProvider>;
   updateUserPreferences: UserPreferences;
+};
+
+
+export type MutationAddBackupProviderArgs = {
+  input: BackupProviderInput;
 };
 
 
@@ -271,6 +307,11 @@ export type MutationCommitIngestArgs = {
 export type MutationCreateFolderArgs = {
   name: Scalars['String']['input'];
   parentId?: InputMaybe<Scalars['UUID']['input']>;
+};
+
+
+export type MutationDeleteBackupProviderArgs = {
+  id: Scalars['UUID']['input'];
 };
 
 
@@ -392,6 +433,12 @@ export type MutationTagBookmarkArgs = {
 };
 
 
+export type MutationUpdateBackupProviderArgs = {
+  id: Scalars['UUID']['input'];
+  input: BackupProviderInput;
+};
+
+
 export type MutationUpdateUserPreferencesArgs = {
   sortOrder?: InputMaybe<Scalars['String']['input']>;
   viewMode?: InputMaybe<Scalars['String']['input']>;
@@ -399,6 +446,8 @@ export type MutationUpdateUserPreferencesArgs = {
 
 export type Query = {
   __typename?: 'Query';
+  backupProviders: Array<BackupProvider>;
+  backupStats: BackupStats;
   bookmarks: Array<Bookmark>;
   costs: CostSummary;
   exportBookmarks: Scalars['String']['output'];
@@ -554,10 +603,11 @@ export type UserPreferences = {
 
 export type Video = {
   __typename?: 'Video';
+  backupStatus?: Maybe<Scalars['String']['output']>;
   channelName?: Maybe<Scalars['String']['output']>;
   description?: Maybe<Scalars['String']['output']>;
-  downloadedAt?: Maybe<Scalars['Instant']['output']>;
   downloadError?: Maybe<Scalars['String']['output']>;
+  downloadedAt?: Maybe<Scalars['Instant']['output']>;
   durationSeconds?: Maybe<Scalars['Int']['output']>;
   filePath?: Maybe<Scalars['String']['output']>;
   id: Scalars['UUID']['output'];
@@ -865,6 +915,35 @@ export type SearchQueryVariables = Exact<{
 
 export type SearchQuery = { __typename?: 'Query', search: Array<{ __typename?: 'SearchResult', type: string, id: any, title?: string | null, url?: string | null, rank: number }> };
 
+export type GetBackupProvidersQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetBackupProvidersQuery = { __typename?: 'Query', backupProviders: Array<{ __typename?: 'BackupProvider', id: any, type: string, name: string, isPrimary: boolean, createdAt: any }> };
+
+export type GetBackupStatsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetBackupStatsQuery = { __typename?: 'Query', backupStats: { __typename?: 'BackupStats', total: number, backedUp: number, pending: number, lost: number, failed: number } };
+
+export type AddBackupProviderMutationVariables = Exact<{
+  input: BackupProviderInput;
+}>;
+
+
+export type AddBackupProviderMutation = { __typename?: 'Mutation', addBackupProvider: { __typename?: 'BackupProvider', id: any, type: string, name: string, isPrimary: boolean } };
+
+export type DeleteBackupProviderMutationVariables = Exact<{
+  id: Scalars['UUID']['input'];
+}>;
+
+
+export type DeleteBackupProviderMutation = { __typename?: 'Mutation', deleteBackupProvider: boolean };
+
+export type TriggerBackfillMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type TriggerBackfillMutation = { __typename?: 'Mutation', triggerBackfill: number };
+
 export type GetYoutubeListsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -877,7 +956,7 @@ export type GetVideosQueryVariables = Exact<{
 }>;
 
 
-export type GetVideosQuery = { __typename?: 'Query', videos: Array<{ __typename?: 'Video', id: any, title?: string | null, youtubeUrl: string, thumbnailPath?: string | null, removedFromYoutube: boolean, downloadedAt?: any | null, downloadError?: string | null }> };
+export type GetVideosQuery = { __typename?: 'Query', videos: Array<{ __typename?: 'Video', id: any, title?: string | null, youtubeUrl: string, thumbnailPath?: string | null, removedFromYoutube: boolean, downloadedAt?: any | null, downloadError?: string | null, backupStatus?: string | null }> };
 
 export type AddYoutubeListMutationVariables = Exact<{
   url: Scalars['String']['input'];
@@ -1710,6 +1789,103 @@ export const SearchDocument = gql`
       super(apollo);
     }
   }
+export const GetBackupProvidersDocument = gql`
+    query GetBackupProviders {
+  backupProviders {
+    id
+    type
+    name
+    isPrimary
+    createdAt
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class GetBackupProvidersGQL extends Apollo.Query<GetBackupProvidersQuery, GetBackupProvidersQueryVariables> {
+    document = GetBackupProvidersDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const GetBackupStatsDocument = gql`
+    query GetBackupStats {
+  backupStats {
+    total
+    backedUp
+    pending
+    lost
+    failed
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class GetBackupStatsGQL extends Apollo.Query<GetBackupStatsQuery, GetBackupStatsQueryVariables> {
+    document = GetBackupStatsDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const AddBackupProviderDocument = gql`
+    mutation AddBackupProvider($input: BackupProviderInput!) {
+  addBackupProvider(input: $input) {
+    id
+    type
+    name
+    isPrimary
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class AddBackupProviderGQL extends Apollo.Mutation<AddBackupProviderMutation, AddBackupProviderMutationVariables> {
+    document = AddBackupProviderDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const DeleteBackupProviderDocument = gql`
+    mutation DeleteBackupProvider($id: UUID!) {
+  deleteBackupProvider(id: $id)
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class DeleteBackupProviderGQL extends Apollo.Mutation<DeleteBackupProviderMutation, DeleteBackupProviderMutationVariables> {
+    document = DeleteBackupProviderDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const TriggerBackfillDocument = gql`
+    mutation TriggerBackfill {
+  triggerBackfill
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class TriggerBackfillGQL extends Apollo.Mutation<TriggerBackfillMutation, TriggerBackfillMutationVariables> {
+    document = TriggerBackfillDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
 export const GetYoutubeListsDocument = gql`
     query GetYoutubeLists {
   youtubeLists {
@@ -1745,6 +1921,7 @@ export const GetVideosDocument = gql`
     removedFromYoutube
     downloadedAt
     downloadError
+    backupStatus
   }
 }
     `;

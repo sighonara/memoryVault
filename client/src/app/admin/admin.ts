@@ -5,6 +5,7 @@ import { AdminStore } from './admin.store';
 import { StatsPanelComponent } from './stats-panel/stats-panel';
 import { JobsTableComponent } from './jobs-table/jobs-table';
 import { LogViewerComponent } from './log-viewer/log-viewer';
+import { BackupPanelComponent } from './backup-panel';
 
 @Component({
   selector: 'app-admin',
@@ -15,6 +16,7 @@ import { LogViewerComponent } from './log-viewer/log-viewer';
     StatsPanelComponent,
     JobsTableComponent,
     LogViewerComponent,
+    BackupPanelComponent,
   ],
   providers: [AdminStore],
   template: `
@@ -52,6 +54,15 @@ import { LogViewerComponent } from './log-viewer/log-viewer';
             (followToggle)="toggleFollow()"
           />
         </mat-tab>
+        <mat-tab label="Backups">
+          <app-backup-panel
+            [providers]="store.backupProviders()"
+            [stats]="store.backupStats()"
+            (onAdd)="openAddProviderDialog()"
+            (onDelete)="store.deleteBackupProvider($event)"
+            (onBackfill)="store.triggerBackfill()"
+          />
+        </mat-tab>
       </mat-tab-group>
     </div>
   `,
@@ -80,6 +91,7 @@ export class AdminComponent implements OnInit {
     if (index === 0) { this.store.loadStats(); this.store.loadCosts(); }
     else if (index === 1) this.store.loadJobs();
     else if (index === 2) this.store.loadLogs();
+    else if (index === 3) { this.store.loadBackupProviders(); this.store.loadBackupStats(); }
 
     // Stop follow when navigating away from logs tab
     if (index !== 2) this.stopFollow();
@@ -101,5 +113,20 @@ export class AdminComponent implements OnInit {
       this.followInterval = null;
     }
     this.store.setFollowActive(false);
+  }
+
+  openAddProviderDialog() {
+    const accessKey = prompt('Internet Archive Access Key:');
+    if (!accessKey) return;
+    const secretKey = prompt('Internet Archive Secret Key:');
+    if (!secretKey) return;
+
+    this.store.addBackupProvider({
+      type: 'INTERNET_ARCHIVE',
+      name: 'Internet Archive',
+      accessKey,
+      secretKey,
+      isPrimary: true
+    });
   }
 }

@@ -61,6 +61,12 @@ variable "jwt_secret" {
   sensitive   = true
 }
 
+variable "encryption_key" {
+  description = "AES-256-GCM encryption key for backup provider credentials"
+  type        = string
+  sensitive   = true
+}
+
 variable "feed_sync_schedule" {
   description = "EventBridge schedule expression for feed-sync Lambda"
   type        = string

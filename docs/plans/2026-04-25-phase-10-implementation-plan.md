@@ -78,7 +78,7 @@ All paths below use `...` as shorthand for `src/main/kotlin/org/sightech/memoryv
 - Modify: `src/main/resources/application.properties`
 - Modify: `.env.sample`
 
-- [ ] **Step 1: Create V9 migration**
+- [x] **Step 1: Create V9 migration**
 
 Create `src/main/resources/db/migration/V9__backup_tables.sql`:
 
@@ -117,7 +117,7 @@ CREATE INDEX idx_backup_records_status ON backup_records(status);
 CREATE INDEX idx_backup_providers_user_id ON backup_providers(user_id);
 ```
 
-- [ ] **Step 2: Create BackupEnums.kt**
+- [x] **Step 2: Create BackupEnums.kt**
 
 Create `src/main/kotlin/org/sightech/memoryvault/backup/entity/BackupEnums.kt`:
 
@@ -129,7 +129,7 @@ enum class BackupProviderType { INTERNET_ARCHIVE, CUSTOM }
 enum class BackupStatus { PENDING, UPLOADING, BACKED_UP, LOST, FAILED }
 ```
 
-- [ ] **Step 3: Add new job types to SyncJob.kt**
+- [x] **Step 3: Add new job types to SyncJob.kt**
 
 In `src/main/kotlin/org/sightech/memoryvault/scheduling/entity/SyncJob.kt`, change:
 
@@ -143,7 +143,7 @@ to:
 enum class JobType { RSS_FETCH, YT_SYNC, BOOKMARK_ARCHIVE, BACKUP_UPLOAD, BACKUP_HEALTH_CHECK }
 ```
 
-- [ ] **Step 4: Add backup config properties**
+- [x] **Step 4: Add backup config properties**
 
 Append to `src/main/resources/application.properties`:
 
@@ -155,7 +155,7 @@ memoryvault.backup.max-uploads-per-day=10
 memoryvault.backup.health-check-failure-threshold=3
 ```
 
-- [ ] **Step 5: Update .env.sample**
+- [x] **Step 5: Update .env.sample**
 
 Append to `.env.sample`:
 
@@ -165,13 +165,13 @@ Append to `.env.sample`:
 MEMORYVAULT_ENCRYPTION_KEY=
 ```
 
-- [ ] **Step 6: Verify migration runs**
+- [x] **Step 6: Verify migration runs**
 
 Run: `./gradlew test --tests "*MemoryVaultApplicationTests*"`
 
 Expected: PASS (Flyway applies V9 migration against TestContainers PostgreSQL)
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/main/resources/db/migration/V9__backup_tables.sql src/main/kotlin/org/sightech/memoryvault/backup/entity/BackupEnums.kt src/main/kotlin/org/sightech/memoryvault/scheduling/entity/SyncJob.kt src/main/resources/application.properties .env.sample
@@ -186,7 +186,7 @@ git commit -m "feat(backup): V9 migration, backup enums, job types, and config p
 - Create: `.../crypto/EncryptionService.kt`
 - Create: `src/test/kotlin/.../crypto/EncryptionServiceTest.kt`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Create `src/test/kotlin/org/sightech/memoryvault/crypto/EncryptionServiceTest.kt`:
 
@@ -234,13 +234,13 @@ class EncryptionServiceTest {
 }
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `./gradlew test --tests "*EncryptionServiceTest*"`
 
 Expected: FAIL (class not found)
 
-- [ ] **Step 3: Implement EncryptionService**
+- [x] **Step 3: Implement EncryptionService**
 
 Create `src/main/kotlin/org/sightech/memoryvault/crypto/EncryptionService.kt`:
 
@@ -273,13 +273,13 @@ class EncryptionService(
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `./gradlew test --tests "*EncryptionServiceTest*"`
 
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/crypto/EncryptionService.kt src/test/kotlin/org/sightech/memoryvault/crypto/EncryptionServiceTest.kt
@@ -296,7 +296,7 @@ git commit -m "feat(crypto): add shared EncryptionService with AES-256-GCM"
 - Create: `.../backup/repository/BackupProviderRepository.kt`
 - Create: `.../backup/repository/BackupRecordRepository.kt`
 
-- [ ] **Step 1: Create BackupProviderEntity**
+- [x] **Step 1: Create BackupProviderEntity**
 
 Create `src/main/kotlin/org/sightech/memoryvault/backup/entity/BackupProviderEntity.kt`:
 
@@ -346,7 +346,7 @@ class BackupProviderEntity(
 )
 ```
 
-- [ ] **Step 2: Create BackupRecord**
+- [x] **Step 2: Create BackupRecord**
 
 Create `src/main/kotlin/org/sightech/memoryvault/backup/entity/BackupRecord.kt`:
 
@@ -394,7 +394,7 @@ class BackupRecord(
 )
 ```
 
-- [ ] **Step 3: Create BackupProviderRepository**
+- [x] **Step 3: Create BackupProviderRepository**
 
 Create `src/main/kotlin/org/sightech/memoryvault/backup/repository/BackupProviderRepository.kt`:
 
@@ -422,7 +422,7 @@ interface BackupProviderRepository : JpaRepository<BackupProviderEntity, UUID> {
 }
 ```
 
-- [ ] **Step 4: Create BackupRecordRepository**
+- [x] **Step 4: Create BackupRecordRepository**
 
 Create `src/main/kotlin/org/sightech/memoryvault/backup/repository/BackupRecordRepository.kt`:
 
@@ -458,13 +458,13 @@ interface BackupRecordRepository : JpaRepository<BackupRecord, UUID> {
 }
 ```
 
-- [ ] **Step 5: Verify entities compile against migration**
+- [x] **Step 5: Verify entities compile against migration**
 
 Run: `./gradlew test --tests "*MemoryVaultApplicationTests*"`
 
 Expected: PASS (Hibernate validates entity mappings against V9 schema)
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/backup/entity/ src/main/kotlin/org/sightech/memoryvault/backup/repository/
@@ -481,7 +481,7 @@ git commit -m "feat(backup): add BackupProviderEntity, BackupRecord entities and
 - Create: `.../backup/provider/BackupProviderFactory.kt`
 - Create: `src/test/kotlin/.../backup/provider/InternetArchiveProviderTest.kt`
 
-- [ ] **Step 1: Create BackupProvider interface**
+- [x] **Step 1: Create BackupProvider interface**
 
 Create `src/main/kotlin/org/sightech/memoryvault/backup/provider/BackupProvider.kt`:
 
@@ -515,7 +515,7 @@ interface BackupProvider {
 }
 ```
 
-- [ ] **Step 2: Write failing tests for InternetArchiveProvider**
+- [x] **Step 2: Write failing tests for InternetArchiveProvider**
 
 Create `src/test/kotlin/org/sightech/memoryvault/backup/provider/InternetArchiveProviderTest.kt`:
 
@@ -578,13 +578,13 @@ class InternetArchiveProviderTest {
 }
 ```
 
-- [ ] **Step 3: Run tests to verify they fail**
+- [x] **Step 3: Run tests to verify they fail**
 
 Run: `./gradlew test --tests "*InternetArchiveProviderTest*"`
 
 Expected: FAIL (class not found)
 
-- [ ] **Step 4: Implement InternetArchiveProvider**
+- [x] **Step 4: Implement InternetArchiveProvider**
 
 Create `src/main/kotlin/org/sightech/memoryvault/backup/provider/InternetArchiveProvider.kt`:
 
@@ -713,7 +713,7 @@ class InternetArchiveProvider(
 }
 ```
 
-- [ ] **Step 5: Create BackupProviderFactory**
+- [x] **Step 5: Create BackupProviderFactory**
 
 Create `src/main/kotlin/org/sightech/memoryvault/backup/provider/BackupProviderFactory.kt`:
 
@@ -755,13 +755,13 @@ class BackupProviderFactory(
 }
 ```
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 6: Run tests to verify they pass**
 
 Run: `./gradlew test --tests "*InternetArchiveProviderTest*"`
 
 Expected: PASS
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/backup/provider/ src/test/kotlin/org/sightech/memoryvault/backup/provider/
@@ -776,7 +776,7 @@ git commit -m "feat(backup): add BackupProvider interface, InternetArchiveProvid
 - Create: `.../backup/service/BackupService.kt`
 - Create: `src/test/kotlin/.../backup/service/BackupServiceTest.kt`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Create `src/test/kotlin/org/sightech/memoryvault/backup/service/BackupServiceTest.kt`:
 
@@ -928,13 +928,13 @@ class BackupServiceTest {
 }
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `./gradlew test --tests "*BackupServiceTest*"`
 
 Expected: FAIL (class not found)
 
-- [ ] **Step 3: Add findDownloadedVideoIdsByUserId to VideoRepository**
+- [x] **Step 3: Add findDownloadedVideoIdsByUserId to VideoRepository**
 
 In `src/main/kotlin/org/sightech/memoryvault/youtube/repository/VideoRepository.kt`, add this method to the interface:
 
@@ -943,7 +943,7 @@ In `src/main/kotlin/org/sightech/memoryvault/youtube/repository/VideoRepository.
 fun findDownloadedVideoIdsByUserId(userId: UUID): List<UUID>
 ```
 
-- [ ] **Step 4: Add retrieve method to StorageService if needed**
+- [x] **Step 4: Add retrieve method to StorageService if needed**
 
 Check if `StorageService` already has a `retrieve` method. If not, add to the interface at `src/main/kotlin/org/sightech/memoryvault/storage/StorageService.kt`:
 
@@ -960,7 +960,7 @@ override fun retrieve(key: String): InputStream {
 }
 ```
 
-- [ ] **Step 5: Implement BackupService**
+- [x] **Step 5: Implement BackupService**
 
 Create `src/main/kotlin/org/sightech/memoryvault/backup/service/BackupService.kt`:
 
@@ -1146,13 +1146,13 @@ data class BackupStats(
 )
 ```
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 6: Run tests to verify they pass**
 
 Run: `./gradlew test --tests "*BackupServiceTest*"`
 
 Expected: PASS
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/backup/service/BackupService.kt src/test/kotlin/org/sightech/memoryvault/backup/service/BackupServiceTest.kt src/main/kotlin/org/sightech/memoryvault/youtube/repository/VideoRepository.kt src/main/kotlin/org/sightech/memoryvault/storage/
@@ -1169,7 +1169,7 @@ git commit -m "feat(backup): add BackupService with upload orchestration, backfi
 - Modify: `.../websocket/VaultEvent.kt`
 - Modify: `.../websocket/WebSocketEventRelay.kt`
 
-- [ ] **Step 1: Add BACKUP_LOST event type**
+- [x] **Step 1: Add BACKUP_LOST event type**
 
 In `src/main/kotlin/org/sightech/memoryvault/websocket/VaultEvent.kt`, add to the `VaultEventType` enum:
 
@@ -1198,7 +1198,7 @@ data class BackupLost(
 }
 ```
 
-- [ ] **Step 2: Add WebSocket relay for BACKUP_LOST**
+- [x] **Step 2: Add WebSocket relay for BACKUP_LOST**
 
 In `src/main/kotlin/org/sightech/memoryvault/websocket/WebSocketEventRelay.kt`, add after `onContentMutated`:
 
@@ -1214,7 +1214,7 @@ fun onBackupLost(event: BackupLost) {
 }
 ```
 
-- [ ] **Step 3: Write failing tests**
+- [x] **Step 3: Write failing tests**
 
 Create `src/test/kotlin/org/sightech/memoryvault/backup/service/BackupHealthCheckServiceTest.kt`:
 
@@ -1336,13 +1336,13 @@ class BackupHealthCheckServiceTest {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they fail**
+- [x] **Step 4: Run tests to verify they fail**
 
 Run: `./gradlew test --tests "*BackupHealthCheckServiceTest*"`
 
 Expected: FAIL (class not found)
 
-- [ ] **Step 5: Implement BackupHealthCheckService**
+- [x] **Step 5: Implement BackupHealthCheckService**
 
 Create `src/main/kotlin/org/sightech/memoryvault/backup/service/BackupHealthCheckService.kt`:
 
@@ -1437,13 +1437,13 @@ class BackupHealthCheckService(
 }
 ```
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 6: Run tests to verify they pass**
 
 Run: `./gradlew test --tests "*BackupHealthCheckServiceTest*"`
 
 Expected: PASS
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/backup/service/BackupHealthCheckService.kt src/test/kotlin/org/sightech/memoryvault/backup/service/BackupHealthCheckServiceTest.kt src/main/kotlin/org/sightech/memoryvault/websocket/VaultEvent.kt src/main/kotlin/org/sightech/memoryvault/websocket/WebSocketEventRelay.kt
@@ -1458,7 +1458,7 @@ git commit -m "feat(backup): add BackupHealthCheckService with LOST detection an
 - Create: `.../backup/BackupSyncRegistrar.kt`
 - Modify: `.../backup/service/BackupService.kt` (add event listener)
 
-- [ ] **Step 1: Create BackupSyncRegistrar**
+- [x] **Step 1: Create BackupSyncRegistrar**
 
 Create `src/main/kotlin/org/sightech/memoryvault/backup/BackupSyncRegistrar.kt`:
 
@@ -1528,7 +1528,7 @@ class BackupSyncRegistrar(
 }
 ```
 
-- [ ] **Step 2: Add VideoDownloadCompleted listener to BackupService**
+- [x] **Step 2: Add VideoDownloadCompleted listener to BackupService**
 
 In `src/main/kotlin/org/sightech/memoryvault/backup/service/BackupService.kt`, add the import and listener method:
 
@@ -1552,13 +1552,13 @@ fun onVideoDownloadCompleted(event: VideoDownloadCompleted) {
 }
 ```
 
-- [ ] **Step 3: Run all tests**
+- [x] **Step 3: Run all tests**
 
 Run: `./gradlew test`
 
 Expected: PASS
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/backup/BackupSyncRegistrar.kt src/main/kotlin/org/sightech/memoryvault/backup/service/BackupService.kt
@@ -1575,7 +1575,7 @@ git commit -m "feat(backup): add BackupSyncRegistrar and auto-queue on video dow
 - Modify: `src/main/resources/graphql/schema.graphqls`
 - Modify: `src/main/resources/graphql/youtube.graphqls`
 
-- [ ] **Step 1: Create backup GraphQL types**
+- [x] **Step 1: Create backup GraphQL types**
 
 Create `src/main/resources/graphql/backup.graphqls`:
 
@@ -1606,7 +1606,7 @@ input BackupProviderInput {
 }
 ```
 
-- [ ] **Step 2: Add backupStatus to Video type**
+- [x] **Step 2: Add backupStatus to Video type**
 
 In `src/main/resources/graphql/youtube.graphqls`, add to the `Video` type after `downloadError: String`:
 
@@ -1614,7 +1614,7 @@ In `src/main/resources/graphql/youtube.graphqls`, add to the `Video` type after 
     backupStatus: String
 ```
 
-- [ ] **Step 3: Add backup queries and mutations to schema**
+- [x] **Step 3: Add backup queries and mutations to schema**
 
 In `src/main/resources/graphql/schema.graphqls`, add to the `Query` type:
 
@@ -1634,7 +1634,7 @@ Add to the `Mutation` type:
     triggerBackfill: Int!
 ```
 
-- [ ] **Step 4: Create BackupResolver**
+- [x] **Step 4: Create BackupResolver**
 
 Create `src/main/kotlin/org/sightech/memoryvault/graphql/BackupResolver.kt`:
 
@@ -1726,13 +1726,13 @@ class BackupResolver(private val backupService: BackupService) {
 }
 ```
 
-- [ ] **Step 5: Run all tests**
+- [x] **Step 5: Run all tests**
 
 Run: `./gradlew test`
 
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/main/resources/graphql/backup.graphqls src/main/resources/graphql/schema.graphqls src/main/resources/graphql/youtube.graphqls src/main/kotlin/org/sightech/memoryvault/graphql/BackupResolver.kt
@@ -1746,7 +1746,7 @@ git commit -m "feat(backup): add GraphQL schema and BackupResolver"
 **Files:**
 - Create: `.../mcp/BackupTools.kt`
 
-- [ ] **Step 1: Create BackupTools**
+- [x] **Step 1: Create BackupTools**
 
 Create `src/main/kotlin/org/sightech/memoryvault/mcp/BackupTools.kt`:
 
@@ -1799,13 +1799,13 @@ class BackupTools(private val backupService: BackupService) {
 }
 ```
 
-- [ ] **Step 2: Run all tests**
+- [x] **Step 2: Run all tests**
 
 Run: `./gradlew test`
 
 Expected: PASS
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/mcp/BackupTools.kt
@@ -1821,7 +1821,7 @@ git commit -m "feat(backup): add MCP tools for backup status, providers, and bac
 - Modify: `client/src/app/youtube/youtube.ts`
 - Regenerate: `client/src/app/shared/graphql/generated.ts`
 
-- [ ] **Step 1: Add backupStatus to GetVideos query**
+- [x] **Step 1: Add backupStatus to GetVideos query**
 
 In `client/src/app/youtube/youtube.graphql`, update the `GetVideos` query to include `backupStatus`:
 
@@ -1840,13 +1840,13 @@ query GetVideos($listId: UUID, $query: String, $removedOnly: Boolean) {
 }
 ```
 
-- [ ] **Step 2: Regenerate GraphQL types**
+- [x] **Step 2: Regenerate GraphQL types**
 
 Run: `cd client && npx graphql-codegen`
 
 Expected: `generated.ts` is updated with `backupStatus` on the `Video` type.
 
-- [ ] **Step 3: Add shield icons and legend to YouTube component**
+- [x] **Step 3: Add shield icons and legend to YouTube component**
 
 In `client/src/app/youtube/youtube.ts`, add the shield icon after the error badge in the video-meta span. Find the closing `</span>` after the error badge block and add:
 
@@ -1903,13 +1903,13 @@ Add these styles:
 .legend-items span { display: inline-flex; align-items: center; gap: 2px; }
 ```
 
-- [ ] **Step 4: Run frontend tests**
+- [x] **Step 4: Run frontend tests**
 
 Run: `cd client && npm run test`
 
 Expected: PASS (component tests pass with new field)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add client/src/app/youtube/youtube.graphql client/src/app/youtube/youtube.ts client/src/app/shared/graphql/generated.ts
@@ -1929,7 +1929,7 @@ git commit -m "feat(backup): add shield icons and legend on YouTube video list"
 - Modify: `client/src/app/admin/admin.ts`
 - Regenerate: `client/src/app/shared/graphql/generated.ts`
 
-- [ ] **Step 1: Add backup GraphQL operations**
+- [x] **Step 1: Add backup GraphQL operations**
 
 Create `client/src/app/youtube/backup.graphql`:
 
@@ -1972,11 +1972,11 @@ mutation TriggerBackfill {
 }
 ```
 
-- [ ] **Step 2: Regenerate GraphQL types**
+- [x] **Step 2: Regenerate GraphQL types**
 
 Run: `cd client && npx graphql-codegen`
 
-- [ ] **Step 3: Create backup-panel component**
+- [x] **Step 3: Create backup-panel component**
 
 Create `client/src/app/admin/backup-panel/backup-panel.ts`:
 
@@ -2087,7 +2087,7 @@ Create `client/src/app/admin/backup-panel/index.ts`:
 export { BackupPanelComponent, type BackupProviderView, type BackupStatsView } from './backup-panel';
 ```
 
-- [ ] **Step 4: Update admin.store.ts with backup state**
+- [x] **Step 4: Update admin.store.ts with backup state**
 
 In `client/src/app/admin/admin.store.ts`, add backup-related state, imports, and methods. The exact changes depend on the store's current structure, but add:
 
@@ -2129,7 +2129,7 @@ triggerBackfill: () => {
 
 Import the generated documents from `../../shared/graphql/generated`.
 
-- [ ] **Step 5: Add Backup tab to admin component**
+- [x] **Step 5: Add Backup tab to admin component**
 
 In `client/src/app/admin/admin.ts`, import `BackupPanelComponent` and add it to the imports array. Add a new `mat-tab` after the Logs tab:
 
@@ -2180,17 +2180,17 @@ addBackupProvider: (input: { type: string; name: string; accessKey: string; secr
 },
 ```
 
-- [ ] **Step 6: Regenerate GraphQL types (if not already done)**
+- [x] **Step 6: Regenerate GraphQL types (if not already done)**
 
 Run: `cd client && npx graphql-codegen`
 
-- [ ] **Step 7: Run frontend tests**
+- [x] **Step 7: Run frontend tests**
 
 Run: `cd client && npm run test`
 
 Expected: PASS
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add client/src/app/admin/backup-panel/ client/src/app/youtube/backup.graphql client/src/app/admin/admin.graphql client/src/app/admin/admin.store.ts client/src/app/admin/admin.ts client/src/app/shared/graphql/generated.ts
@@ -2201,42 +2201,42 @@ git commit -m "feat(backup): add admin backup panel with provider management and
 
 ## Task 12: Start Dev Server + Manual Smoke Test
 
-- [ ] **Step 1: Start backend + frontend**
+- [x] **Step 1: Start backend + frontend**
 
 Run: `./scripts/dev.sh`
 
-- [ ] **Step 2: Verify YouTube page loads**
+- [x] **Step 2: Verify YouTube page loads**
 
 Open `http://localhost:4200/youtube`. Confirm:
 - Videos display without errors
 - Videos without backup records show no shield icon
 - Backup legend is visible (collapsed by default)
 
-- [ ] **Step 3: Verify admin backup tab**
+- [x] **Step 3: Verify admin backup tab**
 
 Navigate to Admin page, click the "Backups" tab. Confirm:
 - "No backup providers configured" message shows
 - Stats show all zeros
 - "Add Provider" button is visible
 
-- [ ] **Step 4: Test add provider flow**
+- [x] **Step 4: Test add provider flow**
 
 Click "Add Provider", enter test IA credentials. Confirm:
 - Provider appears in the list
 - Stats update
 
-- [ ] **Step 5: Test backfill**
+- [x] **Step 5: Test backfill**
 
 Click "Backfill All". Confirm:
 - Stats "Pending" count increases
 
-- [ ] **Step 6: Run full test suite**
+- [x] **Step 6: Run full test suite**
 
 Run: `./gradlew test` and `cd client && npm run test`
 
 Expected: All tests pass.
 
-- [ ] **Step 7: Final commit if any adjustments needed**
+- [x] **Step 7: Final commit if any adjustments needed**
 
 ```bash
 git add -A

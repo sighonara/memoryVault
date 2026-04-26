@@ -31,6 +31,7 @@ type Video {
     filePath: String
     downloadedAt: Instant
     downloadError: String
+    backupStatus: String
     durationSeconds: Int
     removedFromYoutube: Boolean!
     removedDetectedAt: Instant
