@@ -67,7 +67,9 @@ healthCheckFailures: Int (consecutive failures, resets to 0 on success)
 createdAt, updatedAt
 ```
 
-### Enums
+### Enums (BackupEnums.kt)
+
+Both enums live in a single `BackupEnums.kt` file in the entity package, following the pattern of grouping related enums by domain.
 
 ```kotlin
 enum class BackupProviderType { INTERNET_ARCHIVE, CUSTOM }
@@ -109,6 +111,8 @@ CREATE TABLE backup_records (
 ---
 
 ## Credential Encryption
+
+`EncryptionService` lives in the shared `crypto/` package (`src/main/kotlin/org/sightech/memoryvault/crypto/EncryptionService.kt`) — not in `backup/` — since credential encryption is a cross-cutting concern reusable by future features (Phase 11 payment tokens, API keys, etc.).
 
 IA credentials (access key + secret key) are stored encrypted using Spring Security Crypto's `TextEncryptor` (AES-256-GCM). The encryption password comes from env var `MEMORYVAULT_ENCRYPTION_KEY`. Credentials are stored as encrypted JSON:
 
@@ -156,7 +160,7 @@ Decrypted at runtime when the provider is used. Never logged, never returned in 
 
 Two sync jobs, both using the existing `SyncJob` audit trail pattern:
 
-- **BackupUploadJob** — processes PENDING uploads, configurable cron (default: every 2 hours), throttled to N uploads per run (default: 10/day = ~4-5 per run)
+- **BackupUploadJob** — processes PENDING uploads, configurable cron (default: every 6 hours, 4 runs/day), throttled to N uploads per run (default: 10/day = ~2-3 per run)
 - **BackupHealthCheckJob** — checks all BACKED_UP records, configurable cron (default: daily)
 
 ---
@@ -232,7 +236,7 @@ New mutations:
 - IA API errors (auth, rate limit, server error) logged and retried on next cycle
 
 ### Configuration
-- `memoryvault.backup.upload-cron` — upload job schedule (default: `0 0 */2 * * *`)
+- `memoryvault.backup.upload-cron` — upload job schedule (default: `0 0 */6 * * *`)
 - `memoryvault.backup.health-check-cron` — health check schedule (default: `0 0 6 * * *`)
 - `memoryvault.backup.max-uploads-per-day` — throttle (default: 10)
 - `memoryvault.backup.health-check-failure-threshold` — consecutive failures before LOST (default: 3)
@@ -244,10 +248,11 @@ New mutations:
 
 ```
 src/main/kotlin/org/sightech/memoryvault/
+├── crypto/            EncryptionService.kt
 └── backup/
-    ├── entity/        BackupProviderEntity.kt, BackupRecord.kt, BackupProviderType.kt, BackupStatus.kt
+    ├── entity/        BackupProviderEntity.kt, BackupRecord.kt, BackupEnums.kt
     ├── repository/    BackupProviderRepository.kt, BackupRecordRepository.kt
-    ├── service/       BackupService.kt, BackupHealthCheckService.kt, EncryptionService.kt
+    ├── service/       BackupService.kt, BackupHealthCheckService.kt
     ├── provider/      BackupProvider.kt (interface), InternetArchiveProvider.kt, BackupProviderFactory.kt
     └── controller/    (none — GraphQL and MCP only)
 ```
