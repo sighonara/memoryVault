@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class EncryptionService(
-    @Value("\${MEMORYVAULT_ENCRYPTION_KEY:default-dev-key-do-not-use}") private val encryptionKey: String
+    @Value("\${MEMORYVAULT_ENCRYPTION_KEY}") private val encryptionKey: String
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
