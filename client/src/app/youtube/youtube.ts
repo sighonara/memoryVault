@@ -74,6 +74,7 @@ import { YoutubeListDialogComponent } from './youtube-list-dialog';
             <span><mat-icon class="shield-icon shield-yellow">shield</mat-icon> Backup lost</span>
             <span><mat-icon class="shield-icon shield-red">shield</mat-icon> Backup failed</span>
             <span><mat-icon class="shield-icon shield-gray">shield</mat-icon> Backup pending</span>
+            <span><mat-icon class="shield-icon shield-none">gpp_maybe</mat-icon> Not backed up</span>
           </div>
         </details>
 
@@ -87,17 +88,8 @@ import { YoutubeListDialogComponent } from './youtube-list-dialog';
                 (error)="$any($event.target).style.display='none'"
               />
               <div class="video-info">
-                <span class="video-title" [class.removed]="video.removedFromYoutube">{{ video.title || '(untitled)' }}</span>
-                <span class="video-meta">
-                  {{ video.downloadedAt | date:'mediumDate' }}
-                  @if (video.removedFromYoutube) {
-                    <span class="removed-badge">REMOVED</span>
-                  }
-                  @if (video.downloadError) {
-                    <span class="error-badge" [matTooltip]="video.downloadError">
-                      <mat-icon class="error-icon">error_outline</mat-icon> FAILED
-                    </span>
-                  }
+                <span class="video-title" [class.removed]="video.removedFromYoutube">
+                  {{ video.title || '(untitled)' }}
                   @if (video.backupStatus === 'BACKED_UP') {
                     <mat-icon class="shield-icon shield-green" matTooltip="Backed up (IA)">shield</mat-icon>
                   } @else if (video.backupStatus === 'BACKED_UP_BOTH') {
@@ -110,6 +102,19 @@ import { YoutubeListDialogComponent } from './youtube-list-dialog';
                     <mat-icon class="shield-icon shield-red" matTooltip="Backup failed">shield</mat-icon>
                   } @else if (video.backupStatus === 'PENDING') {
                     <mat-icon class="shield-icon shield-gray" matTooltip="Backup pending">shield</mat-icon>
+                  } @else {
+                    <mat-icon class="shield-icon shield-none" matTooltip="Not backed up — add a provider in Admin → Backups, then Backfill All">gpp_maybe</mat-icon>
+                  }
+                </span>
+                <span class="video-meta">
+                  {{ video.downloadedAt | date:'mediumDate' }}
+                  @if (video.removedFromYoutube) {
+                    <span class="removed-badge">REMOVED</span>
+                  }
+                  @if (video.downloadError) {
+                    <span class="error-badge" [matTooltip]="video.downloadError">
+                      <mat-icon class="error-icon">error_outline</mat-icon> FAILED
+                    </span>
                   }
                 </span>
               </div>
@@ -181,7 +186,8 @@ import { YoutubeListDialogComponent } from './youtube-list-dialog';
     .video-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
     .video-title {
       font-size: 0.8125rem; font-weight: 500; color: #202124;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 4px;
+      max-width: 100%; overflow: hidden; white-space: nowrap;
     }
     .video-title.removed { color: #c62828; text-decoration: line-through; }
     .video-meta { font-size: 0.7rem; color: #80868b; }
@@ -214,6 +220,7 @@ import { YoutubeListDialogComponent } from './youtube-list-dialog';
     .shield-yellow { color: #f9a825; }
     .shield-red { color: #c62828; }
     .shield-gray { color: #9e9e9e; }
+    .shield-none { color: #dadce0; }
 
     /* ── Backup legend ── */
     .backup-legend {

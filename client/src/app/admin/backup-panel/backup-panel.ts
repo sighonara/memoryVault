@@ -50,7 +50,7 @@ export interface BackupStatsView {
         <button mat-stroked-button (click)="onAdd.emit()">
           <mat-icon>add</mat-icon> Add Provider
         </button>
-        <button mat-stroked-button (click)="onBackfill.emit()" [disabled]="!stats() || stats()!.total === 0">
+        <button mat-stroked-button (click)="onBackfill.emit()" [disabled]="providers().length === 0">
           <mat-icon>backup</mat-icon> Backfill All
         </button>
       </div>
