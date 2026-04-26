@@ -915,6 +915,35 @@ export type SearchQueryVariables = Exact<{
 
 export type SearchQuery = { __typename?: 'Query', search: Array<{ __typename?: 'SearchResult', type: string, id: any, title?: string | null, url?: string | null, rank: number }> };
 
+export type GetBackupProvidersQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetBackupProvidersQuery = { __typename?: 'Query', backupProviders: Array<{ __typename?: 'BackupProvider', id: any, type: string, name: string, isPrimary: boolean, createdAt: any }> };
+
+export type GetBackupStatsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetBackupStatsQuery = { __typename?: 'Query', backupStats: { __typename?: 'BackupStats', total: number, backedUp: number, pending: number, lost: number, failed: number } };
+
+export type AddBackupProviderMutationVariables = Exact<{
+  input: BackupProviderInput;
+}>;
+
+
+export type AddBackupProviderMutation = { __typename?: 'Mutation', addBackupProvider: { __typename?: 'BackupProvider', id: any, type: string, name: string, isPrimary: boolean } };
+
+export type DeleteBackupProviderMutationVariables = Exact<{
+  id: Scalars['UUID']['input'];
+}>;
+
+
+export type DeleteBackupProviderMutation = { __typename?: 'Mutation', deleteBackupProvider: boolean };
+
+export type TriggerBackfillMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type TriggerBackfillMutation = { __typename?: 'Mutation', triggerBackfill: number };
+
 export type GetYoutubeListsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -1755,6 +1784,103 @@ export const SearchDocument = gql`
   })
   export class SearchGQL extends Apollo.Query<SearchQuery, SearchQueryVariables> {
     document = SearchDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const GetBackupProvidersDocument = gql`
+    query GetBackupProviders {
+  backupProviders {
+    id
+    type
+    name
+    isPrimary
+    createdAt
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class GetBackupProvidersGQL extends Apollo.Query<GetBackupProvidersQuery, GetBackupProvidersQueryVariables> {
+    document = GetBackupProvidersDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const GetBackupStatsDocument = gql`
+    query GetBackupStats {
+  backupStats {
+    total
+    backedUp
+    pending
+    lost
+    failed
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class GetBackupStatsGQL extends Apollo.Query<GetBackupStatsQuery, GetBackupStatsQueryVariables> {
+    document = GetBackupStatsDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const AddBackupProviderDocument = gql`
+    mutation AddBackupProvider($input: BackupProviderInput!) {
+  addBackupProvider(input: $input) {
+    id
+    type
+    name
+    isPrimary
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class AddBackupProviderGQL extends Apollo.Mutation<AddBackupProviderMutation, AddBackupProviderMutationVariables> {
+    document = AddBackupProviderDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const DeleteBackupProviderDocument = gql`
+    mutation DeleteBackupProvider($id: UUID!) {
+  deleteBackupProvider(id: $id)
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class DeleteBackupProviderGQL extends Apollo.Mutation<DeleteBackupProviderMutation, DeleteBackupProviderMutationVariables> {
+    document = DeleteBackupProviderDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const TriggerBackfillDocument = gql`
+    mutation TriggerBackfill {
+  triggerBackfill
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class TriggerBackfillGQL extends Apollo.Mutation<TriggerBackfillMutation, TriggerBackfillMutationVariables> {
+    document = TriggerBackfillDocument;
     
     constructor(apollo: Apollo.Apollo) {
       super(apollo);

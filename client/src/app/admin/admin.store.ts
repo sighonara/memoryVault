@@ -7,11 +7,17 @@ import {
   GetAdminStatsDocument,
   GetCostsDocument,
   RefreshCostsDocument,
+  GetBackupProvidersDocument,
+  GetBackupStatsDocument,
+  AddBackupProviderDocument,
+  DeleteBackupProviderDocument,
+  TriggerBackfillDocument,
   SyncJob,
   LogEntry,
   SystemStats,
   CostSummary,
 } from '../shared/graphql/generated';
+import { BackupProviderView, BackupStatsView } from './backup-panel';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { pipe, switchMap, tap } from 'rxjs';
 import { WebSocketService } from '../core/services/websocket.service';
@@ -31,6 +37,8 @@ export interface AdminState {
   costSummary: CostSummary | null;
   costMonths: number;
   refreshingCosts: boolean;
+  backupProviders: BackupProviderView[];
+  backupStats: BackupStatsView | null;
 }
 
 const initialState: AdminState = {
@@ -47,6 +55,8 @@ const initialState: AdminState = {
   costSummary: null,
   costMonths: 6,
   refreshingCosts: false,
+  backupProviders: [],
+  backupStats: null,
 };
 
 export const AdminStore = signalStore(
@@ -134,6 +144,57 @@ export const AdminStore = signalStore(
       )
     );
 
+    const loadBackupProviders = rxMethod<void>(
+      pipe(
+        switchMap(() =>
+          apollo.query({
+            query: GetBackupProvidersDocument,
+            fetchPolicy: 'network-only',
+          })
+        ),
+        tap((result: any) => {
+          patchState(store, { backupProviders: result.data.backupProviders });
+        })
+      )
+    );
+
+    const loadBackupStats = rxMethod<void>(
+      pipe(
+        switchMap(() =>
+          apollo.query({
+            query: GetBackupStatsDocument,
+            fetchPolicy: 'network-only',
+          })
+        ),
+        tap((result: any) => {
+          patchState(store, { backupStats: result.data.backupStats });
+        })
+      )
+    );
+
+    const deleteBackupProvider = (id: string) => {
+      apollo.mutate({ mutation: DeleteBackupProviderDocument, variables: { id } }).subscribe(() => {
+        patchState(store, {
+          backupProviders: store.backupProviders().filter((p: any) => p.id !== id)
+        });
+      });
+    };
+
+    const triggerBackfillFn = () => {
+      apollo.mutate({ mutation: TriggerBackfillDocument }).subscribe(() => {
+        loadBackupStats();
+      });
+    };
+
+    const addBackupProvider = (input: { type: string; name: string; accessKey: string; secretKey: string; isPrimary: boolean }) => {
+      apollo.mutate({
+        mutation: AddBackupProviderDocument,
+        variables: { input }
+      }).subscribe(() => {
+        loadBackupProviders();
+      });
+    };
+
     // WebSocket subscription for job updates
     ws.on('jobs').pipe(debounceTime(500)).subscribe(() => {
       loadJobs();
@@ -146,6 +207,11 @@ export const AdminStore = signalStore(
       loadLogs,
       loadCosts,
       refreshCosts,
+      loadBackupProviders,
+      loadBackupStats,
+      deleteBackupProvider,
+      triggerBackfill: triggerBackfillFn,
+      addBackupProvider,
       setCostMonths: (months: number) => { patchState(store, { costMonths: months }); loadCosts(); },
       setJobTypeFilter: (type: string | null) => { patchState(store, { jobTypeFilter: type }); loadJobs(); },
       setLogLevelFilter: (level: string | null) => { patchState(store, { logLevelFilter: level }); loadLogs(); },
