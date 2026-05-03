@@ -102,6 +102,18 @@ When you run this skill, emit a table exactly like this in the response:
 
 Then, only if anything is ISSUE, list the issues with a proposed resolution per issue. Do not proceed to commit / approve until either (a) every row is OK / N/A / DEFER, or (b) the user has explicitly accepted the ISSUE as known.
 
+## Deploy sequence gate
+
+If ANY file under `terraform/` was modified in the changeset being audited, you MUST append a **Deploy Sequence** section after the audit table. This is not optional. The section must:
+
+1. List every step required to deploy this change, numbered, in order.
+2. Label each step by what it touches: **terraform** (`terraform apply`), **code** (`git push` / merge), or **automation** (workflow run / manual action).
+3. If `user_data.sh` changed, explicitly warn that EC2 replacement will occur (brief downtime).
+4. If new env vars were added, state which ones need values in `terraform.tfvars` before apply.
+5. State the consequence of deploying out of order (e.g., "If you merge before applying terraform, the container will crash because X env var is missing").
+
+Do NOT mark the Deployment row as OK without this section present. Do NOT say "ready to merge" or "ready for PR" until the user has acknowledged the deploy sequence.
+
 ## Anti-patterns to avoid
 
 - Writing "looks fine" without walking each row.
