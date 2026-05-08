@@ -12,6 +12,6 @@ interface SubscriptionRepository : JpaRepository<SubscriptionEntity, UUID> {
     fun findByStripeSubscriptionId(stripeSubscriptionId: String): SubscriptionEntity?
     fun findAllByStatus(status: SubscriptionStatus): List<SubscriptionEntity>
 
-    @Query("SELECT s FROM SubscriptionEntity s WHERE s.status = 'GRACE_PERIOD' AND s.gracePeriodEndsAt <= :cutoff")
+    @Query("SELECT s FROM SubscriptionEntity s WHERE s.status = org.sightech.memoryvault.billing.entity.SubscriptionStatus.GRACE_PERIOD AND s.gracePeriodEndsAt <= :cutoff")
     fun findExpiredGracePeriods(cutoff: Instant): List<SubscriptionEntity>
 }

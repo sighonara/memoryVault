@@ -18,6 +18,7 @@ import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.postgresql.PostgreSQLContainer
 import java.time.Instant
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -63,7 +64,7 @@ class SubscriptionRepositoryTest {
         ))
         val found = subscriptionRepository.findByUserId(user.id)
         assertNotNull(found)
-        assert(found.stripeSubscriptionId == "sub_test123")
+        assertEquals("sub_test123", found.stripeSubscriptionId)
     }
 
     @Test
@@ -83,5 +84,23 @@ class SubscriptionRepositoryTest {
         ))
         val expired = subscriptionRepository.findExpiredGracePeriods(Instant.now())
         assertTrue(expired.any { it.stripeSubscriptionId == "sub_grace" })
+    }
+
+    @Test
+    fun `findByStripeSubscriptionId returns matching subscription`() {
+        val user = userRepository.save(User(
+            email = "stripe-id-lookup@example.com",
+            displayName = "Lookup",
+            role = UserRole.VIEWER
+        ))
+        subscriptionRepository.save(SubscriptionEntity(
+            userId = user.id,
+            stripeCustomerId = "cus_lookup",
+            stripeSubscriptionId = "sub_lookup_unique",
+            billingInterval = BillingInterval.ANNUAL,
+            status = SubscriptionStatus.ACTIVE
+        ))
+        val found = subscriptionRepository.findByStripeSubscriptionId("sub_lookup_unique")
+        assertEquals("sub_lookup_unique", found?.stripeSubscriptionId)
     }
 }
