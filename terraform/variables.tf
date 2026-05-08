@@ -84,3 +84,35 @@ variable "yt_dlp_upgrade_schedule" {
   type        = string
   default     = "rate(1 day)"
 }
+
+variable "stripe_secret_key" {
+  description = "Stripe secret API key (sk_live_... or sk_test_...)"
+  type        = string
+  sensitive   = true
+}
+
+variable "stripe_webhook_secret" {
+  description = "Stripe webhook signing secret (whsec_...)"
+  type        = string
+  sensitive   = true
+}
+
+variable "stripe_premium_monthly_price_id" {
+  description = "Stripe Price ID for Premium monthly subscription"
+  type        = string
+}
+
+variable "stripe_premium_annual_price_id" {
+  description = "Stripe Price ID for Premium annual subscription"
+  type        = string
+}
+
+variable "stripe_backup_monthly_price_id" {
+  description = "Stripe Price ID for Backup monthly subscription"
+  type        = string
+}
+
+variable "stripe_backup_annual_price_id" {
+  description = "Stripe Price ID for Backup annual subscription"
+  type        = string
+}

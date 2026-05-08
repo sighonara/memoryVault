@@ -69,7 +69,13 @@ resource "aws_instance" "app" {
     internal_api_key     = random_password.internal_api_key.result
     cognito_user_pool_id = aws_cognito_user_pool.main.id
     cognito_client_id    = aws_cognito_user_pool_client.spa.id
-    encryption_key       = var.encryption_key
+    encryption_key                  = var.encryption_key
+    stripe_secret_key               = var.stripe_secret_key
+    stripe_webhook_secret           = var.stripe_webhook_secret
+    stripe_premium_monthly_price_id = var.stripe_premium_monthly_price_id
+    stripe_premium_annual_price_id  = var.stripe_premium_annual_price_id
+    stripe_backup_monthly_price_id  = var.stripe_backup_monthly_price_id
+    stripe_backup_annual_price_id   = var.stripe_backup_annual_price_id
   })
 
   tags = {

@@ -88,6 +88,12 @@ MEMORYVAULT_COGNITO_REGION=${region}
 MEMORYVAULT_COGNITO_USER__POOL__ID=${cognito_user_pool_id}
 MEMORYVAULT_COGNITO_CLIENT__ID=${cognito_client_id}
 MEMORYVAULT_ENCRYPTION_KEY=${encryption_key}
+STRIPE_SECRET_KEY=${stripe_secret_key}
+STRIPE_WEBHOOK_SECRET=${stripe_webhook_secret}
+STRIPE_PREMIUM_MONTHLY_PRICE_ID=${stripe_premium_monthly_price_id}
+STRIPE_PREMIUM_ANNUAL_PRICE_ID=${stripe_premium_annual_price_id}
+STRIPE_BACKUP_MONTHLY_PRICE_ID=${stripe_backup_monthly_price_id}
+STRIPE_BACKUP_ANNUAL_PRICE_ID=${stripe_backup_annual_price_id}
 ENVFILE
 chmod 600 /etc/memoryvault/env
 
