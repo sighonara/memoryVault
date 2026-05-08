@@ -23,6 +23,13 @@ class User(
     @Column(nullable = false, length = 20)
     val role: UserRole = UserRole.OWNER,
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    var tier: Tier = Tier.FREE,
+
+    @Column(name = "stripe_customer_id", length = 255)
+    var stripeCustomerId: String? = null,
+
     @Column(name = "view_mode", nullable = false, length = 10)
     var viewMode: String = "LIST",
 

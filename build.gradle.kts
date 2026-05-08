@@ -58,6 +58,13 @@ dependencies {
     implementation("software.amazon.awssdk:cloudwatchlogs")
     implementation("software.amazon.awssdk:costexplorer")
 
+    // Stripe
+    implementation("com.stripe:stripe-java:26.12.0")
+
+    // AOP (for @TierGate enforcement)
+    implementation("org.springframework:spring-aop")
+    implementation("org.aspectj:aspectjweaver")
+
     // Cognito JWT validation (JWKS)
     implementation("com.nimbusds:nimbus-jose-jwt:10.3")
 

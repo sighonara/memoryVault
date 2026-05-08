@@ -1,5 +1,6 @@
 package org.sightech.memoryvault.auth.repository
 
+import org.sightech.memoryvault.auth.entity.Tier
 import org.sightech.memoryvault.auth.entity.User
 import org.springframework.data.jpa.repository.JpaRepository
 import java.util.UUID
@@ -7,4 +8,5 @@ import java.util.UUID
 interface UserRepository : JpaRepository<User, UUID> {
     fun findByEmailAndDeletedAtIsNull(email: String): User?
     fun findByIdAndDeletedAtIsNull(id: UUID): User?
+    fun findAllByTierAndDeletedAtIsNull(tier: Tier): List<User>
 }
