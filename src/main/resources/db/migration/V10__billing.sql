@@ -15,4 +15,3 @@ CREATE TABLE subscriptions (
 );
 
 CREATE INDEX idx_subscriptions_user_id ON subscriptions(user_id);
-CREATE INDEX idx_subscriptions_stripe_subscription_id ON subscriptions(stripe_subscription_id);

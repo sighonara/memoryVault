@@ -62,8 +62,7 @@ dependencies {
     implementation("com.stripe:stripe-java:26.12.0")
 
     // AOP (for @TierGate enforcement)
-    implementation("org.springframework:spring-aop")
-    implementation("org.aspectj:aspectjweaver")
+    implementation("org.springframework.boot:spring-boot-starter-aspectj")
 
     // Cognito JWT validation (JWKS)
     implementation("com.nimbusds:nimbus-jose-jwt:10.3")

@@ -63,4 +63,13 @@ class BillingMigrationTest {
         val saved = userRepository.save(user)
         assertEquals(Tier.PREMIUM, saved.tier)
     }
+
+    @Test
+    fun `findAllByTierAndDeletedAtIsNull returns only users with matching tier`() {
+        userRepository.save(User(email = "finder-free@example.com", displayName = "Free", role = UserRole.VIEWER))
+        userRepository.save(User(email = "finder-premium@example.com", displayName = "Premium", role = UserRole.VIEWER).also { it.tier = Tier.PREMIUM })
+        val freeUsers = userRepository.findAllByTierAndDeletedAtIsNull(Tier.FREE)
+        assert(freeUsers.any { it.email == "finder-free@example.com" })
+        assert(freeUsers.none { it.email == "finder-premium@example.com" })
+    }
 }
