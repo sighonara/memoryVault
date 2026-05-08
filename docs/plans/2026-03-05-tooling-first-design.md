@@ -240,8 +240,8 @@ Terraform, GitHub Actions CI/CD, production AWS deployment (EC2, RDS, S3, Lambda
 ### Phase 10 — Cross-Platform Video Backup
 Internet Archive as the built-in primary backup target for all archived YouTube videos. Dedup before upload (search IA by video ID), throttled sync job (10/day), daily health checks (3 consecutive failures → LOST → failover to secondary). Pluggable provider interface supports secondary providers (Rumble, etc.) as failover. EncryptionService (shared `crypto/` package) for provider credential storage (AES-256-GCM). Shield icons on YouTube page show backup status. All complete. See `docs/plans/2026-04-23-phase-10-cross-platform-video-backup-design.md`.
 
-### Phase 11 — Public Self-Signup (OldReader Parity)
-Open self-service account creation via Cognito-hosted signup, gated behind a payment wall (Stripe or similar) to deter spam/abuse. Includes: signup page in Angular, Cognito `allow_admin_create_user_only = false` configuration, payment integration before account activation, email verification flow, and a minimal user-management admin view. Mirrors The Old Reader's open-registration model. Depends on Phase 9D (Cognito) being complete.
+### Phase 11 — Public Self-Signup & Subscription Billing
+Open self-service account creation via Cognito email verification, gated behind Stripe subscription billing (Free / Premium / Archive tiers). Free: 100 feeds, bookmarks, search, no video. Premium ($3/mo or $30/yr): unlimited feeds + YouTube archival up to 20h at 1080p. Archive ($10/mo or $90/yr): up to 100h of video. Metered per-GB billing was intentionally avoided — hours-based tiers are simpler for users to understand and yt-dlp is capped at 1080p to reduce storage variance. Includes: AOP `@TierGate` tier enforcement, Stripe Checkout/Portal, grace-period video purge on cancellation, admin user management. See `docs/plans/2026-05-08-phase-11-public-self-signup.md` for implementation plan.
 
 ---
 

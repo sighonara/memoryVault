@@ -92,8 +92,8 @@ STRIPE_SECRET_KEY=${stripe_secret_key}
 STRIPE_WEBHOOK_SECRET=${stripe_webhook_secret}
 STRIPE_PREMIUM_MONTHLY_PRICE_ID=${stripe_premium_monthly_price_id}
 STRIPE_PREMIUM_ANNUAL_PRICE_ID=${stripe_premium_annual_price_id}
-STRIPE_BACKUP_MONTHLY_PRICE_ID=${stripe_backup_monthly_price_id}
-STRIPE_BACKUP_ANNUAL_PRICE_ID=${stripe_backup_annual_price_id}
+STRIPE_ARCHIVE_MONTHLY_PRICE_ID=${stripe_archive_monthly_price_id}
+STRIPE_ARCHIVE_ANNUAL_PRICE_ID=${stripe_archive_annual_price_id}
 ENVFILE
 chmod 600 /etc/memoryvault/env
 

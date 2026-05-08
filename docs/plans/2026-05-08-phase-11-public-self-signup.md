@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Open MemoryVault to public self-service signup with Cognito email verification, Stripe subscription billing across Free/Premium/Backup tiers, AOP-based tier enforcement, daily metered storage reporting to Stripe, and grace-period video purge on cancellation.
+**Goal:** Open MemoryVault to public self-service signup with Cognito email verification, Stripe subscription billing across Free/Premium/Archive tiers, AOP-based tier enforcement, hours-based video archival limits (1080p cap), and grace-period video purge on cancellation.
 
 **Architecture:** Cognito handles signup/email verification. Spring Security auto-provisions a `users` row on first login. Stripe Checkout/Portal handles all payment UX. Tier enforcement uses a Spring AOP `@TierGate` aspect for regular methods; suspend functions use inline checks. Scheduled jobs follow the existing `SyncRegistrar` + `JobScheduler` pattern. Angular adds TierService, signup/billing pages, and locked-state UI where required.
 
@@ -29,7 +29,6 @@ The Cognito `allow_admin_create_user_only = false` change (Task 1) must be appli
 - `src/main/kotlin/org/sightech/memoryvault/billing/tier/TierEnforcementAspect.kt`
 - `src/main/kotlin/org/sightech/memoryvault/billing/service/StripeService.kt`
 - `src/main/kotlin/org/sightech/memoryvault/billing/service/BillingService.kt`
-- `src/main/kotlin/org/sightech/memoryvault/billing/service/StorageUsageReporter.kt`
 - `src/main/kotlin/org/sightech/memoryvault/billing/service/VideoPurgeService.kt`
 - `src/main/kotlin/org/sightech/memoryvault/billing/BillingSyncRegistrar.kt`
 - `src/main/kotlin/org/sightech/memoryvault/billing/controller/BillingController.kt`
@@ -46,15 +45,15 @@ The Cognito `allow_admin_create_user_only = false` change (Task 1) must be appli
 - `src/main/kotlin/org/sightech/memoryvault/auth/repository/UserRepository.kt` — add findAllByTier
 - `src/main/kotlin/org/sightech/memoryvault/config/CognitoJwtFilter.kt` — auto-provision user on first login
 - `src/main/kotlin/org/sightech/memoryvault/config/SecurityConfig.kt` — permit /api/stripe/webhook + new SPA routes
-- `src/main/kotlin/org/sightech/memoryvault/scheduling/entity/JobType.kt` — add STORAGE_USAGE_REPORT, VIDEO_PURGE
+- `src/main/kotlin/org/sightech/memoryvault/scheduling/entity/JobType.kt` — add VIDEO_PURGE
 - `src/main/kotlin/org/sightech/memoryvault/feed/service/FeedService.kt` — 100-feed FREE limit
-- `src/main/kotlin/org/sightech/memoryvault/youtube/service/YoutubeListService.kt` — @TierGate(Tier.BACKUP)
+- `src/main/kotlin/org/sightech/memoryvault/youtube/service/YoutubeListService.kt` — @TierGate(Tier.PREMIUM)
 - `src/main/kotlin/org/sightech/memoryvault/youtube/service/VideoSyncService.kt` — inline tier check on download
 - `src/main/kotlin/org/sightech/memoryvault/youtube/repository/VideoRepository.kt` — add findAllWithFilePathByUserId
-- `src/main/kotlin/org/sightech/memoryvault/backup/service/BackupService.kt` — @TierGate(Tier.BACKUP)
-- `src/main/kotlin/org/sightech/memoryvault/storage/StorageService.kt` — add sizeBytes(key)
-- `src/main/kotlin/org/sightech/memoryvault/storage/LocalStorageService.kt` — implement sizeBytes
-- `src/main/kotlin/org/sightech/memoryvault/storage/S3StorageService.kt` — implement sizeBytes
+- `src/main/kotlin/org/sightech/memoryvault/backup/service/BackupService.kt` — @TierGate(Tier.ARCHIVE)
+- Modify: `src/main/kotlin/org/sightech/memoryvault/youtube/entity/Video.kt` — add durationMinutes field
+- Modify: `src/main/kotlin/org/sightech/memoryvault/youtube/service/YtDlpService.kt` — 1080p format cap + parse durationMinutes
+- Create: `src/main/resources/db/migration/V11__video_duration.sql`
 - `src/main/resources/application.properties` — billing config properties
 - `src/main/resources/application-local.properties` — Stripe test key stubs
 - `src/main/resources/graphql/schema.graphqls` — new types + queries
@@ -130,13 +129,13 @@ variable "stripe_premium_annual_price_id" {
   type        = string
 }
 
-variable "stripe_backup_monthly_price_id" {
-  description = "Stripe Price ID for Backup monthly subscription"
+variable "stripe_archive_monthly_price_id" {
+  description = "Stripe Price ID for Archive monthly subscription"
   type        = string
 }
 
-variable "stripe_backup_annual_price_id" {
-  description = "Stripe Price ID for Backup annual subscription"
+variable "stripe_archive_annual_price_id" {
+  description = "Stripe Price ID for Archive annual subscription"
   type        = string
 }
 ```
@@ -147,10 +146,10 @@ In `terraform/ec2.tf`, inside the `templatefile(...)` call, add after `encryptio
 ```hcl
     stripe_secret_key              = var.stripe_secret_key
     stripe_webhook_secret          = var.stripe_webhook_secret
-    stripe_premium_monthly_price_id = var.stripe_premium_monthly_price_id
-    stripe_premium_annual_price_id  = var.stripe_premium_annual_price_id
-    stripe_backup_monthly_price_id  = var.stripe_backup_monthly_price_id
-    stripe_backup_annual_price_id   = var.stripe_backup_annual_price_id
+    stripe_premium_monthly_price_id  = var.stripe_premium_monthly_price_id
+    stripe_premium_annual_price_id   = var.stripe_premium_annual_price_id
+    stripe_archive_monthly_price_id  = var.stripe_archive_monthly_price_id
+    stripe_archive_annual_price_id   = var.stripe_archive_annual_price_id
 ```
 
 - [ ] **Step 4: Add Stripe vars to user_data.sh env file**
@@ -161,8 +160,8 @@ STRIPE_SECRET_KEY=${stripe_secret_key}
 STRIPE_WEBHOOK_SECRET=${stripe_webhook_secret}
 STRIPE_PREMIUM_MONTHLY_PRICE_ID=${stripe_premium_monthly_price_id}
 STRIPE_PREMIUM_ANNUAL_PRICE_ID=${stripe_premium_annual_price_id}
-STRIPE_BACKUP_MONTHLY_PRICE_ID=${stripe_backup_monthly_price_id}
-STRIPE_BACKUP_ANNUAL_PRICE_ID=${stripe_backup_annual_price_id}
+STRIPE_ARCHIVE_MONTHLY_PRICE_ID=${stripe_archive_monthly_price_id}
+STRIPE_ARCHIVE_ANNUAL_PRICE_ID=${stripe_archive_annual_price_id}
 ```
 
 - [ ] **Step 5: Update .env.sample and local properties**
@@ -173,8 +172,8 @@ STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 STRIPE_PREMIUM_MONTHLY_PRICE_ID=price_...
 STRIPE_PREMIUM_ANNUAL_PRICE_ID=price_...
-STRIPE_BACKUP_MONTHLY_PRICE_ID=price_...
-STRIPE_BACKUP_ANNUAL_PRICE_ID=price_...
+STRIPE_ARCHIVE_MONTHLY_PRICE_ID=price_...
+STRIPE_ARCHIVE_ANNUAL_PRICE_ID=price_...
 ```
 
 In `src/main/resources/application-local.properties`, append:
@@ -184,8 +183,8 @@ STRIPE_SECRET_KEY=sk_test_disabled
 STRIPE_WEBHOOK_SECRET=whsec_disabled
 STRIPE_PREMIUM_MONTHLY_PRICE_ID=price_test_premium_monthly
 STRIPE_PREMIUM_ANNUAL_PRICE_ID=price_test_premium_annual
-STRIPE_BACKUP_MONTHLY_PRICE_ID=price_test_backup_monthly
-STRIPE_BACKUP_ANNUAL_PRICE_ID=price_test_backup_annual
+STRIPE_ARCHIVE_MONTHLY_PRICE_ID=price_test_archive_monthly
+STRIPE_ARCHIVE_ANNUAL_PRICE_ID=price_test_archive_annual
 ```
 
 - [ ] **Step 6: Add new vars to terraform.tfvars (local, gitignored)**
@@ -196,8 +195,8 @@ stripe_secret_key              = "sk_live_..."
 stripe_webhook_secret          = "whsec_..."
 stripe_premium_monthly_price_id = "price_..."
 stripe_premium_annual_price_id  = "price_..."
-stripe_backup_monthly_price_id  = "price_..."
-stripe_backup_annual_price_id   = "price_..."
+stripe_archive_monthly_price_id = "price_..."
+stripe_archive_annual_price_id  = "price_..."
 ```
 
 - [ ] **Step 7: Apply Terraform (run this before merging code)**
@@ -245,10 +244,10 @@ Create `src/main/kotlin/org/sightech/memoryvault/auth/entity/Tier.kt`:
 ```kotlin
 package org.sightech.memoryvault.auth.entity
 
-enum class Tier { FREE, PREMIUM, BACKUP }
+enum class Tier { FREE, PREMIUM, ARCHIVE }
 ```
 
-Ordinal order matters: `FREE.ordinal=0 < PREMIUM.ordinal=1 < BACKUP.ordinal=2`. The TierEnforcementAspect will use ordinal comparison.
+Ordinal order matters: `FREE.ordinal=0 < PREMIUM.ordinal=1 < ARCHIVE.ordinal=2`. The TierEnforcementAspect will use ordinal comparison.
 
 - [ ] **Step 3: Write the migration test (failing)**
 
@@ -344,7 +343,6 @@ CREATE TABLE subscriptions (
     billing_interval VARCHAR(10) NOT NULL CHECK (billing_interval IN ('MONTHLY', 'ANNUAL')),
     status VARCHAR(20) NOT NULL CHECK (status IN ('ACTIVE', 'PAST_DUE', 'CANCELLED', 'GRACE_PERIOD')),
     grace_period_ends_at TIMESTAMPTZ,
-    last_usage_reported_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -545,9 +543,6 @@ class SubscriptionEntity(
     @Column(name = "grace_period_ends_at")
     var gracePeriodEndsAt: Instant? = null,
 
-    @Column(name = "last_usage_reported_at")
-    var lastUsageReportedAt: Instant? = null,
-
     @Column(name = "created_at", nullable = false)
     val createdAt: Instant = Instant.now(),
 
@@ -583,7 +578,7 @@ interface SubscriptionRepository : JpaRepository<SubscriptionEntity, UUID> {
 
 In `src/main/kotlin/org/sightech/memoryvault/scheduling/entity/JobType.kt`, extend the enum:
 ```kotlin
-enum class JobType { RSS_FETCH, YT_SYNC, BOOKMARK_ARCHIVE, BACKUP_UPLOAD, BACKUP_HEALTH_CHECK, STORAGE_USAGE_REPORT, VIDEO_PURGE }
+enum class JobType { RSS_FETCH, YT_SYNC, BOOKMARK_ARCHIVE, BACKUP_UPLOAD, BACKUP_HEALTH_CHECK, VIDEO_PURGE }
 ```
 
 - [ ] **Step 7: Run the test — expect pass**
@@ -664,36 +659,36 @@ class TierEnforcementAspectTest {
         every { userRepository.findByIdAndDeletedAtIsNull(userId) } returns user
 
         // Would throw if check were applied, but OWNER bypasses
-        val result = aspect.enforceTier(mockJoinPoint(), mockTierGate(Tier.BACKUP))
+        val result = aspect.enforceTier(mockJoinPoint(), mockTierGate(Tier.ARCHIVE))
         assertEquals("result", result)
     }
 
     @Test
-    fun `BACKUP user passes BACKUP gate`() {
-        val user = mockUser(UserRole.VIEWER, Tier.BACKUP)
+    fun `ARCHIVE user passes ARCHIVE gate`() {
+        val user = mockUser(UserRole.VIEWER, Tier.ARCHIVE)
         every { userRepository.findByIdAndDeletedAtIsNull(any()) } returns user
 
-        val result = aspect.enforceTier(mockJoinPoint(), mockTierGate(Tier.BACKUP))
+        val result = aspect.enforceTier(mockJoinPoint(), mockTierGate(Tier.ARCHIVE))
         assertEquals("result", result)
     }
 
     @Test
-    fun `FREE user fails BACKUP gate`() {
+    fun `FREE user fails ARCHIVE gate`() {
         val user = mockUser(UserRole.VIEWER, Tier.FREE)
         every { userRepository.findByIdAndDeletedAtIsNull(any()) } returns user
 
         assertThrows<TierRequiredException> {
-            aspect.enforceTier(mockJoinPoint(), mockTierGate(Tier.BACKUP))
+            aspect.enforceTier(mockJoinPoint(), mockTierGate(Tier.ARCHIVE))
         }
     }
 
     @Test
-    fun `PREMIUM user fails BACKUP gate`() {
+    fun `PREMIUM user fails ARCHIVE gate`() {
         val user = mockUser(UserRole.VIEWER, Tier.PREMIUM)
         every { userRepository.findByIdAndDeletedAtIsNull(any()) } returns user
 
         assertThrows<TierRequiredException> {
-            aspect.enforceTier(mockJoinPoint(), mockTierGate(Tier.BACKUP))
+            aspect.enforceTier(mockJoinPoint(), mockTierGate(Tier.ARCHIVE))
         }
     }
 
@@ -1019,14 +1014,15 @@ Append to `src/main/resources/application.properties`:
 # Billing
 memoryvault.billing.free-feed-limit=100
 memoryvault.billing.grace-period-days=30
-memoryvault.billing.usage-report-cron=-
 memoryvault.billing.video-purge-cron=-
 memoryvault.billing.stripe-secret-key=${STRIPE_SECRET_KEY}
 memoryvault.billing.stripe-webhook-secret=${STRIPE_WEBHOOK_SECRET}
 memoryvault.billing.stripe-premium-monthly-price-id=${STRIPE_PREMIUM_MONTHLY_PRICE_ID}
 memoryvault.billing.stripe-premium-annual-price-id=${STRIPE_PREMIUM_ANNUAL_PRICE_ID}
-memoryvault.billing.stripe-backup-monthly-price-id=${STRIPE_BACKUP_MONTHLY_PRICE_ID}
-memoryvault.billing.stripe-backup-annual-price-id=${STRIPE_BACKUP_ANNUAL_PRICE_ID}
+memoryvault.billing.stripe-archive-monthly-price-id=${STRIPE_ARCHIVE_MONTHLY_PRICE_ID}
+memoryvault.billing.stripe-archive-annual-price-id=${STRIPE_ARCHIVE_ANNUAL_PRICE_ID}
+memoryvault.billing.premium-video-hours-limit=20
+memoryvault.billing.archive-video-hours-limit=100
 ```
 
 - [ ] **Step 2: Write StripeService unit test (failing)**
@@ -1056,8 +1052,8 @@ class StripeServiceTest {
             webhookSecret = "whsec_disabled",
             premiumMonthlyPriceId = "price_pm",
             premiumAnnualPriceId = "price_pa",
-            backupMonthlyPriceId = "price_bm",
-            backupAnnualPriceId = "price_ba"
+            archiveMonthlyPriceId = "price_am",
+            archiveAnnualPriceId = "price_aa"
         )
         assertNotNull(service)
     }
@@ -1101,8 +1097,8 @@ class StripeService(
     @Value("\${memoryvault.billing.stripe-webhook-secret}") val webhookSecret: String,
     @Value("\${memoryvault.billing.stripe-premium-monthly-price-id}") private val premiumMonthlyPriceId: String,
     @Value("\${memoryvault.billing.stripe-premium-annual-price-id}") private val premiumAnnualPriceId: String,
-    @Value("\${memoryvault.billing.stripe-backup-monthly-price-id}") private val backupMonthlyPriceId: String,
-    @Value("\${memoryvault.billing.stripe-backup-annual-price-id}") private val backupAnnualPriceId: String
+    @Value("\${memoryvault.billing.stripe-archive-monthly-price-id}") private val archiveMonthlyPriceId: String,
+    @Value("\${memoryvault.billing.stripe-archive-annual-price-id}") private val archiveAnnualPriceId: String
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -1153,28 +1149,11 @@ class StripeService(
         return Session.create(params)
     }
 
-    fun reportUsage(subscriptionItemId: String, quantity: Long, timestamp: Long) {
-        // Stripe metered billing usage record via raw API call
-        // subscriptionItemId is the SI id for the metered price component
-        val params = mapOf(
-            "quantity" to quantity.toString(),
-            "timestamp" to timestamp.toString(),
-            "action" to "set"
-        )
-        com.stripe.net.ApiResource.request(
-            com.stripe.net.ApiResource.RequestMethod.POST,
-            "${Stripe.getApiBase()}/v1/subscription_items/$subscriptionItemId/usage_records",
-            params,
-            com.stripe.model.UsageRecord::class.java,
-            null
-        )
-    }
-
     private fun priceIdFor(tier: Tier, interval: BillingInterval): String = when (tier to interval) {
         Tier.PREMIUM to BillingInterval.MONTHLY -> premiumMonthlyPriceId
         Tier.PREMIUM to BillingInterval.ANNUAL  -> premiumAnnualPriceId
-        Tier.BACKUP  to BillingInterval.MONTHLY -> backupMonthlyPriceId
-        Tier.BACKUP  to BillingInterval.ANNUAL  -> backupAnnualPriceId
+        Tier.ARCHIVE to BillingInterval.MONTHLY -> archiveMonthlyPriceId
+        Tier.ARCHIVE to BillingInterval.ANNUAL  -> archiveAnnualPriceId
         else -> throw IllegalArgumentException("No price for tier=$tier interval=$interval")
     }
 }
@@ -1390,14 +1369,14 @@ class BillingService(
         val sub = subscriptionRepository.findByStripeSubscriptionId(stripeSubscriptionId) ?: return
         val user = userRepository.findByIdAndDeletedAtIsNull(sub.userId) ?: return
 
-        val wasBackup = user.tier == Tier.BACKUP
+        val hadVideoAccess = user.tier == Tier.PREMIUM || user.tier == Tier.ARCHIVE
         user.tier = Tier.FREE
         userRepository.save(user)
 
         sub.status = SubscriptionStatus.GRACE_PERIOD
-        if (wasBackup) sub.gracePeriodEndsAt = Instant.now().plus(gracePeriodDays, ChronoUnit.DAYS)
+        if (hadVideoAccess) sub.gracePeriodEndsAt = Instant.now().plus(gracePeriodDays, ChronoUnit.DAYS)
         subscriptionRepository.save(sub)
-        log.info("Subscription deleted userId={} wasBackup={} gracePeriodEndsAt={}", user.id, wasBackup, sub.gracePeriodEndsAt)
+        log.info("Subscription deleted userId={} hadVideoAccess={} gracePeriodEndsAt={}", user.id, hadVideoAccess, sub.gracePeriodEndsAt)
     }
 
     @Transactional
@@ -1694,7 +1673,7 @@ class TierGateEnforcementTest {
             org.sightech.memoryvault.billing.tier.TierGate::class.java
         )
         assert(annotation != null) { "addList must be annotated with @TierGate" }
-        assert(annotation!!.value == Tier.BACKUP) { "addList requires BACKUP tier" }
+        assert(annotation!!.value == Tier.PREMIUM) { "addList requires PREMIUM tier" }
     }
 }
 ```
@@ -1713,11 +1692,11 @@ import org.sightech.memoryvault.billing.tier.TierGate
 import org.sightech.memoryvault.auth.entity.Tier
 
 // On the addList method:
-@TierGate(Tier.BACKUP)
+@TierGate(Tier.PREMIUM)
 fun addList(url: String): Pair<YoutubeList, SyncResult> { ... }
 
 // On the refreshList method:
-@TierGate(Tier.BACKUP)
+@TierGate(Tier.PREMIUM)
 fun refreshList(listId: UUID?): List<SyncResult> { ... }
 ```
 
@@ -1728,10 +1707,10 @@ In `src/main/kotlin/org/sightech/memoryvault/backup/service/BackupService.kt`, a
 import org.sightech.memoryvault.billing.tier.TierGate
 import org.sightech.memoryvault.auth.entity.Tier
 
-@TierGate(Tier.BACKUP)
+@TierGate(Tier.ARCHIVE)
 fun addProvider(userId: UUID, type: BackupProviderType, name: String, credentialsJson: String, isPrimary: Boolean): BackupProviderEntity { ... }
 
-@TierGate(Tier.BACKUP)
+@TierGate(Tier.ARCHIVE)
 fun triggerBackfill(userId: UUID): Int { ... }
 ```
 
@@ -1754,12 +1733,12 @@ Add `@Value("\${memoryvault.billing.free-feed-limit:100}") private val freeFeedL
 
 - [ ] **Step 6: Add inline tier check to VideoSyncService**
 
-In `VideoSyncService.syncList`, inject `UserRepository` and add a tier check before calling the downloader. When the list owner's tier is not BACKUP, skip downloading (just sync metadata) without throwing:
+In `VideoSyncService.syncList`, inject `UserRepository` and add a tier check before calling the downloader. When the list owner's tier is below PREMIUM, skip downloading (just sync metadata) without throwing:
 
 ```kotlin
 // After resolving the list owner userId, add:
 val owner = userRepository.findByIdAndDeletedAtIsNull(list.userId)
-val canDownload = owner?.role == UserRole.OWNER || owner?.tier == Tier.BACKUP
+val canDownload = owner?.role == UserRole.OWNER || owner?.tier == Tier.PREMIUM || owner?.tier == Tier.ARCHIVE
 ```
 
 Then wrap the download call:
@@ -1767,47 +1746,68 @@ Then wrap the download call:
 if (canDownload) {
     videoDownloader.download(video, list)
 } else {
-    log.debug("Skipping download for userId={} — tier not BACKUP", list.userId)
+    log.debug("Skipping download for userId={} — tier below PREMIUM", list.userId)
 }
 ```
 
 Add constructor injection of `UserRepository` and the required imports.
 
-- [ ] **Step 7: Add sizeBytes to StorageService interface**
+- [ ] **Step 7: Add V11 migration for Video.durationMinutes**
 
-In `src/main/kotlin/org/sightech/memoryvault/storage/StorageService.kt`, add:
-```kotlin
-    fun sizeBytes(key: String): Long
+Create `src/main/resources/db/migration/V11__video_duration.sql`:
+```sql
+ALTER TABLE videos ADD COLUMN duration_minutes INT;
 ```
 
-In `LocalStorageService.kt`, implement:
+- [ ] **Step 8: Add durationMinutes to Video entity**
+
+In `src/main/kotlin/org/sightech/memoryvault/youtube/entity/Video.kt`, add after the `filePath` field:
 ```kotlin
-    override fun sizeBytes(key: String): Long {
-        val path = java.nio.file.Paths.get(localPath, key)
-        return if (java.nio.file.Files.exists(path)) java.nio.file.Files.size(path) else 0L
-    }
+var durationMinutes: Int? = null
 ```
 
-In `S3StorageService.kt`, implement using S3 HeadObject:
-```kotlin
-    override fun sizeBytes(key: String): Long = try {
-        val response = s3Client.headObject { it.bucket(bucket).key(key) }
-        response.contentLength()
-    } catch (e: Exception) {
-        log.warn("Could not get size for key={}: {}", key, e.message)
-        0L
-    }
-```
+- [ ] **Step 9: Cap yt-dlp at 1080p and parse duration**
 
-- [ ] **Step 8: Add video query to VideoRepository**
+In `src/main/kotlin/org/sightech/memoryvault/youtube/service/YtDlpService.kt`, add `--format "bestvideo[height<=1080]+bestaudio/best[height<=1080]"` to the yt-dlp download command arguments.
+
+Also parse the `duration` field from the yt-dlp JSON output and convert to minutes:
+```kotlin
+val durationSeconds = json.get("duration")?.intValue() ?: 0
+val durationMinutes = (durationSeconds + 59) / 60  // round up
+```
+Set this on the Video entity before saving.
+
+- [ ] **Step 10: Add duration sum query to VideoRepository**
 
 In `src/main/kotlin/org/sightech/memoryvault/youtube/repository/VideoRepository.kt`, add:
+```kotlin
+@Query("SELECT COALESCE(SUM(v.durationMinutes), 0) FROM Video v WHERE v.youtubeList.userId = :userId AND v.youtubeList.deletedAt IS NULL AND v.deletedAt IS NULL")
+fun sumDurationMinutesByUserId(@Param("userId") userId: UUID): Int
+```
+
+Also add the existing `findAllWithFilePathByUserId` query:
 ```kotlin
     @Query("SELECT v FROM Video v WHERE v.youtubeList.userId = :userId AND v.filePath IS NOT NULL AND v.youtubeList.deletedAt IS NULL")
     fun findAllWithFilePathByUserId(userId: UUID): List<Video>
 ```
 
-- [ ] **Step 9: Create VideoController for grace-period download**
+- [ ] **Step 11: Enforce hours limit in VideoSyncService before download**
+
+Inject `@Value("\${memoryvault.billing.premium-video-hours-limit:20}") private val premiumHoursLimit: Int` and `@Value("\${memoryvault.billing.archive-video-hours-limit:100}") private val archiveHoursLimit: Int` into `VideoSyncService`.
+
+Before calling `videoDownloader.download(video, list)`, add:
+```kotlin
+val limitMinutes: Int? = when {
+    owner?.role == UserRole.OWNER -> null  // no limit
+    owner?.tier == Tier.ARCHIVE  -> archiveHoursLimit * 60
+    owner?.tier == Tier.PREMIUM  -> premiumHoursLimit * 60
+    else -> 0  // FREE — no video
+}
+val usedMinutes = videoRepository.sumDurationMinutesByUserId(list.userId)
+val canDownload = limitMinutes == null || (usedMinutes + (video.durationMinutes ?: 0)) <= limitMinutes
+```
+
+- [ ] **Step 12: Create VideoController for grace-period download**
 
 Create `src/main/kotlin/org/sightech/memoryvault/youtube/controller/VideoController.kt`:
 ```kotlin
@@ -1843,7 +1843,7 @@ class VideoController(
         val filePath = video.filePath
             ?: return ResponseEntity.notFound().build()
 
-        // Allow download if BACKUP tier OR in grace period
+        // Allow download if subscription active OR in grace period
         val sub = subscriptionRepository.findByUserId(userId)
         val allowed = sub != null && (sub.status == SubscriptionStatus.ACTIVE ||
                 sub.status == SubscriptionStatus.GRACE_PERIOD)
@@ -1860,117 +1860,36 @@ class VideoController(
 }
 ```
 
-- [ ] **Step 10: Run the enforcement test**
+- [ ] **Step 13: Run the enforcement test**
 
 ```bash
 ./gradlew test --tests "org.sightech.memoryvault.billing.TierGateEnforcementTest" 2>&1 | tail -10
 ```
 Expected: `BUILD SUCCESSFUL`, 1 test passed.
 
-- [ ] **Step 11: Run all tests**
+- [ ] **Step 14: Run all tests**
 
 ```bash
 ./gradlew test 2>&1 | tail -20
 ```
 Expected: `BUILD SUCCESSFUL`.
 
-- [ ] **Step 12: Commit**
+- [ ] **Step 15: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/ src/test/kotlin/org/sightech/memoryvault/billing/TierGateEnforcementTest.kt
-git commit -m "feat: tier enforcement — @TierGate on YouTube/Backup, FREE feed limit, video download endpoint"
+git commit -m "feat: tier enforcement — PREMIUM gates video, ARCHIVE gates BackupService, 1080p cap, hours limit"
 ```
 
 
-## Task 10: StorageUsageReporter + VideoPurgeService + BillingSyncRegistrar
+## Task 10: VideoPurgeService + BillingSyncRegistrar
 
 **Files:**
-- Create: `src/main/kotlin/org/sightech/memoryvault/billing/service/StorageUsageReporter.kt`
 - Create: `src/main/kotlin/org/sightech/memoryvault/billing/service/VideoPurgeService.kt`
 - Create: `src/main/kotlin/org/sightech/memoryvault/billing/BillingSyncRegistrar.kt`
-- Test: `src/test/kotlin/org/sightech/memoryvault/billing/StorageUsageReporterTest.kt`
 - Test: `src/test/kotlin/org/sightech/memoryvault/billing/VideoPurgeServiceTest.kt`
 
-- [ ] **Step 1: Write StorageUsageReporter test (failing)**
-
-Create `src/test/kotlin/org/sightech/memoryvault/billing/StorageUsageReporterTest.kt`:
-```kotlin
-package org.sightech.memoryvault.billing
-
-import io.mockk.*
-import org.junit.jupiter.api.Test
-import org.sightech.memoryvault.auth.entity.Tier
-import org.sightech.memoryvault.auth.entity.User
-import org.sightech.memoryvault.auth.entity.UserRole
-import org.sightech.memoryvault.auth.repository.UserRepository
-import org.sightech.memoryvault.billing.entity.BillingInterval
-import org.sightech.memoryvault.billing.entity.SubscriptionEntity
-import org.sightech.memoryvault.billing.entity.SubscriptionStatus
-import org.sightech.memoryvault.billing.repository.SubscriptionRepository
-import org.sightech.memoryvault.billing.service.StorageUsageReporter
-import org.sightech.memoryvault.billing.service.StripeService
-import org.sightech.memoryvault.storage.StorageService
-import org.sightech.memoryvault.youtube.entity.Video
-import org.sightech.memoryvault.youtube.repository.VideoRepository
-import java.time.Instant
-import java.util.UUID
-import kotlin.test.assertEquals
-
-class StorageUsageReporterTest {
-
-    private val userRepository = mockk<UserRepository>()
-    private val subscriptionRepository = mockk<SubscriptionRepository>(relaxed = true)
-    private val videoRepository = mockk<VideoRepository>()
-    private val storageService = mockk<StorageService>()
-    private val stripeService = mockk<StripeService>(relaxed = true)
-    private val reporter = StorageUsageReporter(
-        userRepository, subscriptionRepository, videoRepository, storageService, stripeService
-    )
-
-    @Test
-    fun `reports storage usage for BACKUP users`() {
-        val userId = UUID.randomUUID()
-        val user = mockk<User>()
-        every { user.id } returns userId
-
-        val sub = SubscriptionEntity(
-            userId = userId,
-            stripeCustomerId = "cus_123",
-            stripeSubscriptionId = "sub_123",
-            billingInterval = BillingInterval.MONTHLY,
-            status = SubscriptionStatus.ACTIVE,
-            lastUsageReportedAt = null
-        )
-
-        val video = mockk<Video>()
-        every { video.filePath } returns "videos/test.mp4"
-
-        every { userRepository.findAllByTierAndDeletedAtIsNull(Tier.BACKUP) } returns listOf(user)
-        every { subscriptionRepository.findByUserId(userId) } returns sub
-        every { videoRepository.findAllWithFilePathByUserId(userId) } returns listOf(video)
-        every { storageService.sizeBytes("videos/test.mp4") } returns 1_073_741_824L // 1 GB
-
-        reporter.report()
-
-        verify { stripeService.reportUsage(any(), 1L, any()) }
-    }
-
-    @Test
-    fun `skips users with no BACKUP subscription`() {
-        val userId = UUID.randomUUID()
-        val user = mockk<User>()
-        every { user.id } returns userId
-        every { userRepository.findAllByTierAndDeletedAtIsNull(Tier.BACKUP) } returns listOf(user)
-        every { subscriptionRepository.findByUserId(userId) } returns null
-
-        reporter.report()
-
-        verify(exactly = 0) { stripeService.reportUsage(any(), any(), any()) }
-    }
-}
-```
-
-- [ ] **Step 2: Write VideoPurgeService test (failing)**
+- [ ] **Step 1: Write VideoPurgeService test (failing)**
 
 Create `src/test/kotlin/org/sightech/memoryvault/billing/VideoPurgeServiceTest.kt`:
 ```kotlin
@@ -1988,7 +1907,6 @@ import org.sightech.memoryvault.youtube.entity.Video
 import org.sightech.memoryvault.youtube.repository.VideoRepository
 import java.time.Instant
 import java.util.UUID
-import kotlin.test.assertNull
 
 class VideoPurgeServiceTest {
 
@@ -2033,67 +1951,13 @@ class VideoPurgeServiceTest {
 }
 ```
 
-- [ ] **Step 3: Run both tests — expect compilation failure**
+- [ ] **Step 2: Run test — expect compilation failure**
 
 ```bash
-./gradlew test --tests "org.sightech.memoryvault.billing.StorageUsageReporterTest" --tests "org.sightech.memoryvault.billing.VideoPurgeServiceTest" 2>&1 | tail -10
+./gradlew test --tests "org.sightech.memoryvault.billing.VideoPurgeServiceTest" 2>&1 | tail -10
 ```
 
-- [ ] **Step 4: Create StorageUsageReporter**
-
-Create `src/main/kotlin/org/sightech/memoryvault/billing/service/StorageUsageReporter.kt`:
-```kotlin
-package org.sightech.memoryvault.billing.service
-
-import org.sightech.memoryvault.auth.entity.Tier
-import org.sightech.memoryvault.auth.repository.UserRepository
-import org.sightech.memoryvault.billing.repository.SubscriptionRepository
-import org.sightech.memoryvault.storage.StorageService
-import org.sightech.memoryvault.youtube.repository.VideoRepository
-import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
-import java.time.Instant
-
-private const val BYTES_PER_GB = 1_073_741_824L
-
-@Service
-class StorageUsageReporter(
-    private val userRepository: UserRepository,
-    private val subscriptionRepository: SubscriptionRepository,
-    private val videoRepository: VideoRepository,
-    private val storageService: StorageService,
-    private val stripeService: StripeService
-) {
-    private val log = LoggerFactory.getLogger(javaClass)
-
-    fun report(): Map<String, Any> {
-        val backupUsers = userRepository.findAllByTierAndDeletedAtIsNull(Tier.BACKUP)
-        var reported = 0
-        var errors = 0
-
-        for (user in backupUsers) {
-            val sub = subscriptionRepository.findByUserId(user.id) ?: continue
-            try {
-                val totalBytes = videoRepository.findAllWithFilePathByUserId(user.id)
-                    .sumOf { storageService.sizeBytes(it.filePath!!) }
-                val gb = totalBytes / BYTES_PER_GB
-                stripeService.reportUsage(sub.stripeSubscriptionId, gb, Instant.now().epochSecond)
-                sub.lastUsageReportedAt = Instant.now()
-                subscriptionRepository.save(sub)
-                reported++
-                log.info("Reported storage userId={} gb={}", user.id, gb)
-            } catch (e: Exception) {
-                log.warn("Failed to report storage for userId={}: {}", user.id, e.message)
-                errors++
-            }
-        }
-
-        return mapOf("reported" to reported, "errors" to errors)
-    }
-}
-```
-
-- [ ] **Step 5: Create VideoPurgeService**
+- [ ] **Step 3: Create VideoPurgeService**
 
 Create `src/main/kotlin/org/sightech/memoryvault/billing/service/VideoPurgeService.kt`:
 ```kotlin
@@ -2144,13 +2008,12 @@ class VideoPurgeService(
 }
 ```
 
-- [ ] **Step 6: Create BillingSyncRegistrar**
+- [ ] **Step 4: Create BillingSyncRegistrar**
 
 Create `src/main/kotlin/org/sightech/memoryvault/billing/BillingSyncRegistrar.kt`:
 ```kotlin
 package org.sightech.memoryvault.billing
 
-import org.sightech.memoryvault.billing.service.StorageUsageReporter
 import org.sightech.memoryvault.billing.service.VideoPurgeService
 import org.sightech.memoryvault.scheduling.JobScheduler
 import org.sightech.memoryvault.scheduling.entity.JobType
@@ -2163,19 +2026,13 @@ import org.springframework.stereotype.Component
 @Component
 class BillingSyncRegistrar(
     private val jobScheduler: JobScheduler,
-    private val storageUsageReporter: StorageUsageReporter,
     private val videoPurgeService: VideoPurgeService,
-    @Value("\${memoryvault.billing.usage-report-cron:-}") private val usageReportCron: String,
     @Value("\${memoryvault.billing.video-purge-cron:-}") private val videoPurgeCron: String
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
     @EventListener(ApplicationReadyEvent::class)
     fun registerJobs() {
-        jobScheduler.schedule("billing-usage-report", usageReportCron, JobType.STORAGE_USAGE_REPORT) {
-            log.info("Storage usage report job starting")
-            storageUsageReporter.report()
-        }
         jobScheduler.schedule("billing-video-purge", videoPurgeCron, JobType.VIDEO_PURGE) {
             log.info("Video purge job starting")
             videoPurgeService.purge()
@@ -2184,25 +2041,25 @@ class BillingSyncRegistrar(
 }
 ```
 
-- [ ] **Step 7: Run both tests — expect pass**
+- [ ] **Step 5: Run test**
 
 ```bash
-./gradlew test --tests "org.sightech.memoryvault.billing.StorageUsageReporterTest" --tests "org.sightech.memoryvault.billing.VideoPurgeServiceTest" 2>&1 | tail -10
+./gradlew test --tests "org.sightech.memoryvault.billing.VideoPurgeServiceTest" 2>&1 | tail -10
 ```
-Expected: `BUILD SUCCESSFUL`, 4 tests passed.
+Expected: `BUILD SUCCESSFUL`, 2 tests passed.
 
-- [ ] **Step 8: Run all tests**
+- [ ] **Step 6: Run all tests**
 
 ```bash
 ./gradlew test 2>&1 | tail -20
 ```
 Expected: `BUILD SUCCESSFUL`.
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add src/main/kotlin/org/sightech/memoryvault/billing/ src/test/kotlin/org/sightech/memoryvault/billing/StorageUsageReporterTest.kt src/test/kotlin/org/sightech/memoryvault/billing/VideoPurgeServiceTest.kt
-git commit -m "feat: StorageUsageReporter, VideoPurgeService, BillingSyncRegistrar"
+git add src/main/kotlin/org/sightech/memoryvault/billing/ src/test/kotlin/org/sightech/memoryvault/billing/VideoPurgeServiceTest.kt
+git commit -m "feat: VideoPurgeService, BillingSyncRegistrar — grace period purge on cancellation"
 ```
 
 
@@ -2248,7 +2105,6 @@ type SubscriptionInfo {
     status: String!
     billingInterval: String!
     gracePeriodEndsAt: Instant
-    lastUsageReportedAt: Instant
 }
 
 type AdminUserView {
@@ -2429,7 +2285,7 @@ class BillingTools(
             }
     }
 
-    @Tool(description = "Change a user's tier. Provide userId (UUID string) and tier (FREE, PREMIUM, or BACKUP). Only usable by OWNER role.")
+    @Tool(description = "Change a user's tier. Provide userId (UUID string) and tier (FREE, PREMIUM, or ARCHIVE). Only usable by OWNER role.")
     fun adminSetUserTier(userId: String, tier: String): Map<String, Any> {
         val caller = userRepository.findByIdAndDeletedAtIsNull(CurrentUser.userId())
         if (caller?.role != UserRole.OWNER) return mapOf("success" to false, "error" to "OWNER role required")
@@ -2473,7 +2329,7 @@ git commit -m "feat: GraphQL billing queries (me, subscription, adminUsers), MCP
 
 Create `client/src/app/core/models/user-profile.model.ts`:
 ```typescript
-export type Tier = 'FREE' | 'PREMIUM' | 'BACKUP';
+export type Tier = 'FREE' | 'PREMIUM' | 'ARCHIVE';
 export type UserRole = 'OWNER' | 'ADMIN' | 'VIEWER';
 
 export interface UserProfile {
@@ -2514,7 +2370,7 @@ export class TierService {
   }
 
   isAtLeast(required: Tier): boolean {
-    const order: Tier[] = ['FREE', 'PREMIUM', 'BACKUP'];
+    const order: Tier[] = ['FREE', 'PREMIUM', 'ARCHIVE'];
     return order.indexOf(this.tier()) >= order.indexOf(required);
   }
 
@@ -2720,8 +2576,8 @@ export class BillingComponent implements OnInit {
     this.initiateCheckout('PREMIUM', interval);
   }
 
-  upgradeToBackup(interval: 'MONTHLY' | 'ANNUAL'): void {
-    this.initiateCheckout('BACKUP', interval);
+  upgradeToArchive(interval: 'MONTHLY' | 'ANNUAL'): void {
+    this.initiateCheckout('ARCHIVE', interval);
   }
 
   openPortal(): void {
@@ -2774,13 +2630,13 @@ Create `client/src/app/feature-billing/billing.component.html`:
     </mat-card>
   }
 
-  @if (tierService.tier() !== 'BACKUP') {
+  @if (tierService.tier() !== 'ARCHIVE') {
     <mat-card>
-      <mat-card-header><mat-card-title>Add YouTube Backup — $3/mo base + storage</mat-card-title></mat-card-header>
+      <mat-card-header><mat-card-title>Upgrade to Archive — $10/mo or $90/yr</mat-card-title></mat-card-header>
       <mat-card-content>
-        <p>Archive YouTube playlists + Internet Archive backup. Metered S3 storage billing.</p>
-        <button mat-raised-button color="accent" (click)="upgradeToBackup('MONTHLY')" [disabled]="loading()">$3 / month + storage</button>
-        <button mat-button (click)="upgradeToBackup('ANNUAL')" [disabled]="loading()">$30 / year + storage</button>
+        <p>Up to 100h of 1080p video archival + Internet Archive backup.</p>
+        <button mat-raised-button color="accent" (click)="upgradeToArchive('MONTHLY')" [disabled]="loading()">$10 / month</button>
+        <button mat-button (click)="upgradeToArchive('ANNUAL')" [disabled]="loading()">$90 / year</button>
       </mat-card-content>
     </mat-card>
   }
@@ -2900,12 +2756,12 @@ readonly tierService = inject(TierService);
 
 In `client/src/app/youtube/youtube.html`, wrap the existing content:
 ```html
-@if (tierService.isAtLeast('BACKUP') || tierService.isOwner()) {
+@if (tierService.isAtLeast('PREMIUM') || tierService.isOwner()) {
   <!-- existing youtube content here -->
 } @else {
   <div class="tier-gate">
     <mat-icon>lock</mat-icon>
-    <h3>YouTube Archival requires the Backup tier</h3>
+    <h3>YouTube Archival requires the Premium tier</h3>
     <a mat-raised-button color="primary" routerLink="/billing">Upgrade</a>
   </div>
 }
@@ -2978,7 +2834,7 @@ Check:
 - `/login` has a "Create account" link
 - Top bar shows user icon with dropdown (Billing, Sign out)
 - `/billing` shows current tier and upgrade options
-- `/youtube` shows locked state for non-BACKUP users (OWNER bypasses)
+- `/youtube` shows locked state for FREE users (PREMIUM and ARCHIVE get access; OWNER bypasses)
 - `/admin` has a Users tab
 
 - [ ] **Step 10: Commit**
@@ -3003,8 +2859,8 @@ git commit -m "feat: billing pages, user menu, YouTube locked state, feed upgrad
 | 6     | StripeService + billing application config                      | `StripeService.kt`, `application.properties`                                                                                    |
 | 7     | BillingService + BillingController                              | `BillingService.kt`, `BillingController.kt`                                                                                     |
 | 8     | StripeWebhookController                                         | `StripeWebhookController.kt`                                                                                                    |
-| 9     | Tier enforcement on existing services + video download          | `FeedService.kt`, `YoutubeListService.kt`, `VideoSyncService.kt`, `BackupService.kt`, `VideoController.kt`, `StorageService.kt` |
-| 10    | StorageUsageReporter + VideoPurgeService + BillingSyncRegistrar | `StorageUsageReporter.kt`, `VideoPurgeService.kt`, `BillingSyncRegistrar.kt`                                                    |
+| 9     | Tier enforcement on existing services + video download + hours limit | `FeedService.kt`, `YoutubeListService.kt`, `VideoSyncService.kt`, `BackupService.kt`, `VideoController.kt`, `Video.kt`, `YtDlpService.kt`, `V11__video_duration.sql` |
+| 10    | VideoPurgeService + BillingSyncRegistrar                        | `VideoPurgeService.kt`, `BillingSyncRegistrar.kt`                                                                               |
 | 11    | GraphQL schema + resolvers + MCP tools                          | `schema.graphqls`, `BillingResolver.kt`, `AdminUserResolver.kt`, `BillingTools.kt`                                              |
 | 12    | Angular TierService + signup page                               | `tier.service.ts`, `signup.component.ts`, `app.routes.ts`                                                                       |
 | 13    | Angular billing pages + UI changes                              | `billing.component.ts`, `top-bar.ts/html`, `youtube.ts/html`, `admin.ts/html`                                                   |

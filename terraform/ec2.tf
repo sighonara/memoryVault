@@ -74,8 +74,8 @@ resource "aws_instance" "app" {
     stripe_webhook_secret           = var.stripe_webhook_secret
     stripe_premium_monthly_price_id = var.stripe_premium_monthly_price_id
     stripe_premium_annual_price_id  = var.stripe_premium_annual_price_id
-    stripe_backup_monthly_price_id  = var.stripe_backup_monthly_price_id
-    stripe_backup_annual_price_id   = var.stripe_backup_annual_price_id
+    stripe_archive_monthly_price_id = var.stripe_archive_monthly_price_id
+    stripe_archive_annual_price_id  = var.stripe_archive_annual_price_id
   })
 
   tags = {

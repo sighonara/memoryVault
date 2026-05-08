@@ -107,12 +107,12 @@ variable "stripe_premium_annual_price_id" {
   type        = string
 }
 
-variable "stripe_backup_monthly_price_id" {
-  description = "Stripe Price ID for Backup monthly subscription"
+variable "stripe_archive_monthly_price_id" {
+  description = "Stripe Price ID for Archive monthly subscription"
   type        = string
 }
 
-variable "stripe_backup_annual_price_id" {
-  description = "Stripe Price ID for Backup annual subscription"
+variable "stripe_archive_annual_price_id" {
+  description = "Stripe Price ID for Archive annual subscription"
   type        = string
 }
