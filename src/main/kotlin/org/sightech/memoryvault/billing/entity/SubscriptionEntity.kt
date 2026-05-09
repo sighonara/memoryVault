@@ -17,7 +17,7 @@ class SubscriptionEntity(
     val stripeCustomerId: String,
 
     @Column(name = "stripe_subscription_id", nullable = false, unique = true)
-    val stripeSubscriptionId: String,
+    var stripeSubscriptionId: String,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "billing_interval", nullable = false, length = 10)

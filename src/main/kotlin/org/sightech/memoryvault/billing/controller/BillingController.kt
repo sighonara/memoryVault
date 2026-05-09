@@ -4,8 +4,8 @@ import jakarta.servlet.http.HttpServletRequest
 import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.auth.entity.Tier
 import org.sightech.memoryvault.auth.repository.UserRepository
+import org.sightech.memoryvault.billing.dto.SubscriptionDto
 import org.sightech.memoryvault.billing.entity.BillingInterval
-import org.sightech.memoryvault.billing.entity.SubscriptionEntity
 import org.sightech.memoryvault.billing.service.BillingService
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
@@ -34,7 +34,9 @@ class BillingController(
             return ResponseEntity.badRequest().build()
         }
         if (tier == Tier.FREE) return ResponseEntity.badRequest().build()
-        val baseUrl = "${httpRequest.scheme}://${httpRequest.serverName}"
+        val port = httpRequest.serverPort
+        val baseUrl = if (port == 80 || port == 443) "${httpRequest.scheme}://${httpRequest.serverName}"
+                      else "${httpRequest.scheme}://${httpRequest.serverName}:$port"
         val url = billingService.createCheckoutSession(user, tier, interval, baseUrl)
         log.info("Checkout initiated userId={} tier={} interval={}", user.id, tier, interval)
         return ResponseEntity.ok(CheckoutResponse(url))
@@ -44,16 +46,29 @@ class BillingController(
     fun portal(httpRequest: HttpServletRequest): ResponseEntity<PortalResponse> {
         val user = userRepository.findByIdAndDeletedAtIsNull(CurrentUser.userId())
             ?: return ResponseEntity.notFound().build()
-        val baseUrl = "${httpRequest.scheme}://${httpRequest.serverName}"
-        val url = billingService.createPortalSession(user, baseUrl)
-        return ResponseEntity.ok(PortalResponse(url))
+        val port = httpRequest.serverPort
+        val baseUrl = if (port == 80 || port == 443) "${httpRequest.scheme}://${httpRequest.serverName}"
+                      else "${httpRequest.scheme}://${httpRequest.serverName}:$port"
+        return try {
+            val url = billingService.createPortalSession(user, baseUrl)
+            ResponseEntity.ok(PortalResponse(url))
+        } catch (ex: IllegalStateException) {
+            log.warn("Portal session failed userId={}: {}", user.id, ex.message)
+            ResponseEntity.badRequest().build()
+        }
     }
 
     @GetMapping("/subscription")
     fun subscription(): ResponseEntity<*> {
         val user = userRepository.findByIdAndDeletedAtIsNull(CurrentUser.userId())
             ?: return ResponseEntity.notFound().build<Void>()
-        val sub: SubscriptionEntity? = billingService.getSubscription(user)
-        return if (sub != null) ResponseEntity.ok(sub) else ResponseEntity.noContent().build<Void>()
+        val sub = billingService.getSubscription(user)
+            ?: return ResponseEntity.noContent().build<Void>()
+        return ResponseEntity.ok(SubscriptionDto(
+            id = sub.id,
+            status = sub.status,
+            billingInterval = sub.billingInterval,
+            gracePeriodEndsAt = sub.gracePeriodEndsAt
+        ))
     }
 }

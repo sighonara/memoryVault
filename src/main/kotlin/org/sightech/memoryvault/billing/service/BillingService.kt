@@ -63,6 +63,7 @@ class BillingService(
 
         val existing = subscriptionRepository.findByUserId(user.id)
         if (existing != null) {
+            existing.stripeSubscriptionId = stripeSubscriptionId
             existing.status = SubscriptionStatus.ACTIVE
             existing.gracePeriodEndsAt = null
             subscriptionRepository.save(existing)
