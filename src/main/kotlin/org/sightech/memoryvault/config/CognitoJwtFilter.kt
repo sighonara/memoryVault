@@ -3,6 +3,8 @@ package org.sightech.memoryvault.config
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.sightech.memoryvault.auth.entity.User
+import org.sightech.memoryvault.auth.entity.UserRole
 import org.sightech.memoryvault.auth.repository.UserRepository
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
@@ -34,15 +36,23 @@ class CognitoJwtFilter(
             }
             if (claims != null) {
                 val user = userRepository.findByEmailAndDeletedAtIsNull(claims.email)
-                if (user != null) {
-                    val authorities = listOf(SimpleGrantedAuthority("ROLE_${claims.role}"))
-                    val auth = UsernamePasswordAuthenticationToken(user.id.toString(), null, authorities)
-                    SecurityContextHolder.getContext().authentication = auth
-                } else {
-                    log.warn("Cognito user {} not found in database", claims.email)
-                }
+                    ?: provisionUser(claims.email, claims.role)
+                val authorities = listOf(SimpleGrantedAuthority("ROLE_${user.role.name}"))
+                val auth = UsernamePasswordAuthenticationToken(user.id.toString(), null, authorities)
+                SecurityContextHolder.getContext().authentication = auth
             }
         }
         filterChain.doFilter(request, response)
+    }
+
+    private fun provisionUser(email: String, roleHint: String): User {
+        val role = runCatching { UserRole.valueOf(roleHint) }.getOrDefault(UserRole.VIEWER)
+        val user = userRepository.save(User(
+            email = email,
+            displayName = email.substringBefore("@"),
+            role = role
+        ))
+        log.info("Auto-provisioned user email={} role={}", email, role)
+        return user
     }
 }

@@ -67,14 +67,18 @@ class CognitoJwtFilterTest {
     }
 
     @Test
-    fun `skips auth when user not found or soft-deleted`() {
-        every { tokenValidator.validate("valid-token") } returns CognitoClaims("ghost@example.com", "OWNER")
+    fun `auto-provisions and authenticates when user not found`() {
+        val newUser = User(email = "ghost@example.com", displayName = "ghost", role = UserRole.VIEWER)
+        every { tokenValidator.validate("valid-token") } returns CognitoClaims("ghost@example.com", "VIEWER")
         every { userRepository.findByEmailAndDeletedAtIsNull("ghost@example.com") } returns null
+        every { userRepository.save(any<User>()) } returns newUser
 
         val request = MockHttpServletRequest()
         request.addHeader("Authorization", "Bearer valid-token")
 
         filter.doFilter(request, MockHttpServletResponse(), filterChain)
-        assertNull(SecurityContextHolder.getContext().authentication)
+
+        val auth = SecurityContextHolder.getContext().authentication
+        assertEquals(newUser.id.toString(), auth?.principal)
     }
 }

@@ -42,12 +42,13 @@ class SecurityConfig(
                     // Auth for /api/internal/** is enforced by InternalApiKeyFilter (aws profile only),
                     // not by JWT. Permit here so the chain reaches the filter instead of short-circuiting.
                     .requestMatchers("/api/internal/**").permitAll()
+                    .requestMatchers("/api/stripe/webhook").permitAll()
                     .requestMatchers("/graphiql/**").permitAll()
                     .requestMatchers("/ws/**").permitAll()
                     .requestMatchers("/", "/index.html", "/*.js", "/*.css", "/*.ico", "/*.png", "/*.svg", "/*.woff2", "/assets/**", "/media/**").permitAll()
                     // Angular client-side routes — must be permitted so requests fall through to the SPA
                     // index.html fallback (SpaWebConfig 404 handler). Auth is enforced by the Angular authGuard.
-                    .requestMatchers("/login", "/reader", "/bookmarks/**", "/youtube/**", "/admin/**", "/search/**").permitAll()
+                    .requestMatchers("/login", "/reader", "/bookmarks/**", "/youtube/**", "/admin/**", "/search/**", "/signup", "/billing", "/billing/**").permitAll()
                     .anyRequest().authenticated()
             }
             .exceptionHandling { ex ->
