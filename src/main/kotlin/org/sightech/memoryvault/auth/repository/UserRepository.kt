@@ -9,4 +9,5 @@ interface UserRepository : JpaRepository<User, UUID> {
     fun findByEmailAndDeletedAtIsNull(email: String): User?
     fun findByIdAndDeletedAtIsNull(id: UUID): User?
     fun findAllByTierAndDeletedAtIsNull(tier: Tier): List<User>
+    fun findByStripeCustomerIdAndDeletedAtIsNull(stripeCustomerId: String): User?
 }

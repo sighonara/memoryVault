@@ -25,7 +25,7 @@ class StripeService(
     @Value("\${memoryvault.billing.stripe-premium-annual-price-id}") private val premiumAnnualPriceId: String,
     @Value("\${memoryvault.billing.stripe-archive-monthly-price-id}") private val archiveMonthlyPriceId: String,
     @Value("\${memoryvault.billing.stripe-archive-annual-price-id}") private val archiveAnnualPriceId: String
-) {
+) : StripeGateway {
     private val log = LoggerFactory.getLogger(javaClass)
 
     @PostConstruct
@@ -34,7 +34,7 @@ class StripeService(
         log.info("Stripe client initialized (key prefix={})", secretKey.take(8))
     }
 
-    fun findOrCreateCustomer(email: String): Customer {
+    override fun findOrCreateCustomer(email: String): Customer {
         require(!email.contains("'")) { "Email contains character illegal in Stripe search query" }
         val existing = Customer.search(
             CustomerSearchParams.builder()
@@ -50,7 +50,7 @@ class StripeService(
         )
     }
 
-    fun createCheckoutSession(
+    override fun createCheckoutSession(
         customerId: String,
         tier: Tier,
         interval: BillingInterval,
@@ -73,7 +73,7 @@ class StripeService(
         return CheckoutSession.create(params)
     }
 
-    fun createPortalSession(customerId: String, returnUrl: String): PortalSession {
+    override fun createPortalSession(customerId: String, returnUrl: String): PortalSession {
         val params = PortalSessionCreateParams.builder()
             .setCustomer(customerId)
             .setReturnUrl(returnUrl)
