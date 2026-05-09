@@ -5,6 +5,7 @@ import org.sightech.memoryvault.auth.dto.UserProfileDto
 import org.sightech.memoryvault.auth.repository.UserRepository
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -17,6 +18,10 @@ class UserController(private val userRepository: UserRepository) {
 
     @GetMapping
     fun getMe(): ResponseEntity<UserProfileDto> {
+        val auth = SecurityContextHolder.getContext().authentication
+        if (auth == null || !auth.isAuthenticated) {
+            return ResponseEntity.status(401).build()
+        }
         val userId = CurrentUser.userId()
         val user = userRepository.findByIdAndDeletedAtIsNull(userId)
             ?: return ResponseEntity.notFound().build()

@@ -47,12 +47,17 @@ class CognitoJwtFilter(
 
     private fun provisionUser(email: String, roleHint: String): User {
         val role = runCatching { UserRole.valueOf(roleHint) }.getOrDefault(UserRole.VIEWER)
-        val user = userRepository.save(User(
-            email = email,
-            displayName = email.substringBefore("@"),
-            role = role
-        ))
-        log.info("Auto-provisioned user email={} role={}", email, role)
-        return user
+        return try {
+            val user = userRepository.save(User(
+                email = email,
+                displayName = email.substringBefore("@"),
+                role = role
+            ))
+            log.info("Auto-provisioned user email={} role={}", email, role)
+            user
+        } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
+            log.info("Concurrent provision for email={}, fetching existing row", email)
+            userRepository.findByEmailAndDeletedAtIsNull(email) ?: throw ex
+        }
     }
 }
