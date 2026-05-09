@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service
 @Service
 @Profile("!test")
 class StripeService(
-    @Value("\${memoryvault.billing.stripe-secret-key}") val secretKey: String,
+    @Value("\${memoryvault.billing.stripe-secret-key}") private val secretKey: String,
     @Value("\${memoryvault.billing.stripe-webhook-secret}") val webhookSecret: String,
     @Value("\${memoryvault.billing.stripe-premium-monthly-price-id}") private val premiumMonthlyPriceId: String,
     @Value("\${memoryvault.billing.stripe-premium-annual-price-id}") private val premiumAnnualPriceId: String,
@@ -35,6 +35,7 @@ class StripeService(
     }
 
     fun findOrCreateCustomer(email: String): Customer {
+        require(!email.contains("'")) { "Email contains character illegal in Stripe search query" }
         val existing = Customer.search(
             CustomerSearchParams.builder()
                 .setQuery("email:'$email'")
