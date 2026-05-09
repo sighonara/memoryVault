@@ -69,6 +69,7 @@ class StripeService(
             )
             .setSuccessUrl(successUrl)
             .setCancelUrl(cancelUrl)
+            .putAllMetadata(mapOf("tier" to tier.name, "interval" to interval.name))
             .build()
         return CheckoutSession.create(params)
     }
