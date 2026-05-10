@@ -39,6 +39,13 @@ type Query {
 
     # Search
     search(query: String!, types: [String]): [SearchResult!]!
+
+    # Billing / user profile
+    me: UserProfile!
+    subscription: SubscriptionInfo
+
+    # Admin users
+    adminUsers(limit: Int, offset: Int): [AdminUserView!]!
 }
 
 type Mutation {
@@ -89,4 +96,33 @@ type Mutation {
     updateBackupProvider(id: UUID!, input: BackupProviderInput!): BackupProvider
     deleteBackupProvider(id: UUID!): Boolean!
     triggerBackfill: Int!
+
+    # Admin user management
+    adminSetUserTier(userId: UUID!, tier: String!): Boolean!
+    adminSetUserActive(userId: UUID!, active: Boolean!): Boolean!
+}
+
+type UserProfile {
+    id: UUID!
+    email: String!
+    displayName: String!
+    tier: String!
+    role: String!
+}
+
+type SubscriptionInfo {
+    tier: String!
+    status: String!
+    billingInterval: String!
+    gracePeriodEndsAt: Instant
+}
+
+type AdminUserView {
+    id: UUID!
+    email: String!
+    displayName: String!
+    tier: String!
+    role: String!
+    subscriptionStatus: String
+    createdAt: Instant!
 }
