@@ -88,7 +88,7 @@ class YoutubeListService(
                 val metadata = ytDlpService.fetchPlaylistMetadata(list.url)
                 videoSyncService.syncList(list, metadata)
             } catch (e: Exception) {
-                log.warn("Refresh failed for list={}: {}", list.id, e.message)
+                log.warn("Refresh failed for list={}: {}", list.id, e.message, e)
                 val currentList = youtubeListRepository.findById(list.id).orElse(list)
                 currentList.failureCount++
                 currentList.updatedAt = Instant.now()

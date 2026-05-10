@@ -99,14 +99,18 @@ class VideoSyncService(
             else -> 0L  // FREE — no video downloads
         }
 
+        val baseUsedMinutes = if (limitMinutes != null && limitMinutes > 0L)
+            videoRepository.sumDownloadedDurationMinutesByUserId(list.userId) else 0L
+        var dispatchingMinutes = 0L
+
         for (video in newVideos) {
             if (limitMinutes != null) {
-                val usedMinutes = videoRepository.sumDownloadedDurationMinutesByUserId(list.userId)
                 val videoDuration = (video.durationMinutes ?: 0).toLong()
-                if (usedMinutes + videoDuration > limitMinutes) {
+                if (limitMinutes == 0L || baseUsedMinutes + dispatchingMinutes + videoDuration > limitMinutes) {
                     log.debug("Skipping download videoId={} — hours limit reached userId={}", video.id, list.userId)
                     continue
                 }
+                dispatchingMinutes += videoDuration
             }
             videoDownloader.download(video.youtubeUrl, video.id)
         }

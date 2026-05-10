@@ -1,8 +1,10 @@
 package org.sightech.memoryvault.youtube.controller
 
 import org.sightech.memoryvault.auth.CurrentUser
+import org.sightech.memoryvault.auth.entity.UserRole
+import org.sightech.memoryvault.auth.repository.UserRepository
 import org.sightech.memoryvault.billing.entity.SubscriptionStatus
-import org.sightech.memoryvault.billing.repository.SubscriptionRepository
+import org.sightech.memoryvault.billing.service.BillingService
 import org.sightech.memoryvault.storage.StorageService
 import org.sightech.memoryvault.youtube.repository.VideoRepository
 import org.slf4j.LoggerFactory
@@ -18,21 +20,27 @@ import java.util.UUID
 class VideoController(
     private val videoRepository: VideoRepository,
     private val storageService: StorageService,
-    private val subscriptionRepository: SubscriptionRepository
+    private val billingService: BillingService,
+    private val userRepository: UserRepository
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
     @GetMapping("/{id}/download")
     fun download(@PathVariable id: UUID): ResponseEntity<InputStreamResource> {
         val userId = CurrentUser.userId()
+        val user = userRepository.findByIdAndDeletedAtIsNull(userId)
+            ?: return ResponseEntity.status(401).build()
+
         val video = videoRepository.findByIdAndUserId(id, userId)
             ?: return ResponseEntity.notFound().build()
         val filePath = video.filePath
             ?: return ResponseEntity.notFound().build()
 
-        val sub = subscriptionRepository.findByUserId(userId)
-        val allowed = sub != null && (sub.status == SubscriptionStatus.ACTIVE ||
-                sub.status == SubscriptionStatus.GRACE_PERIOD)
+        // OWNER users always have access; paid users need an active or grace-period subscription
+        val allowed = user.role == UserRole.OWNER || run {
+            val sub = billingService.getSubscription(user)
+            sub != null && (sub.status == SubscriptionStatus.ACTIVE || sub.status == SubscriptionStatus.GRACE_PERIOD)
+        }
         if (!allowed) return ResponseEntity.status(403).build()
 
         log.info("Video download videoId={} userId={}", id, userId)
