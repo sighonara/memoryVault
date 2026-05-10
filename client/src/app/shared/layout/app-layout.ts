@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, inject, OnInit } from '@angular/cor
 import { RouterOutlet } from '@angular/router';
 import { TopBarComponent } from './top-bar';
 import { WebSocketService } from '../../core/services/websocket.service';
+import { TierService } from '../../core/services/tier.service';
 
 @Component({
   selector: 'app-layout',
@@ -13,8 +14,10 @@ import { WebSocketService } from '../../core/services/websocket.service';
 })
 export class AppLayoutComponent implements OnInit {
   private ws = inject(WebSocketService);
+  private tierService = inject(TierService);
 
   ngOnInit() {
     this.ws.connect();
+    this.tierService.load();
   }
 }

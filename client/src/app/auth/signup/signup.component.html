@@ -1,0 +1,30 @@
+<div class="signup-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Create Account</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      @if (success()) {
+        <p>Check your email to verify your account, then <a routerLink="/login">sign in</a>.</p>
+      } @else {
+        <form (ngSubmit)="signup()">
+          <mat-form-field appearance="outline">
+            <mat-label>Email</mat-label>
+            <input matInput type="email" [(ngModel)]="email" name="email" required />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Password</mat-label>
+            <input matInput type="password" [(ngModel)]="password" name="password" required />
+          </mat-form-field>
+          @if (error()) {
+            <p class="error">{{ error() }}</p>
+          }
+          <button mat-raised-button color="primary" type="submit" [disabled]="loading()">
+            {{ loading() ? 'Creating account…' : 'Create Account' }}
+          </button>
+        </form>
+        <p><a routerLink="/login">Already have an account? Sign in</a></p>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>

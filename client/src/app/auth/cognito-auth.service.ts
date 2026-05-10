@@ -51,6 +51,15 @@ export class CognitoAuthService {
     });
   }
 
+  signUp(email: string, password: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.userPool.signUp(email, password, [], [], (err) => {
+        if (err) { reject(err); return; }
+        resolve();
+      });
+    });
+  }
+
   logout(): void {
     if (!this._userPool) return;
     const user = this._userPool.getCurrentUser();
