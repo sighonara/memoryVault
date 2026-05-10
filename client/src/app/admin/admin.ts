@@ -134,7 +134,7 @@ export class AdminComponent implements OnInit {
       fetchPolicy: 'network-only'
     }).subscribe({
       next: (r: any) => this.adminUsers.set(r.data.adminUsers),
-      error: () => {}
+      error: (e: any) => console.error('Failed to load admin users', e)
     });
   }
 
