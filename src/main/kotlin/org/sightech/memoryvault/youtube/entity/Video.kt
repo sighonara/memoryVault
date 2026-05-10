@@ -45,6 +45,9 @@ class Video(
     @Column(name = "duration_seconds")
     var durationSeconds: Int? = null,
 
+    @Column(name = "duration_minutes")
+    var durationMinutes: Int? = null,
+
     @Column(name = "removed_from_youtube", nullable = false)
     var removedFromYoutube: Boolean = false,
 

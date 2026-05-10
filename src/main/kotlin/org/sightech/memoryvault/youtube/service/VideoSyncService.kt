@@ -1,10 +1,14 @@
 package org.sightech.memoryvault.youtube.service
 
+import org.sightech.memoryvault.auth.entity.Tier
+import org.sightech.memoryvault.auth.entity.UserRole
+import org.sightech.memoryvault.auth.repository.UserRepository
 import org.sightech.memoryvault.youtube.entity.Video
 import org.sightech.memoryvault.youtube.entity.YoutubeList
 import org.sightech.memoryvault.youtube.repository.VideoRepository
 import org.sightech.memoryvault.youtube.repository.YoutubeListRepository
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.Instant
 
@@ -24,7 +28,10 @@ class VideoSyncService(
     private val ytDlpService: YtDlpService,
     private val videoRepository: VideoRepository,
     private val youtubeListRepository: YoutubeListRepository,
-    private val videoDownloader: VideoDownloader
+    private val videoDownloader: VideoDownloader,
+    private val userRepository: UserRepository,
+    @Value("\${memoryvault.billing.premium-video-hours-limit:20}") private val premiumHoursLimit: Int,
+    @Value("\${memoryvault.billing.archive-video-hours-limit:100}") private val archiveHoursLimit: Int
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -71,7 +78,8 @@ class VideoSyncService(
                     description = meta.description,
                     channelName = meta.channel,
                     youtubeUrl = meta.url,
-                    durationSeconds = meta.durationSeconds
+                    durationSeconds = meta.durationSeconds,
+                    durationMinutes = if (meta.durationSeconds != null) (meta.durationSeconds + 59) / 60 else null
                 )
             )
         }
@@ -83,7 +91,23 @@ class VideoSyncService(
         // Dispatch downloads asynchronously. AsyncVideoDownloader owns the post-download
         // DB write (filePath, downloadedAt) and the VideoDownloadCompleted event. Callers
         // see "dispatched" counts here, not completion counts.
+        val owner = userRepository.findByIdAndDeletedAtIsNull(list.userId)
+        val limitMinutes: Long? = when {
+            owner?.role == UserRole.OWNER -> null  // no limit
+            owner?.tier == Tier.ARCHIVE  -> archiveHoursLimit.toLong() * 60
+            owner?.tier == Tier.PREMIUM  -> premiumHoursLimit.toLong() * 60
+            else -> 0L  // FREE — no video downloads
+        }
+
         for (video in newVideos) {
+            if (limitMinutes != null) {
+                val usedMinutes = videoRepository.sumDownloadedDurationMinutesByUserId(list.userId)
+                val videoDuration = (video.durationMinutes ?: 0).toLong()
+                if (usedMinutes + videoDuration > limitMinutes) {
+                    log.debug("Skipping download videoId={} — hours limit reached userId={}", video.id, list.userId)
+                    continue
+                }
+            }
             videoDownloader.download(video.youtubeUrl, video.id)
         }
 

@@ -1,10 +1,12 @@
 package org.sightech.memoryvault.backup.service
 
+import org.sightech.memoryvault.auth.entity.Tier
 import org.sightech.memoryvault.backup.entity.*
 import org.sightech.memoryvault.backup.provider.BackupProviderFactory
 import org.sightech.memoryvault.backup.provider.VideoBackupMetadata
 import org.sightech.memoryvault.backup.repository.BackupProviderRepository
 import org.sightech.memoryvault.backup.repository.BackupRecordRepository
+import org.sightech.memoryvault.billing.tier.TierGate
 import org.sightech.memoryvault.crypto.EncryptionService
 import org.sightech.memoryvault.storage.StorageService
 import org.sightech.memoryvault.websocket.VideoDownloadCompleted
@@ -83,6 +85,7 @@ class BackupService(
         }
     }
 
+    @TierGate(Tier.ARCHIVE)
     fun addProvider(userId: UUID, type: BackupProviderType, name: String, credentialsJson: String, isPrimary: Boolean): BackupProviderEntity {
         val encrypted = encryptionService.encrypt(credentialsJson)
         val provider = BackupProviderEntity(
@@ -148,6 +151,7 @@ class BackupService(
         return downloadedIds.count { it !in backedUpIds }
     }
 
+    @TierGate(Tier.ARCHIVE)
     fun triggerBackfill(userId: UUID): Int {
         val primary = providerRepo.findPrimaryByUserId(userId) ?: return 0
         val downloadedIds = videoRepo.findDownloadedVideoIdsByUserId(userId)

@@ -3,6 +3,10 @@ package org.sightech.memoryvault.youtube.service
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.sightech.memoryvault.auth.entity.Tier
+import org.sightech.memoryvault.auth.entity.User
+import org.sightech.memoryvault.auth.entity.UserRole
+import org.sightech.memoryvault.auth.repository.UserRepository
 import org.sightech.memoryvault.youtube.entity.Video
 import org.sightech.memoryvault.youtube.entity.YoutubeList
 import org.sightech.memoryvault.youtube.repository.VideoRepository
@@ -17,17 +21,31 @@ class VideoSyncServiceTest {
     private val videoRepository = mockk<VideoRepository>()
     private val youtubeListRepository = mockk<YoutubeListRepository>()
     private val videoDownloader = mockk<VideoDownloader>(relaxed = true)
+    private val userRepository = mockk<UserRepository>()
 
-    private val service = VideoSyncService(ytDlpService, videoRepository, youtubeListRepository, videoDownloader)
+    private val service = VideoSyncService(
+        ytDlpService, videoRepository, youtubeListRepository, videoDownloader, userRepository,
+        premiumHoursLimit = 20, archiveHoursLimit = 100
+    )
 
     private val userId = UUID.fromString("00000000-0000-0000-0000-000000000001")
     private val list = YoutubeList(userId = userId, youtubeListId = "PLtest", url = "https://youtube.com/playlist?list=PLtest")
+
+    private val ownerUser = User(
+        id = userId,
+        email = "owner@example.com",
+        displayName = "Owner",
+        role = UserRole.OWNER,
+        tier = Tier.FREE
+    )
 
     @BeforeEach
     fun setUp() {
         every { youtubeListRepository.findById(list.id) } returns Optional.of(list)
         every { youtubeListRepository.save(any()) } answers { firstArg() }
         every { videoRepository.save(any()) } answers { firstArg() }
+        every { userRepository.findByIdAndDeletedAtIsNull(userId) } returns ownerUser
+        every { videoRepository.sumDownloadedDurationMinutesByUserId(userId) } returns 0L
     }
 
     @Test

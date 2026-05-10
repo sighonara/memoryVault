@@ -4,6 +4,10 @@ import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.sightech.memoryvault.auth.entity.Tier
+import org.sightech.memoryvault.auth.entity.User
+import org.sightech.memoryvault.auth.entity.UserRole
+import org.sightech.memoryvault.auth.repository.UserRepository
 import org.sightech.memoryvault.feed.entity.Feed
 import org.sightech.memoryvault.feed.entity.FeedCategory
 import org.sightech.memoryvault.feed.repository.FeedItemRepository
@@ -25,9 +29,20 @@ class FeedServiceTest {
     private val rssFetchService = mockk<RssFetchService>()
     private val feedCategoryService = mockk<FeedCategoryService>()
     private val eventPublisher = mockk<ApplicationEventPublisher>(relaxed = true)
-    private val service = FeedService(feedRepository, feedItemRepository, rssFetchService, feedCategoryService, eventPublisher)
+    private val userRepository = mockk<UserRepository>()
+    private val service = FeedService(
+        feedRepository, feedItemRepository, rssFetchService, feedCategoryService, eventPublisher,
+        userRepository, freeFeedLimit = 100L
+    )
     private val userId = UUID.fromString("00000000-0000-0000-0000-000000000001")
     private val defaultCategory = FeedCategory(userId = userId, name = "Subscribed")
+    private val ownerUser = User(
+        id = userId,
+        email = "owner@example.com",
+        displayName = "Owner",
+        role = UserRole.OWNER,
+        tier = Tier.FREE
+    )
 
     @BeforeEach
     fun setUp() {
@@ -39,6 +54,9 @@ class FeedServiceTest {
         every { securityContext.authentication } returns authentication
         every { authentication.principal } returns userId.toString()
         SecurityContextHolder.setContext(securityContext)
+
+        // Default: owner user (no tier limit)
+        every { userRepository.findByIdAndDeletedAtIsNull(userId) } returns ownerUser
     }
 
     @AfterTest

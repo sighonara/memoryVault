@@ -3,6 +3,7 @@ package org.sightech.memoryvault.youtube.repository
 import org.sightech.memoryvault.youtube.entity.Video
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 import java.util.UUID
 
 interface VideoRepository : JpaRepository<Video, UUID> {
@@ -40,4 +41,10 @@ interface VideoRepository : JpaRepository<Video, UUID> {
 
     @Query("SELECT v.id FROM Video v WHERE v.youtubeList.userId = :userId AND v.youtubeList.deletedAt IS NULL AND v.downloadedAt IS NOT NULL")
     fun findDownloadedVideoIdsByUserId(userId: UUID): List<UUID>
+
+    @Query("SELECT COALESCE(SUM(v.durationMinutes), 0) FROM Video v WHERE v.youtubeList.userId = :userId AND v.youtubeList.deletedAt IS NULL AND v.filePath IS NOT NULL")
+    fun sumDownloadedDurationMinutesByUserId(@Param("userId") userId: UUID): Long
+
+    @Query("SELECT v FROM Video v WHERE v.youtubeList.userId = :userId AND v.filePath IS NOT NULL AND v.youtubeList.deletedAt IS NULL")
+    fun findAllWithFilePathByUserId(@Param("userId") userId: UUID): List<Video>
 }

@@ -1,11 +1,16 @@
 package org.sightech.memoryvault.feed.service
 
 import org.sightech.memoryvault.auth.CurrentUser
+import org.sightech.memoryvault.auth.entity.Tier
+import org.sightech.memoryvault.auth.entity.UserRole
+import org.sightech.memoryvault.auth.repository.UserRepository
+import org.sightech.memoryvault.billing.tier.TierRequiredException
 import org.sightech.memoryvault.feed.entity.Feed
 import org.sightech.memoryvault.feed.repository.FeedItemRepository
 import org.sightech.memoryvault.feed.repository.FeedRepository
 import org.sightech.memoryvault.websocket.FeedSyncCompleted
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import java.time.Instant
@@ -17,13 +22,22 @@ class FeedService(
     private val feedItemRepository: FeedItemRepository,
     private val rssFetchService: RssFetchService,
     private val feedCategoryService: FeedCategoryService,
-    private val eventPublisher: ApplicationEventPublisher
+    private val eventPublisher: ApplicationEventPublisher,
+    private val userRepository: UserRepository,
+    @Value("\${memoryvault.billing.free-feed-limit:100}") private val freeFeedLimit: Long
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     suspend fun addFeed(url: String, categoryId: UUID? = null): Feed {
         val userId = CurrentUser.userId()
+        val user = userRepository.findByIdAndDeletedAtIsNull(userId)
+        if (user != null && user.role != UserRole.OWNER && user.tier == Tier.FREE) {
+            val count = feedRepository.countByUserIdAndDeletedAtIsNull(userId)
+            if (count >= freeFeedLimit) {
+                throw TierRequiredException(Tier.PREMIUM)
+            }
+        }
         val category = if (categoryId != null) {
             feedCategoryService.getCategoryById(categoryId)
                 ?: feedCategoryService.getSubscribedCategory()

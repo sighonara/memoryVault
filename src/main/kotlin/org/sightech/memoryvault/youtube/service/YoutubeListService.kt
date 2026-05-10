@@ -1,6 +1,8 @@
 package org.sightech.memoryvault.youtube.service
 
 import org.sightech.memoryvault.auth.CurrentUser
+import org.sightech.memoryvault.auth.entity.Tier
+import org.sightech.memoryvault.billing.tier.TierGate
 import org.sightech.memoryvault.youtube.entity.YoutubeList
 import org.sightech.memoryvault.youtube.repository.VideoRepository
 import org.sightech.memoryvault.youtube.repository.YoutubeListRepository
@@ -25,6 +27,7 @@ class YoutubeListService(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
+    @TierGate(Tier.PREMIUM)
     fun addList(url: String): Pair<YoutubeList, SyncResult> {
         val userId = CurrentUser.userId()
         val playlistId = extractPlaylistId(url)
@@ -70,6 +73,7 @@ class YoutubeListService(
         return youtubeListRepository.save(list)
     }
 
+    @TierGate(Tier.PREMIUM)
     fun refreshList(listId: UUID?): List<SyncResult> {
         val userId = CurrentUser.userId()
         val lists = if (listId != null) {

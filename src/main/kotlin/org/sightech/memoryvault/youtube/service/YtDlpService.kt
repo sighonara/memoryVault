@@ -80,7 +80,10 @@ class YtDlpService(
 
         val process = try {
             ProcessBuilder(
-                "yt-dlp", "-o", outputPath, videoUrl
+                "yt-dlp",
+                "--format", "bestvideo[height<=1080]+bestaudio/best[height<=1080]",
+                "-o", outputPath,
+                videoUrl
             )
                 .redirectErrorStream(false)
                 .start()
