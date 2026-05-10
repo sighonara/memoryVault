@@ -3,6 +3,7 @@ package org.sightech.memoryvault.graphql
 import org.sightech.memoryvault.auth.entity.Tier
 import org.sightech.memoryvault.auth.repository.UserRepository
 import org.sightech.memoryvault.billing.service.BillingService
+import org.sightech.memoryvault.graphql.dto.AdminUserView
 import org.slf4j.LoggerFactory
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.MutationMapping
@@ -10,16 +11,6 @@ import org.springframework.graphql.data.method.annotation.QueryMapping
 import org.springframework.stereotype.Controller
 import java.time.Instant
 import java.util.UUID
-
-data class AdminUserView(
-    val id: UUID,
-    val email: String,
-    val displayName: String,
-    val tier: String,
-    val role: String,
-    val subscriptionStatus: String?,
-    val createdAt: Instant
-)
 
 @Controller
 class AdminUserResolver(
@@ -59,7 +50,7 @@ class AdminUserResolver(
 
     @MutationMapping
     fun adminSetUserActive(@Argument userId: UUID, @Argument active: Boolean): Boolean {
-        val user = userRepository.findByIdAndDeletedAtIsNull(userId) ?: return false
+        val user = userRepository.findById(userId).orElse(null) ?: return false
         user.deletedAt = if (active) null else Instant.now()
         userRepository.save(user)
         log.info("Admin set active userId={} active={}", userId, active)
