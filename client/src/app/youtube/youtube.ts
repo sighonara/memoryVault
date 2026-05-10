@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { MatListModule } from '@angular/material/list';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -10,12 +11,14 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { YoutubeStore } from './youtube.store';
 import { YoutubeListDialogComponent } from './youtube-list-dialog';
+import { TierService } from '../core/services/tier.service';
 
 @Component({
   selector: 'app-youtube',
   standalone: true,
   imports: [
     DatePipe,
+    RouterLink,
     MatListModule,
     MatButtonModule,
     MatIconModule,
@@ -26,6 +29,7 @@ import { YoutubeListDialogComponent } from './youtube-list-dialog';
     MatSidenavModule,
   ],
   template: `
+    @if (tierService.isAtLeast('PREMIUM') || tierService.isOwner()) {
     <mat-sidenav-container class="youtube-container">
       <mat-sidenav mode="side" opened class="yt-sidebar">
         <mat-toolbar class="sidebar-toolbar">
@@ -131,6 +135,13 @@ import { YoutubeListDialogComponent } from './youtube-list-dialog';
         }
       </mat-sidenav-content>
     </mat-sidenav-container>
+    } @else {
+    <div class="tier-gate" style="text-align:center;padding:64px">
+      <mat-icon style="font-size:48px;height:48px;width:48px">lock</mat-icon>
+      <h3>YouTube Archival requires the Premium tier</h3>
+      <a mat-raised-button color="primary" routerLink="/billing">Upgrade</a>
+    </div>
+    }
   `,
   styles: [`
     .youtube-container { height: 100%; background: #fff; }
@@ -236,6 +247,7 @@ import { YoutubeListDialogComponent } from './youtube-list-dialog';
 })
 export class YoutubeComponent implements OnInit {
   readonly store = inject(YoutubeStore);
+  readonly tierService = inject(TierService);
   private dialog = inject(MatDialog);
   private searchTimeout: ReturnType<typeof setTimeout> | null = null;
 

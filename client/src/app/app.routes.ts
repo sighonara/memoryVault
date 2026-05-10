@@ -37,6 +37,18 @@ export const routes: Routes = [
         path: 'search',
         loadComponent: () => import('./search/search').then(m => m.SearchComponent)
       },
+      {
+        path: 'billing',
+        loadComponent: () => import('./feature-billing/billing.component').then(m => m.BillingComponent)
+      },
+      {
+        path: 'billing/success',
+        loadComponent: () => import('./feature-billing/billing-success.component').then(m => m.BillingSuccessComponent)
+      },
+      {
+        path: 'billing/cancelled',
+        loadComponent: () => import('./feature-billing/billing-cancelled.component').then(m => m.BillingCancelledComponent)
+      },
     ],
   },
 ];

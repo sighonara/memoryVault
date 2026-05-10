@@ -1,0 +1,10 @@
+.billing-page {
+  max-width: 600px;
+  margin: 32px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  mat-card-content { display: flex; flex-direction: column; gap: 8px; }
+  button { margin-right: 8px; }
+  .warn { color: var(--mat-sys-error); }
+}

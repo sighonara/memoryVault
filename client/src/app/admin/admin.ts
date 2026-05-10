@@ -1,6 +1,8 @@
-import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTableModule } from '@angular/material/table';
+import { Apollo, gql } from 'apollo-angular';
 import { AdminStore } from './admin.store';
 import { StatsPanelComponent } from './stats-panel/stats-panel';
 import { JobsTableComponent } from './jobs-table/jobs-table';
@@ -13,6 +15,7 @@ import { BackupPanelComponent } from './backup-panel';
   imports: [
     MatTabsModule,
     MatProgressSpinnerModule,
+    MatTableModule,
     StatsPanelComponent,
     JobsTableComponent,
     LogViewerComponent,
@@ -63,18 +66,45 @@ import { BackupPanelComponent } from './backup-panel';
             (onBackfill)="store.triggerBackfill()"
           />
         </mat-tab>
+        <mat-tab label="Users">
+          <div class="users-tab">
+            <table mat-table [dataSource]="adminUsers()">
+              <ng-container matColumnDef="email">
+                <th mat-header-cell *matHeaderCellDef>Email</th>
+                <td mat-cell *matCellDef="let u">{{ u.email }}</td>
+              </ng-container>
+              <ng-container matColumnDef="tier">
+                <th mat-header-cell *matHeaderCellDef>Tier</th>
+                <td mat-cell *matCellDef="let u">{{ u.tier }}</td>
+              </ng-container>
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let u">{{ u.subscriptionStatus ?? '—' }}</td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="['email','tier','status']"></tr>
+              <tr mat-row *matRowDef="let row; columns: ['email','tier','status']"></tr>
+            </table>
+            @if (adminUsers().length === 0) {
+              <p>Click the Users tab to load</p>
+            }
+          </div>
+        </mat-tab>
       </mat-tab-group>
     </div>
   `,
   styles: [`
     .admin-page { height: 100%; display: flex; flex-direction: column; }
     .loading { display: flex; justify-content: center; padding: 16px; }
+    .users-tab { padding: 16px; }
+    .users-tab table { width: 100%; }
   `],
 })
 export class AdminComponent implements OnInit {
   readonly store = inject(AdminStore);
+  private apollo = inject(Apollo);
   private destroyRef = inject(DestroyRef);
   private followInterval: ReturnType<typeof setInterval> | null = null;
+  readonly adminUsers = signal<any[]>([]);
 
   constructor() {
     this.destroyRef.onDestroy(() => this.stopFollow());
@@ -92,9 +122,20 @@ export class AdminComponent implements OnInit {
     else if (index === 1) this.store.loadJobs();
     else if (index === 2) this.store.loadLogs();
     else if (index === 3) { this.store.loadBackupProviders(); this.store.loadBackupStats(); }
+    else if (index === 4) this.loadAdminUsers();
 
     // Stop follow when navigating away from logs tab
     if (index !== 2) this.stopFollow();
+  }
+
+  loadAdminUsers(): void {
+    this.apollo.query({
+      query: gql`query { adminUsers(limit: 50) { id email displayName tier role subscriptionStatus createdAt } }`,
+      fetchPolicy: 'network-only'
+    }).subscribe({
+      next: (r: any) => this.adminUsers.set(r.data.adminUsers),
+      error: () => {}
+    });
   }
 
   toggleFollow() {

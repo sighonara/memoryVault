@@ -1,3 +1,9 @@
+@if (tierService.tier() === 'FREE' && feedCount() >= 90) {
+  <div class="tier-banner">
+    <span>Approaching 100-feed limit (FREE tier). </span>
+    <a routerLink="/billing">Upgrade to Premium</a>
+  </div>
+}
 <mat-sidenav-container class="reader-container">
   <mat-sidenav mode="side" opened class="reader-sidebar">
     <app-category-sidebar />

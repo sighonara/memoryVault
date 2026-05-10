@@ -1,0 +1,41 @@
+<div class="billing-page">
+  <h2>Billing & Subscription</h2>
+
+  <mat-card>
+    <mat-card-header><mat-card-title>Current Plan</mat-card-title></mat-card-header>
+    <mat-card-content>
+      <p><strong>Tier:</strong> {{ tierService.tier() }}</p>
+      @if (subscription(); as sub) {
+        <p><strong>Status:</strong> {{ sub.status }}</p>
+        @if (sub.gracePeriodEndsAt) {
+          <p class="warn">Grace period ends: {{ sub.gracePeriodEndsAt | date }}</p>
+        }
+        <button mat-stroked-button (click)="openPortal()" [disabled]="loading()">
+          Manage Subscription
+        </button>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  @if (tierService.tier() === 'FREE') {
+    <mat-card>
+      <mat-card-header><mat-card-title>Upgrade to Premium — $3/mo or $30/yr</mat-card-title></mat-card-header>
+      <mat-card-content>
+        <p>Unlimited feeds, full-text search, bookmarks, MCP tools.</p>
+        <button mat-raised-button color="primary" (click)="upgradeToPremium('MONTHLY')" [disabled]="loading()">$3 / month</button>
+        <button mat-button (click)="upgradeToPremium('ANNUAL')" [disabled]="loading()">$30 / year</button>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  @if (tierService.tier() !== 'ARCHIVE') {
+    <mat-card>
+      <mat-card-header><mat-card-title>Upgrade to Archive — $10/mo or $90/yr</mat-card-title></mat-card-header>
+      <mat-card-content>
+        <p>Up to 100h of 1080p video archival + Internet Archive backup.</p>
+        <button mat-raised-button color="accent" (click)="upgradeToArchive('MONTHLY')" [disabled]="loading()">$10 / month</button>
+        <button mat-button (click)="upgradeToArchive('ANNUAL')" [disabled]="loading()">$90 / year</button>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>
