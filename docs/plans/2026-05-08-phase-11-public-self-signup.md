@@ -92,7 +92,7 @@ The Cognito `allow_admin_create_user_only = false` change (Task 1) must be appli
 - Modify: `.env.sample`
 - Modify: `src/main/resources/application-local.properties`
 
-- [ ] **Step 1: Open Cognito to self-registration**
+- [x] **Step 1: Open Cognito to self-registration**
 
 In `terraform/cognito.tf`, change:
 ```hcl
@@ -103,7 +103,7 @@ to:
 allow_admin_create_user_only = false
 ```
 
-- [ ] **Step 2: Add Stripe variables to Terraform**
+- [x] **Step 2: Add Stripe variables to Terraform**
 
 In `terraform/variables.tf`, append:
 ```hcl
@@ -140,7 +140,7 @@ variable "stripe_archive_annual_price_id" {
 }
 ```
 
-- [ ] **Step 3: Pass Stripe vars to user_data template in ec2.tf**
+- [x] **Step 3: Pass Stripe vars to user_data template in ec2.tf**
 
 In `terraform/ec2.tf`, inside the `templatefile(...)` call, add after `encryption_key`:
 ```hcl
@@ -152,7 +152,7 @@ In `terraform/ec2.tf`, inside the `templatefile(...)` call, add after `encryptio
     stripe_archive_annual_price_id   = var.stripe_archive_annual_price_id
 ```
 
-- [ ] **Step 4: Add Stripe vars to user_data.sh env file**
+- [x] **Step 4: Add Stripe vars to user_data.sh env file**
 
 In `terraform/templates/user_data.sh`, inside the `cat > /etc/memoryvault/env` heredoc, append after `MEMORYVAULT_ENCRYPTION_KEY`:
 ```bash
@@ -164,7 +164,7 @@ STRIPE_ARCHIVE_MONTHLY_PRICE_ID=${stripe_archive_monthly_price_id}
 STRIPE_ARCHIVE_ANNUAL_PRICE_ID=${stripe_archive_annual_price_id}
 ```
 
-- [ ] **Step 5: Update .env.sample and local properties**
+- [x] **Step 5: Update .env.sample and local properties**
 
 In `.env.sample`, append:
 ```
@@ -207,9 +207,9 @@ terraform plan
 terraform apply
 ```
 
-Expected: Cognito user pool updated (`allow_admin_create_user_only = false`). No EC2 replacement.
+Expected: Cognito user pool updated (`allow_admin_create_user_only = false`) **and the EC2 instance REPLACED** — `user_data.sh` changes and `ec2.tf` sets `user_data_replace_on_change = true`. Expect EIP reassociation and brief downtime; wait for the new instance's status checks before merging. (Corrected 2026-11-12; the original text said "No EC2 replacement".)
 
-- [ ] **Step 8: Commit Terraform changes**
+- [x] **Step 8: Commit Terraform changes**
 
 ```bash
 git add terraform/cognito.tf terraform/variables.tf terraform/ec2.tf terraform/templates/user_data.sh .env.sample src/main/resources/application-local.properties
@@ -227,7 +227,7 @@ git commit -m "feat: phase 11 terraform prerequisites — Cognito self-signup + 
 - Modify: `src/main/kotlin/org/sightech/memoryvault/auth/repository/UserRepository.kt`
 - Test: `src/test/kotlin/org/sightech/memoryvault/billing/BillingMigrationTest.kt`
 
-- [ ] **Step 1: Add dependencies to build.gradle.kts**
+- [x] **Step 1: Add dependencies to build.gradle.kts**
 
 In `build.gradle.kts`, inside the `dependencies` block, after the AWS SDK section add:
 ```kotlin
@@ -238,7 +238,7 @@ In `build.gradle.kts`, inside the `dependencies` block, after the AWS SDK sectio
     implementation("org.springframework.boot:spring-boot-starter-aop")
 ```
 
-- [ ] **Step 2: Create Tier enum**
+- [x] **Step 2: Create Tier enum**
 
 Create `src/main/kotlin/org/sightech/memoryvault/auth/entity/Tier.kt`:
 ```kotlin
@@ -249,7 +249,7 @@ enum class Tier { FREE, PREMIUM, ARCHIVE }
 
 Ordinal order matters: `FREE.ordinal=0 < PREMIUM.ordinal=1 < ARCHIVE.ordinal=2`. The TierEnforcementAspect will use ordinal comparison.
 
-- [ ] **Step 3: Write the migration test (failing)**
+- [x] **Step 3: Write the migration test (failing)**
 
 Create `src/test/kotlin/org/sightech/memoryvault/billing/BillingMigrationTest.kt`:
 ```kotlin
@@ -321,14 +321,14 @@ class BillingMigrationTest {
 }
 ```
 
-- [ ] **Step 4: Run test — expect compilation failure (Tier not yet on User)**
+- [x] **Step 4: Run test — expect compilation failure (Tier not yet on User)**
 
 ```bash
 ./gradlew test --tests "org.sightech.memoryvault.billing.BillingMigrationTest" 2>&1 | tail -20
 ```
 Expected: compilation error — `User` has no `tier` or `stripeCustomerId` property.
 
-- [ ] **Step 5: Write V10 migration**
+- [x] **Step 5: Write V10 migration**
 
 Create `src/main/resources/db/migration/V10__billing.sql`:
 ```sql
@@ -351,7 +351,7 @@ CREATE INDEX idx_subscriptions_user_id ON subscriptions(user_id);
 CREATE INDEX idx_subscriptions_stripe_subscription_id ON subscriptions(stripe_subscription_id);
 ```
 
-- [ ] **Step 6: Add tier and stripeCustomerId to User entity**
+- [x] **Step 6: Add tier and stripeCustomerId to User entity**
 
 In `src/main/kotlin/org/sightech/memoryvault/auth/entity/User.kt`, add these two fields after `role`:
 ```kotlin
@@ -365,21 +365,21 @@ In `src/main/kotlin/org/sightech/memoryvault/auth/entity/User.kt`, add these two
 
 Also add the import at the top: `import org.sightech.memoryvault.auth.entity.Tier`
 
-- [ ] **Step 7: Add findAllByTier to UserRepository**
+- [x] **Step 7: Add findAllByTier to UserRepository**
 
 In `src/main/kotlin/org/sightech/memoryvault/auth/repository/UserRepository.kt`, add:
 ```kotlin
     fun findAllByTierAndDeletedAtIsNull(tier: Tier): List<User>
 ```
 
-- [ ] **Step 8: Run the migration test — expect pass**
+- [x] **Step 8: Run the migration test — expect pass**
 
 ```bash
 ./gradlew test --tests "org.sightech.memoryvault.billing.BillingMigrationTest" 2>&1 | tail -20
 ```
 Expected: `BUILD SUCCESSFUL`, 2 tests passed.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add build.gradle.kts src/main/kotlin/org/sightech/memoryvault/auth/entity/Tier.kt src/main/kotlin/org/sightech/memoryvault/auth/entity/User.kt src/main/kotlin/org/sightech/memoryvault/auth/repository/UserRepository.kt src/main/resources/db/migration/V10__billing.sql src/test/kotlin/org/sightech/memoryvault/billing/BillingMigrationTest.kt
@@ -396,7 +396,7 @@ git commit -m "feat: V10 migration — billing tier + subscriptions table, Tier 
 - Modify: `src/main/kotlin/org/sightech/memoryvault/scheduling/entity/JobType.kt`
 - Test: `src/test/kotlin/org/sightech/memoryvault/billing/SubscriptionRepositoryTest.kt`
 
-- [ ] **Step 1: Write repository test (failing)**
+- [x] **Step 1: Write repository test (failing)**
 
 Create `src/test/kotlin/org/sightech/memoryvault/billing/SubscriptionRepositoryTest.kt`:
 ```kotlin
@@ -489,14 +489,14 @@ class SubscriptionRepositoryTest {
 }
 ```
 
-- [ ] **Step 2: Run test — expect compilation failure**
+- [x] **Step 2: Run test — expect compilation failure**
 
 ```bash
 ./gradlew test --tests "org.sightech.memoryvault.billing.SubscriptionRepositoryTest" 2>&1 | tail -15
 ```
 Expected: compilation error — billing types not yet defined.
 
-- [ ] **Step 3: Create BillingEnums.kt**
+- [x] **Step 3: Create BillingEnums.kt**
 
 Create `src/main/kotlin/org/sightech/memoryvault/billing/entity/BillingEnums.kt`:
 ```kotlin
@@ -507,7 +507,7 @@ enum class BillingInterval { MONTHLY, ANNUAL }
 enum class SubscriptionStatus { ACTIVE, PAST_DUE, CANCELLED, GRACE_PERIOD }
 ```
 
-- [ ] **Step 4: Create SubscriptionEntity.kt**
+- [x] **Step 4: Create SubscriptionEntity.kt**
 
 Create `src/main/kotlin/org/sightech/memoryvault/billing/entity/SubscriptionEntity.kt`:
 ```kotlin
@@ -551,7 +551,7 @@ class SubscriptionEntity(
 )
 ```
 
-- [ ] **Step 5: Create SubscriptionRepository.kt**
+- [x] **Step 5: Create SubscriptionRepository.kt**
 
 Create `src/main/kotlin/org/sightech/memoryvault/billing/repository/SubscriptionRepository.kt`:
 ```kotlin
@@ -574,21 +574,21 @@ interface SubscriptionRepository : JpaRepository<SubscriptionEntity, UUID> {
 }
 ```
 
-- [ ] **Step 6: Add new JobType values**
+- [x] **Step 6: Add new JobType values**
 
 In `src/main/kotlin/org/sightech/memoryvault/scheduling/entity/JobType.kt`, extend the enum:
 ```kotlin
 enum class JobType { RSS_FETCH, YT_SYNC, BOOKMARK_ARCHIVE, BACKUP_UPLOAD, BACKUP_HEALTH_CHECK, VIDEO_PURGE }
 ```
 
-- [ ] **Step 7: Run the test — expect pass**
+- [x] **Step 7: Run the test — expect pass**
 
 ```bash
 ./gradlew test --tests "org.sightech.memoryvault.billing.SubscriptionRepositoryTest" 2>&1 | tail -15
 ```
 Expected: `BUILD SUCCESSFUL`, 2 tests passed.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/billing/ src/main/kotlin/org/sightech/memoryvault/scheduling/entity/JobType.kt src/test/kotlin/org/sightech/memoryvault/billing/SubscriptionRepositoryTest.kt
@@ -606,7 +606,7 @@ git commit -m "feat: SubscriptionEntity, SubscriptionRepository, BillingEnums, J
 
 The AOP aspect intercepts any `@Component`/`@Service` method annotated with `@TierGate`. It loads the authenticated user from `UserRepository` using `CurrentUser.userId()`, then throws `TierRequiredException` (→ 403) if their tier ordinal is below the required tier. `UserRole.OWNER` bypasses all checks. **Not applicable to `suspend` functions** — those use inline checks (see Task 9).
 
-- [ ] **Step 1: Write the aspect unit test (failing)**
+- [x] **Step 1: Write the aspect unit test (failing)**
 
 Create `src/test/kotlin/org/sightech/memoryvault/billing/TierEnforcementAspectTest.kt`:
 ```kotlin
@@ -703,14 +703,14 @@ class TierEnforcementAspectTest {
 }
 ```
 
-- [ ] **Step 2: Run test — expect compilation failure**
+- [x] **Step 2: Run test — expect compilation failure**
 
 ```bash
 ./gradlew test --tests "org.sightech.memoryvault.billing.TierEnforcementAspectTest" 2>&1 | tail -10
 ```
 Expected: compilation error — tier package types missing.
 
-- [ ] **Step 3: Create TierGate annotation**
+- [x] **Step 3: Create TierGate annotation**
 
 Create `src/main/kotlin/org/sightech/memoryvault/billing/tier/TierGate.kt`:
 ```kotlin
@@ -723,7 +723,7 @@ import org.sightech.memoryvault.auth.entity.Tier
 annotation class TierGate(val value: Tier)
 ```
 
-- [ ] **Step 4: Create TierRequiredException**
+- [x] **Step 4: Create TierRequiredException**
 
 Create `src/main/kotlin/org/sightech/memoryvault/billing/tier/TierRequiredException.kt`:
 ```kotlin
@@ -738,7 +738,7 @@ class TierRequiredException(required: Tier) :
     RuntimeException("This feature requires ${required.name} tier or higher")
 ```
 
-- [ ] **Step 5: Create TierEnforcementAspect**
+- [x] **Step 5: Create TierEnforcementAspect**
 
 Create `src/main/kotlin/org/sightech/memoryvault/billing/tier/TierEnforcementAspect.kt`:
 ```kotlin
@@ -779,14 +779,14 @@ class TierEnforcementAspect(private val userRepository: UserRepository) {
 }
 ```
 
-- [ ] **Step 6: Run the test — expect pass**
+- [x] **Step 6: Run the test — expect pass**
 
 ```bash
 ./gradlew test --tests "org.sightech.memoryvault.billing.TierEnforcementAspectTest" 2>&1 | tail -10
 ```
 Expected: `BUILD SUCCESSFUL`, 5 tests passed.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/billing/tier/ src/test/kotlin/org/sightech/memoryvault/billing/TierEnforcementAspectTest.kt
@@ -805,7 +805,7 @@ git commit -m "feat: @TierGate annotation + TierEnforcementAspect + TierRequired
 
 `CognitoJwtFilter` currently logs a warning and sets no auth when a valid JWT has no matching `users` row. Update it to auto-create the user with `tier=FREE, role=VIEWER`. The `CognitoClaims.role` field (from the `custom:role` Cognito attribute) is used if present, defaulting to `VIEWER`.
 
-- [ ] **Step 1: Update CognitoJwtFilter to auto-provision**
+- [x] **Step 1: Update CognitoJwtFilter to auto-provision**
 
 Replace the `else` branch in `CognitoJwtFilter.doFilterInternal` (the "user not found" case):
 
@@ -850,7 +850,7 @@ import org.sightech.memoryvault.auth.entity.User
 import org.sightech.memoryvault.auth.entity.UserRole
 ```
 
-- [ ] **Step 2: Add SPA routes + webhook permit to SecurityConfig**
+- [x] **Step 2: Add SPA routes + webhook permit to SecurityConfig**
 
 In `SecurityConfig.kt`, add to the `requestMatchers(...).permitAll()` chain:
 ```kotlin
@@ -860,7 +860,7 @@ In `SecurityConfig.kt`, add to the `requestMatchers(...).permitAll()` chain:
 
 Place the `/api/stripe/webhook` line immediately after the `/api/internal/**` line. Place the SPA routes line alongside the other SPA route matchers (`/login`, `/reader`, etc.).
 
-- [ ] **Step 3: Create UserProfileDto**
+- [x] **Step 3: Create UserProfileDto**
 
 Create `src/main/kotlin/org/sightech/memoryvault/auth/dto/UserProfileDto.kt`:
 ```kotlin
@@ -879,7 +879,7 @@ data class UserProfileDto(
 )
 ```
 
-- [ ] **Step 4: Create UserController**
+- [x] **Step 4: Create UserController**
 
 Create `src/main/kotlin/org/sightech/memoryvault/auth/controller/UserController.kt`:
 ```kotlin
@@ -917,7 +917,7 @@ class UserController(private val userRepository: UserRepository) {
 }
 ```
 
-- [ ] **Step 5: Write provisioning integration test**
+- [x] **Step 5: Write provisioning integration test**
 
 Create `src/test/kotlin/org/sightech/memoryvault/auth/UserProvisioningTest.kt`:
 ```kotlin
@@ -983,14 +983,14 @@ class UserProvisioningTest {
 }
 ```
 
-- [ ] **Step 6: Run all tests**
+- [x] **Step 6: Run all tests**
 
 ```bash
 ./gradlew test 2>&1 | tail -20
 ```
 Expected: `BUILD SUCCESSFUL`.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/config/CognitoJwtFilter.kt src/main/kotlin/org/sightech/memoryvault/config/SecurityConfig.kt src/main/kotlin/org/sightech/memoryvault/auth/dto/UserProfileDto.kt src/main/kotlin/org/sightech/memoryvault/auth/controller/UserController.kt src/test/kotlin/org/sightech/memoryvault/auth/UserProvisioningTest.kt
@@ -1007,7 +1007,7 @@ git commit -m "feat: auto-provision Cognito users on first login, GET /api/me"
 
 `StripeService` wraps the Stripe Java SDK. It's `@Profile("!test")` so the real Stripe client is never initialized in integration tests. Tests mock it directly via MockK.
 
-- [ ] **Step 1: Add billing config to application.properties**
+- [x] **Step 1: Add billing config to application.properties**
 
 Append to `src/main/resources/application.properties`:
 ```properties
@@ -1025,7 +1025,7 @@ memoryvault.billing.premium-video-hours-limit=20
 memoryvault.billing.archive-video-hours-limit=100
 ```
 
-- [ ] **Step 2: Write StripeService unit test (failing)**
+- [x] **Step 2: Write StripeService unit test (failing)**
 
 Create `src/test/kotlin/org/sightech/memoryvault/billing/StripeServiceTest.kt`:
 ```kotlin
@@ -1060,14 +1060,14 @@ class StripeServiceTest {
 }
 ```
 
-- [ ] **Step 3: Run test — expect compilation failure**
+- [x] **Step 3: Run test — expect compilation failure**
 
 ```bash
 ./gradlew test --tests "org.sightech.memoryvault.billing.StripeServiceTest" 2>&1 | tail -10
 ```
 Expected: compilation error — StripeService not defined.
 
-- [ ] **Step 4: Create StripeService**
+- [x] **Step 4: Create StripeService**
 
 Create `src/main/kotlin/org/sightech/memoryvault/billing/service/StripeService.kt`:
 ```kotlin
@@ -1159,21 +1159,21 @@ class StripeService(
 }
 ```
 
-- [ ] **Step 5: Run the test — expect pass**
+- [x] **Step 5: Run the test — expect pass**
 
 ```bash
 ./gradlew test --tests "org.sightech.memoryvault.billing.StripeServiceTest" 2>&1 | tail -10
 ```
 Expected: `BUILD SUCCESSFUL`.
 
-- [ ] **Step 6: Run all tests to check for regressions**
+- [x] **Step 6: Run all tests to check for regressions**
 
 ```bash
 ./gradlew test 2>&1 | tail -20
 ```
 Expected: `BUILD SUCCESSFUL`.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/billing/service/StripeService.kt src/main/resources/application.properties src/test/kotlin/org/sightech/memoryvault/billing/StripeServiceTest.kt
@@ -1188,7 +1188,7 @@ git commit -m "feat: StripeService — customer management, checkout/portal sess
 - Create: `src/main/kotlin/org/sightech/memoryvault/billing/controller/BillingController.kt`
 - Test: `src/test/kotlin/org/sightech/memoryvault/billing/BillingServiceTest.kt`
 
-- [ ] **Step 1: Write BillingService unit test (failing)**
+- [x] **Step 1: Write BillingService unit test (failing)**
 
 Create `src/test/kotlin/org/sightech/memoryvault/billing/BillingServiceTest.kt`:
 ```kotlin
@@ -1272,13 +1272,13 @@ class BillingServiceTest {
 }
 ```
 
-- [ ] **Step 2: Run test — expect compilation failure**
+- [x] **Step 2: Run test — expect compilation failure**
 
 ```bash
 ./gradlew test --tests "org.sightech.memoryvault.billing.BillingServiceTest" 2>&1 | tail -10
 ```
 
-- [ ] **Step 3: Create BillingService**
+- [x] **Step 3: Create BillingService**
 
 Create `src/main/kotlin/org/sightech/memoryvault/billing/service/BillingService.kt`:
 ```kotlin
@@ -1397,7 +1397,7 @@ class BillingService(
 }
 ```
 
-- [ ] **Step 4: Create BillingController**
+- [x] **Step 4: Create BillingController**
 
 Create `src/main/kotlin/org/sightech/memoryvault/billing/controller/BillingController.kt`:
 ```kotlin
@@ -1456,14 +1456,14 @@ class BillingController(
 }
 ```
 
-- [ ] **Step 5: Run the test — expect pass**
+- [x] **Step 5: Run the test — expect pass**
 
 ```bash
 ./gradlew test --tests "org.sightech.memoryvault.billing.BillingServiceTest" 2>&1 | tail -10
 ```
 Expected: `BUILD SUCCESSFUL`, 3 tests passed.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/billing/service/BillingService.kt src/main/kotlin/org/sightech/memoryvault/billing/controller/BillingController.kt src/test/kotlin/org/sightech/memoryvault/billing/BillingServiceTest.kt
@@ -1479,7 +1479,7 @@ git commit -m "feat: BillingService + BillingController — checkout, portal, su
 
 The webhook endpoint is unauthenticated (secured by Stripe signature verification). It always returns 200 to prevent Stripe retry floods — errors are logged at WARN for manual investigation.
 
-- [ ] **Step 1: Write webhook controller test (failing)**
+- [x] **Step 1: Write webhook controller test (failing)**
 
 Create `src/test/kotlin/org/sightech/memoryvault/billing/StripeWebhookControllerTest.kt`:
 ```kotlin
@@ -1520,13 +1520,13 @@ class StripeWebhookControllerTest {
 }
 ```
 
-- [ ] **Step 2: Run test — expect compilation failure**
+- [x] **Step 2: Run test — expect compilation failure**
 
 ```bash
 ./gradlew test --tests "org.sightech.memoryvault.billing.StripeWebhookControllerTest" 2>&1 | tail -10
 ```
 
-- [ ] **Step 3: Create StripeWebhookController**
+- [x] **Step 3: Create StripeWebhookController**
 
 Create `src/main/kotlin/org/sightech/memoryvault/billing/controller/StripeWebhookController.kt`:
 ```kotlin
@@ -1612,14 +1612,14 @@ Note: The `tier` and `interval` metadata must be passed when creating the Checko
 .putAllMetadata(mapOf("tier" to tier.name, "interval" to interval.name))
 ```
 
-- [ ] **Step 4: Run all tests**
+- [x] **Step 4: Run all tests**
 
 ```bash
 ./gradlew test 2>&1 | tail -20
 ```
 Expected: `BUILD SUCCESSFUL`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/billing/controller/StripeWebhookController.kt src/main/kotlin/org/sightech/memoryvault/billing/service/StripeService.kt src/test/kotlin/org/sightech/memoryvault/billing/StripeWebhookControllerTest.kt
@@ -1641,7 +1641,7 @@ git commit -m "feat: StripeWebhookController — signature verification + event 
 - Create: `src/main/kotlin/org/sightech/memoryvault/youtube/controller/VideoController.kt`
 - Test: `src/test/kotlin/org/sightech/memoryvault/billing/TierGateEnforcementTest.kt`
 
-- [ ] **Step 1: Write enforcement integration test (failing)**
+- [x] **Step 1: Write enforcement integration test (failing)**
 
 Create `src/test/kotlin/org/sightech/memoryvault/billing/TierGateEnforcementTest.kt`:
 ```kotlin
@@ -1678,13 +1678,13 @@ class TierGateEnforcementTest {
 }
 ```
 
-- [ ] **Step 2: Run test — expect failure (annotation not yet applied)**
+- [x] **Step 2: Run test — expect failure (annotation not yet applied)**
 
 ```bash
 ./gradlew test --tests "org.sightech.memoryvault.billing.TierGateEnforcementTest" 2>&1 | tail -10
 ```
 
-- [ ] **Step 3: Add @TierGate to YoutubeListService**
+- [x] **Step 3: Add @TierGate to YoutubeListService**
 
 In `src/main/kotlin/org/sightech/memoryvault/youtube/service/YoutubeListService.kt`, add annotation imports and annotate:
 ```kotlin
@@ -1700,7 +1700,7 @@ fun addList(url: String): Pair<YoutubeList, SyncResult> { ... }
 fun refreshList(listId: UUID?): List<SyncResult> { ... }
 ```
 
-- [ ] **Step 4: Add @TierGate to BackupService**
+- [x] **Step 4: Add @TierGate to BackupService**
 
 In `src/main/kotlin/org/sightech/memoryvault/backup/service/BackupService.kt`, annotate:
 ```kotlin
@@ -1714,7 +1714,7 @@ fun addProvider(userId: UUID, type: BackupProviderType, name: String, credential
 fun triggerBackfill(userId: UUID): Int { ... }
 ```
 
-- [ ] **Step 5: Add 100-feed FREE limit to FeedService**
+- [x] **Step 5: Add 100-feed FREE limit to FeedService**
 
 `addFeed` is a `suspend fun` so AOP doesn't apply. Add an inline check. First, inject `UserRepository` into `FeedService`. Add it to the constructor and add an import.
 
@@ -1731,7 +1731,7 @@ In `FeedService.addFeed`, add this block immediately after `val userId = Current
 
 Add `@Value("\${memoryvault.billing.free-feed-limit:100}") private val freeFeedLimit: Long` to the `FeedService` constructor, plus imports for `Tier`, `UserRole`, `TierRequiredException`, and `UserRepository`.
 
-- [ ] **Step 6: Add inline tier check to VideoSyncService**
+- [x] **Step 6: Add inline tier check to VideoSyncService**
 
 In `VideoSyncService.syncList`, inject `UserRepository` and add a tier check before calling the downloader. When the list owner's tier is below PREMIUM, skip downloading (just sync metadata) without throwing:
 
@@ -1752,21 +1752,21 @@ if (canDownload) {
 
 Add constructor injection of `UserRepository` and the required imports.
 
-- [ ] **Step 7: Add V11 migration for Video.durationMinutes**
+- [x] **Step 7: Add V11 migration for Video.durationMinutes**
 
 Create `src/main/resources/db/migration/V11__video_duration.sql`:
 ```sql
 ALTER TABLE videos ADD COLUMN duration_minutes INT;
 ```
 
-- [ ] **Step 8: Add durationMinutes to Video entity**
+- [x] **Step 8: Add durationMinutes to Video entity**
 
 In `src/main/kotlin/org/sightech/memoryvault/youtube/entity/Video.kt`, add after the `filePath` field:
 ```kotlin
 var durationMinutes: Int? = null
 ```
 
-- [ ] **Step 9: Cap yt-dlp at 1080p and parse duration**
+- [x] **Step 9: Cap yt-dlp at 1080p and parse duration**
 
 In `src/main/kotlin/org/sightech/memoryvault/youtube/service/YtDlpService.kt`, add `--format "bestvideo[height<=1080]+bestaudio/best[height<=1080]"` to the yt-dlp download command arguments.
 
@@ -1777,7 +1777,7 @@ val durationMinutes = (durationSeconds + 59) / 60  // round up
 ```
 Set this on the Video entity before saving.
 
-- [ ] **Step 10: Add duration sum query to VideoRepository**
+- [x] **Step 10: Add duration sum query to VideoRepository**
 
 In `src/main/kotlin/org/sightech/memoryvault/youtube/repository/VideoRepository.kt`, add:
 ```kotlin
@@ -1791,7 +1791,7 @@ Also add the existing `findAllWithFilePathByUserId` query:
     fun findAllWithFilePathByUserId(userId: UUID): List<Video>
 ```
 
-- [ ] **Step 11: Enforce hours limit in VideoSyncService before download**
+- [x] **Step 11: Enforce hours limit in VideoSyncService before download**
 
 Inject `@Value("\${memoryvault.billing.premium-video-hours-limit:20}") private val premiumHoursLimit: Int` and `@Value("\${memoryvault.billing.archive-video-hours-limit:100}") private val archiveHoursLimit: Int` into `VideoSyncService`.
 
@@ -1807,7 +1807,7 @@ val usedMinutes = videoRepository.sumDurationMinutesByUserId(list.userId)
 val canDownload = limitMinutes == null || (usedMinutes + (video.durationMinutes ?: 0)) <= limitMinutes
 ```
 
-- [ ] **Step 12: Create VideoController for grace-period download**
+- [x] **Step 12: Create VideoController for grace-period download**
 
 Create `src/main/kotlin/org/sightech/memoryvault/youtube/controller/VideoController.kt`:
 ```kotlin
@@ -1860,21 +1860,21 @@ class VideoController(
 }
 ```
 
-- [ ] **Step 13: Run the enforcement test**
+- [x] **Step 13: Run the enforcement test**
 
 ```bash
 ./gradlew test --tests "org.sightech.memoryvault.billing.TierGateEnforcementTest" 2>&1 | tail -10
 ```
 Expected: `BUILD SUCCESSFUL`, 1 test passed.
 
-- [ ] **Step 14: Run all tests**
+- [x] **Step 14: Run all tests**
 
 ```bash
 ./gradlew test 2>&1 | tail -20
 ```
 Expected: `BUILD SUCCESSFUL`.
 
-- [ ] **Step 15: Commit**
+- [x] **Step 15: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/ src/test/kotlin/org/sightech/memoryvault/billing/TierGateEnforcementTest.kt
@@ -1889,7 +1889,7 @@ git commit -m "feat: tier enforcement — PREMIUM gates video, ARCHIVE gates Bac
 - Create: `src/main/kotlin/org/sightech/memoryvault/billing/BillingSyncRegistrar.kt`
 - Test: `src/test/kotlin/org/sightech/memoryvault/billing/VideoPurgeServiceTest.kt`
 
-- [ ] **Step 1: Write VideoPurgeService test (failing)**
+- [x] **Step 1: Write VideoPurgeService test (failing)**
 
 Create `src/test/kotlin/org/sightech/memoryvault/billing/VideoPurgeServiceTest.kt`:
 ```kotlin
@@ -1951,13 +1951,13 @@ class VideoPurgeServiceTest {
 }
 ```
 
-- [ ] **Step 2: Run test — expect compilation failure**
+- [x] **Step 2: Run test — expect compilation failure**
 
 ```bash
 ./gradlew test --tests "org.sightech.memoryvault.billing.VideoPurgeServiceTest" 2>&1 | tail -10
 ```
 
-- [ ] **Step 3: Create VideoPurgeService**
+- [x] **Step 3: Create VideoPurgeService**
 
 Create `src/main/kotlin/org/sightech/memoryvault/billing/service/VideoPurgeService.kt`:
 ```kotlin
@@ -2008,7 +2008,7 @@ class VideoPurgeService(
 }
 ```
 
-- [ ] **Step 4: Create BillingSyncRegistrar**
+- [x] **Step 4: Create BillingSyncRegistrar**
 
 Create `src/main/kotlin/org/sightech/memoryvault/billing/BillingSyncRegistrar.kt`:
 ```kotlin
@@ -2041,21 +2041,21 @@ class BillingSyncRegistrar(
 }
 ```
 
-- [ ] **Step 5: Run test**
+- [x] **Step 5: Run test**
 
 ```bash
 ./gradlew test --tests "org.sightech.memoryvault.billing.VideoPurgeServiceTest" 2>&1 | tail -10
 ```
 Expected: `BUILD SUCCESSFUL`, 2 tests passed.
 
-- [ ] **Step 6: Run all tests**
+- [x] **Step 6: Run all tests**
 
 ```bash
 ./gradlew test 2>&1 | tail -20
 ```
 Expected: `BUILD SUCCESSFUL`.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/main/kotlin/org/sightech/memoryvault/billing/ src/test/kotlin/org/sightech/memoryvault/billing/VideoPurgeServiceTest.kt
@@ -2071,7 +2071,7 @@ git commit -m "feat: VideoPurgeService, BillingSyncRegistrar — grace period pu
 - Create: `src/main/kotlin/org/sightech/memoryvault/graphql/AdminUserResolver.kt`
 - Create: `src/main/kotlin/org/sightech/memoryvault/mcp/BillingTools.kt`
 
-- [ ] **Step 1: Extend GraphQL schema**
+- [x] **Step 1: Extend GraphQL schema**
 
 In `src/main/resources/graphql/schema.graphqls`, add to the `Query` type (after the `search` query):
 ```graphql
@@ -2118,7 +2118,7 @@ type AdminUserView {
 }
 ```
 
-- [ ] **Step 2: Create BillingResolver**
+- [x] **Step 2: Create BillingResolver**
 
 Create `src/main/kotlin/org/sightech/memoryvault/graphql/BillingResolver.kt`:
 ```kotlin
@@ -2163,7 +2163,7 @@ class BillingResolver(
 }
 ```
 
-- [ ] **Step 3: Create AdminUserResolver**
+- [x] **Step 3: Create AdminUserResolver**
 
 Create `src/main/kotlin/org/sightech/memoryvault/graphql/AdminUserResolver.kt`:
 ```kotlin
@@ -2237,7 +2237,7 @@ class AdminUserResolver(
 }
 ```
 
-- [ ] **Step 4: Create BillingTools MCP**
+- [x] **Step 4: Create BillingTools MCP**
 
 Create `src/main/kotlin/org/sightech/memoryvault/mcp/BillingTools.kt`:
 ```kotlin
@@ -2299,14 +2299,14 @@ class BillingTools(
 }
 ```
 
-- [ ] **Step 5: Run all tests**
+- [x] **Step 5: Run all tests**
 
 ```bash
 ./gradlew test 2>&1 | tail -20
 ```
 Expected: `BUILD SUCCESSFUL`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/main/resources/graphql/schema.graphqls src/main/kotlin/org/sightech/memoryvault/graphql/BillingResolver.kt src/main/kotlin/org/sightech/memoryvault/graphql/AdminUserResolver.kt src/main/kotlin/org/sightech/memoryvault/mcp/BillingTools.kt
@@ -2325,7 +2325,7 @@ git commit -m "feat: GraphQL billing queries (me, subscription, adminUsers), MCP
 - Modify: `client/src/app/app.routes.ts`
 - Modify: `client/src/app/auth/login/login.html` (add "Create account" link)
 
-- [ ] **Step 1: Create user profile model**
+- [x] **Step 1: Create user profile model**
 
 Create `client/src/app/core/models/user-profile.model.ts`:
 ```typescript
@@ -2341,7 +2341,7 @@ export interface UserProfile {
 }
 ```
 
-- [ ] **Step 2: Create TierService**
+- [x] **Step 2: Create TierService**
 
 Create `client/src/app/core/services/tier.service.ts`:
 ```typescript
@@ -2380,7 +2380,7 @@ export class TierService {
 }
 ```
 
-- [ ] **Step 3: Load TierService on app init**
+- [x] **Step 3: Load TierService on app init**
 
 In `client/src/app/shared/layout/app-layout.ts`, inject `TierService` and call `load()` in `ngOnInit`:
 ```typescript
@@ -2395,7 +2395,7 @@ ngOnInit() {
 }
 ```
 
-- [ ] **Step 4: Create signup component**
+- [x] **Step 4: Create signup component**
 
 Create `client/src/app/auth/signup/signup.component.ts`:
 ```typescript
@@ -2491,7 +2491,7 @@ Create `client/src/app/auth/signup/signup.component.scss`:
 
 Note: `CognitoAuthService.signUp()` must accept `(email, password)` and call the Cognito SDK's `signUp` method. Read `client/src/app/auth/cognito-auth.service.ts` to find the correct method name before implementing; add `signUp` if it doesn't exist.
 
-- [ ] **Step 5: Add /signup route**
+- [x] **Step 5: Add /signup route**
 
 In `client/src/app/app.routes.ts`, add before the main `''` route:
 ```typescript
@@ -2501,21 +2501,21 @@ In `client/src/app/app.routes.ts`, add before the main `''` route:
   },
 ```
 
-- [ ] **Step 6: Add "Create account" link to login page**
+- [x] **Step 6: Add "Create account" link to login page**
 
 Read `client/src/app/auth/login/login.html`. After the submit button, add:
 ```html
 <p><a routerLink="/signup">Create account</a></p>
 ```
 
-- [ ] **Step 7: Run frontend tests**
+- [x] **Step 7: Run frontend tests**
 
 ```bash
 cd client && npm run test -- --run 2>&1 | tail -20
 ```
 Expected: all tests pass (TierService has no spec file yet — that's OK, add one if coverage requires it).
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add client/src/app/core/models/user-profile.model.ts client/src/app/core/services/tier.service.ts client/src/app/auth/signup/ client/src/app/app.routes.ts client/src/app/auth/login/ client/src/app/shared/layout/app-layout.ts
@@ -2535,7 +2535,7 @@ git commit -m "feat: Angular TierService, signup page, /signup route"
 - Modify: `client/src/app/reader/reader.ts/html` — upgrade prompt at feed limit
 - Modify: `client/src/app/admin/admin.ts/html` — Users tab
 
-- [ ] **Step 1: Create billing page**
+- [x] **Step 1: Create billing page**
 
 Create `client/src/app/feature-billing/billing.component.ts`:
 ```typescript
@@ -2657,7 +2657,7 @@ Create `client/src/app/feature-billing/billing.component.scss`:
 }
 ```
 
-- [ ] **Step 2: Create billing-success and billing-cancelled components**
+- [x] **Step 2: Create billing-success and billing-cancelled components**
 
 Create `client/src/app/feature-billing/billing-success.component.ts`:
 ```typescript
@@ -2707,7 +2707,7 @@ import { MatButtonModule } from '@angular/material/button';
 export class BillingCancelledComponent {}
 ```
 
-- [ ] **Step 3: Add /billing routes**
+- [x] **Step 3: Add /billing routes**
 
 In `client/src/app/app.routes.ts`, inside the `canActivate: [authGuard]` children array, add:
 ```typescript
@@ -2725,7 +2725,7 @@ In `client/src/app/app.routes.ts`, inside the `canActivate: [authGuard]` childre
       },
 ```
 
-- [ ] **Step 4: Add user menu to top bar**
+- [x] **Step 4: Add user menu to top bar**
 
 Read `client/src/app/shared/layout/top-bar.html` to see current structure. Add a user icon button with a Material menu after the nav links:
 ```html
@@ -2746,7 +2746,7 @@ Read `client/src/app/shared/layout/top-bar.html` to see current structure. Add a
 
 `MatMenuModule` is already imported in `TopBarComponent`. Add `MatIconModule` if not already present.
 
-- [ ] **Step 5: Add YouTube locked state**
+- [x] **Step 5: Add YouTube locked state**
 
 In `client/src/app/youtube/youtube.ts`, inject `TierService`:
 ```typescript
@@ -2767,7 +2767,7 @@ In `client/src/app/youtube/youtube.html`, wrap the existing content:
 }
 ```
 
-- [ ] **Step 6: Add feed upgrade prompt**
+- [x] **Step 6: Add feed upgrade prompt**
 
 In `client/src/app/reader/reader.ts`, inject `TierService` and create a computed signal for `atFeedLimit`. The feed count must come from the store/service already present in the reader. Add:
 ```typescript
@@ -2786,7 +2786,7 @@ Add a banner above the feed list when tier is FREE and feed count approaches 100
 }
 ```
 
-- [ ] **Step 7: Add Users tab to admin page**
+- [x] **Step 7: Add Users tab to admin page**
 
 Read `client/src/app/admin/admin.ts` and `admin.html` to understand the existing tab structure (tabs for Jobs, Logs, Stats, etc.). Add a "Users" tab that displays a table of users.
 
@@ -2816,14 +2816,14 @@ Add the Users tab to the mat-tab-group in `admin.html`:
 </mat-tab>
 ```
 
-- [ ] **Step 8: Run frontend tests**
+- [x] **Step 8: Run frontend tests**
 
 ```bash
 cd client && npm run test -- --run 2>&1 | tail -20
 ```
 Expected: all tests pass.
 
-- [ ] **Step 9: Start dev server and verify visually**
+- [x] **Step 9: Start dev server and verify visually**
 
 ```bash
 ./scripts/dev.sh
@@ -2837,7 +2837,7 @@ Check:
 - `/youtube` shows locked state for FREE users (PREMIUM and ARCHIVE get access; OWNER bypasses)
 - `/admin` has a Users tab
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add client/src/app/feature-billing/ client/src/app/app.routes.ts client/src/app/shared/layout/ client/src/app/youtube/ client/src/app/reader/ client/src/app/admin/

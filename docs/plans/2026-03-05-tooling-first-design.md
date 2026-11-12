@@ -243,6 +243,14 @@ Internet Archive as the built-in primary backup target for all archived YouTube 
 ### Phase 11 — Public Self-Signup & Subscription Billing
 Open self-service account creation via Cognito email verification, gated behind Stripe subscription billing (Free / Premium / Archive tiers). Free: 100 feeds, bookmarks, search, no video. Premium ($3/mo or $30/yr): unlimited feeds + YouTube archival up to 20h at 1080p. Archive ($10/mo or $90/yr): up to 100h of video. Metered per-GB billing was intentionally avoided — hours-based tiers are simpler for users to understand and yt-dlp is capped at 1080p to reduce storage variance. Includes: AOP `@TierGate` tier enforcement, Stripe Checkout/Portal, grace-period video purge on cancellation, admin user management. See `docs/plans/2026-05-08-phase-11-public-self-signup.md` for implementation plan.
 
+**Status (2026-11-12): code complete on `feature/phase-11-public-self-signup`, NOT deployed.** All 13 plan tasks implemented; 364 backend + 93 frontend tests pass. Remaining before merge/launch:
+- **Blocker — scheduled jobs never run in prod.** `memoryvault.billing.video-purge-cron`, `memoryvault.backup.upload-cron` and `memoryvault.backup.health-check-cron` all default to `-` (disabled), and nothing in Terraform, `user_data.sh` or EventBridge enables them. So the Phase 11 grace-period purge — and the already-shipped Phase 10 Internet Archive upload/health jobs — do not run on AWS. Fix via the existing EventBridge → Lambda → `/api/internal/sync/*` pattern (or set the crons in the EC2 env file).
+- **Admin refund not implemented.** Spec defines `POST /api/admin/users/{id}/refund` / `adminRefundUser`; neither exists. Build it or explicitly defer (refunds can be issued from the Stripe dashboard).
+- **Stripe setup:** create Premium/Archive products with monthly + annual prices, the `/api/stripe/webhook` endpoint (signing secret), and enable the Customer Portal. Start in test mode.
+- **AWS state:** add the six `stripe_*` vars to `terraform.tfvars` (they have no defaults), then `terraform plan` / `apply`. **This replaces the EC2 instance** (`user_data` changed, `user_data_replace_on_change = true`). Must happen before merge, or the signup page ships while Cognito still rejects self-registration.
+- **Public-launch concerns not in the spec:** Terms of Service + Privacy Policy pages (Stripe requires them), signup abuse protection (rate limit / CAPTCHA), Cognito default email sender's low daily cap (move to SES), smoke-test coverage for `/signup`, `/billing` and the webhook route.
+- **Merge hygiene:** `origin/master` has a stale duplicate plan, `docs/plans/2026-05-22-phase-11-implementation-plan.md` (pre-rename BACKUP tier + metered billing). Remove it when merging master into this branch.
+
 ---
 
 ## Tech Debt
