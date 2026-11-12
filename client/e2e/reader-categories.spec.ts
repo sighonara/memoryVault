@@ -3,6 +3,9 @@ import { test, expect } from '@playwright/test';
 /**
  * Reader category E2E tests require a running backend.
  * They authenticate first, then test feed category management flows.
+ *
+ * View mode and sort order are persisted server-side as user preferences, so
+ * the toggle tests click twice to leave the seed user's preferences unchanged.
  */
 test.describe('Reader Categories (requires backend)', () => {
   test.beforeEach(async ({ page }) => {
@@ -14,7 +17,7 @@ test.describe('Reader Categories (requires backend)', () => {
   });
 
   test('reader page shows All Items heading', async ({ page }) => {
-    await expect(page.locator('text=All Items')).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('app-feed-toolbar').getByText('All Items')).toBeVisible({ timeout: 5_000 });
   });
 
   test('sidebar shows Subscribed category', async ({ page }) => {
@@ -22,37 +25,44 @@ test.describe('Reader Categories (requires backend)', () => {
   });
 
   test('can toggle between List and Full view modes', async ({ page }) => {
-    // Look for view mode toggle buttons in toolbar
-    const listButton = page.getByRole('button', { name: /list/i });
-    const fullButton = page.getByRole('button', { name: /full|article/i });
+    const toggle = page.locator('app-feed-toolbar').getByRole('button', { name: /^(full|list) view$/i });
+    await expect(toggle).toBeVisible({ timeout: 5_000 });
 
-    // At least one should be visible
-    const hasListButton = await listButton.isVisible().catch(() => false);
-    const hasFullButton = await fullButton.isVisible().catch(() => false);
-    expect(hasListButton || hasFullButton).toBeTruthy();
+    const before = await toggle.getAttribute('aria-label');
+    await toggle.click();
+    await expect(toggle).not.toHaveAttribute('aria-label', before!);
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-label', before!);
   });
 
   test('can toggle sort order', async ({ page }) => {
-    // Look for sort order toggle
-    const sortButton = page.getByRole('button', { name: /newest|oldest|sort/i });
-    const isVisible = await sortButton.isVisible().catch(() => false);
-    expect(isVisible).toBeTruthy();
+    const toggle = page.locator('app-feed-toolbar').getByRole('button', { name: /^(newest|oldest) first$/i });
+    await expect(toggle).toBeVisible({ timeout: 5_000 });
+
+    const before = await toggle.getAttribute('aria-label');
+    await toggle.click();
+    await expect(toggle).not.toHaveAttribute('aria-label', before!);
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-label', before!);
   });
 
   test('can toggle unread filter', async ({ page }) => {
-    // Look for unread toggle
-    const unreadToggle = page.locator('mat-slide-toggle, [role="switch"]').first();
-    const isVisible = await unreadToggle.isVisible().catch(() => false);
-    // Toggle may be a slide-toggle or button
-    if (!isVisible) {
-      const unreadButton = page.getByRole('button', { name: /unread/i });
-      await expect(unreadButton).toBeVisible();
-    }
+    const toggle = page.locator('app-feed-toolbar').getByRole('button', { name: /^show (all|unread)$/i });
+    await expect(toggle).toBeVisible({ timeout: 5_000 });
+
+    const before = (await toggle.textContent())!.trim();
+    await toggle.click();
+    await expect(toggle).not.toHaveText(before);
+    await toggle.click();
+    await expect(toggle).toHaveText(before);
   });
 
   test('clicking All Items in sidebar loads all items view', async ({ page }) => {
-    // Click on "All Items" in the sidebar
+    // Select a category first so the click on All Items actually changes the view.
+    await page.locator('.reader-sidebar').getByText('Subscribed').click();
+    await expect(page.locator('app-feed-toolbar').getByText('Subscribed')).toBeVisible();
+
     await page.locator('.reader-sidebar').getByText('All Items').click();
-    await expect(page.locator('text=All Items')).toBeVisible();
+    await expect(page.locator('app-feed-toolbar').getByText('All Items')).toBeVisible();
   });
 });
