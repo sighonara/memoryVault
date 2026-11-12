@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+cd "$(dirname "$0")/.."
 
 echo "=== MemoryVault: Running all tests ==="
 
@@ -10,7 +11,7 @@ echo "--- Kotlin/Spring tests ---"
 echo ""
 echo "--- Content processor tests (if exists) ---"
 if [ -d "content-processor" ]; then
-  cd content-processor && python -m pytest --tb=short && cd ..
+  (cd content-processor && python3 -m pytest --tb=short)
 else
   echo "content-processor not yet created, skipping."
 fi
@@ -19,8 +20,13 @@ echo ""
 echo "--- Lambda tests (if exist) ---"
 if [ -d "lambdas" ]; then
   for dir in lambdas/*/; do
-    echo "Testing $dir..."
-    cd "$dir" && python -m pytest --tb=short && cd ../..
+    # Note: `compgen -G` echoes back a literal path even if it doesn't exist, so use -d for the dir.
+    if compgen -G "${dir}test_*.py" > /dev/null || [ -d "${dir}tests" ]; then
+      echo "Testing $dir..."
+      (cd "$dir" && python3 -m pytest --tb=short)
+    else
+      echo "No tests in $dir, skipping."
+    fi
   done
 else
   echo "lambdas/ not yet created, skipping."
