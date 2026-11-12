@@ -99,6 +99,10 @@ kotlin {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    // Keep test-run logs out of the dev server's ~/.memoryvault/logs/memoryvault.log
+    // (which the Admin > Logs tab reads). Logback and LocalLogService both resolve this
+    // system property, so tests write and read build/test-logs/ instead.
+    systemProperty("memoryvault.logging.path", layout.buildDirectory.dir("test-logs").get().asFile.absolutePath)
     testLogging {
         events("passed", "skipped", "failed")
         showStandardStreams = false
