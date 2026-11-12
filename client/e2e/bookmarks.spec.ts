@@ -65,22 +65,32 @@ test.describe('Bookmarks (requires backend)', () => {
   });
 
   test.describe('Bookmark operations', () => {
+    // The toolbar "Add" button opens a menu (Add Bookmark / New Folder); the dialog
+    // comes from the "Add Bookmark" menu item.
+    async function openAddBookmarkDialog(page: import('@playwright/test').Page) {
+      await page.getByRole('button', { name: /^add$/i }).click();
+      await page.getByRole('menuitem', { name: /add bookmark/i }).click();
+      const dialog = page.getByRole('dialog');
+      await expect(dialog).toBeVisible({ timeout: 3_000 });
+      return dialog;
+    }
+
     test('opens add bookmark dialog', async ({ page }) => {
-      await page.getByRole('button', { name: /add/i }).click();
-      await expect(page.getByRole('dialog')).toBeVisible({ timeout: 3_000 });
+      const dialog = await openAddBookmarkDialog(page);
+      await expect(dialog.getByRole('heading', { name: /add bookmark/i })).toBeVisible();
     });
 
     test('creates a bookmark via dialog', async ({ page }) => {
-      await page.getByRole('button', { name: /add/i }).click();
-      const dialog = page.getByRole('dialog');
-      await expect(dialog).toBeVisible({ timeout: 3_000 });
+      const dialog = await openAddBookmarkDialog(page);
+      // Unique per run so URL de-duplication never interferes.
+      const title = `E2E Test Bookmark ${Date.now()}`;
 
-      await dialog.getByLabel(/url/i).fill('https://example-e2e-test.com');
-      await dialog.getByLabel(/title/i).fill('E2E Test Bookmark');
-      await dialog.getByRole('button', { name: /save|add|create/i }).click();
+      await dialog.getByLabel(/url/i).fill(`https://example-e2e-test.com/${Date.now()}`);
+      await dialog.getByLabel(/title/i).fill(title);
+      await dialog.getByRole('button', { name: /^add$/i }).click();
 
-      // Dialog should close
       await expect(dialog).not.toBeVisible({ timeout: 5_000 });
+      await expect(page.getByText(title)).toBeVisible({ timeout: 5_000 });
     });
 
     test('clicking All Bookmarks shows all bookmarks', async ({ page }) => {
