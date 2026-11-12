@@ -8,6 +8,7 @@ import org.sightech.memoryvault.feed.service.FeedService
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.MutationMapping
 import org.springframework.graphql.data.method.annotation.QueryMapping
+import org.springframework.graphql.data.method.annotation.SchemaMapping
 import org.springframework.stereotype.Controller
 import java.util.UUID
 
@@ -16,6 +17,17 @@ class FeedResolver(
     private val feedService: FeedService,
     private val feedItemService: FeedItemService
 ) {
+
+    // FeedItem has a `feed` relation, not a `feedId` property, so the schema's
+    // non-null FeedItem.feedId needs an explicit mapping. Reading the id off the
+    // lazy proxy does not trigger a fetch.
+    @SchemaMapping(typeName = "FeedItem", field = "feedId")
+    fun feedId(item: FeedItem): UUID = item.feed.id
+
+    // Same issue: Feed has a `category` relation, not a `categoryId` property.
+    // The schema field is nullable, so without this it silently returned null.
+    @SchemaMapping(typeName = "Feed", field = "categoryId")
+    fun categoryId(feed: Feed): UUID? = feed.category?.id
 
     @QueryMapping
     fun feeds(): List<Map<String, Any?>> {
