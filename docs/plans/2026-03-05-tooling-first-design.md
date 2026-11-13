@@ -249,7 +249,7 @@ Open self-service account creation via Cognito email verification, gated behind 
 - **Stripe setup:** create Premium/Archive products with monthly + annual prices, the `/api/stripe/webhook` endpoint (signing secret), and enable the Customer Portal. Start in test mode.
 - **AWS state:** add the six `stripe_*` vars to `terraform.tfvars` (they have no defaults), then `terraform plan` / `apply`. **This replaces the EC2 instance** (`user_data` changed, `user_data_replace_on_change = true`). Must happen before merge, or the signup page ships while Cognito still rejects self-registration.
 - **Public-launch concerns not in the spec:** Terms of Service + Privacy Policy pages (Stripe requires them), signup abuse protection (rate limit / CAPTCHA), Cognito default email sender's low daily cap (move to SES), smoke-test coverage for `/signup`, `/billing` and the webhook route.
-- **Merge hygiene:** `origin/master` has a stale duplicate plan, `docs/plans/2026-05-22-phase-11-implementation-plan.md` (pre-rename BACKUP tier + metered billing). Remove it when merging master into this branch.
+- ~~**Merge hygiene:** stale duplicate plan `2026-05-22-phase-11-implementation-plan.md` on master~~ — removed 2026-11-12 when master was merged into this branch (deletion reaches master when Phase 11 merges).
 
 ---
 
