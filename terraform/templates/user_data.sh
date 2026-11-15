@@ -100,8 +100,10 @@ ECR_REPO="${ecr_repo_url}"
 aws ecr get-login-password --region "$REGION" | \
   docker login --username AWS --password-stdin "$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com"
 
-# Create log directory for CloudWatch agent
+# Create log directory for CloudWatch agent, owned by the container's app user
+# (UID/GID 10001, pinned in the Dockerfile) so the app can write its JSON log here.
 mkdir -p /var/log/memoryvault
+chown 10001:10001 /var/log/memoryvault
 
 # Run the application container
 docker run -d \
