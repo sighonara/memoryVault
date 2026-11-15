@@ -57,6 +57,27 @@ class CloudWatchLogServiceTest {
     }
 
     @Test
+    fun `getLogs parses the timestamp format Logs Insights actually returns`() {
+        every { cwClient.startQuery(any<StartQueryRequest>()) } returns
+            StartQueryResponse.builder().queryId("q1").build() as StartQueryResponse
+
+        // Exact @timestamp shape observed from a real Insights query on 2026-11-12:
+        // space-separated, millisecond precision, no zone designator (UTC).
+        val row = listOf(
+            ResultField.builder().field("@timestamp").value("2026-11-13 03:41:47.451").build() as ResultField,
+            ResultField.builder().field("level").value("WARN").build() as ResultField,
+            ResultField.builder().field("message").value("Insights row").build() as ResultField
+        )
+        every { cwClient.getQueryResults(any<GetQueryResultsRequest>()) } returns completeResponse(row)
+
+        val logs = service.getLogs(null, null, 10)
+
+        assertEquals(1, logs.size, "Insights-format row must not be dropped")
+        assertEquals(java.time.Instant.parse("2026-11-13T03:41:47.451Z"), logs[0].timestamp)
+        assertEquals("WARN", logs[0].level)
+    }
+
+    @Test
     fun `getLogs filters by level in query`() {
         every { cwClient.startQuery(any<StartQueryRequest>()) } returns
             StartQueryResponse.builder().queryId("q1").build() as StartQueryResponse

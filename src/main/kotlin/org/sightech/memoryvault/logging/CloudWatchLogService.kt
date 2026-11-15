@@ -7,6 +7,10 @@ import org.springframework.stereotype.Component
 import software.amazon.awssdk.services.cloudwatchlogs.CloudWatchLogsClient
 import software.amazon.awssdk.services.cloudwatchlogs.model.*
 import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
 @Component
 @Profile("aws")
@@ -71,16 +75,32 @@ class CloudWatchLogService(
             try {
                 val fields = row.associate { it.field() to it.value() }
                 LogEntry(
-                    timestamp = Instant.parse(fields["@timestamp"]!!),
+                    timestamp = parseTimestamp(fields["@timestamp"]!!),
                     level = fields["level"] ?: "UNKNOWN",
                     logger = fields["logger"] ?: "",
                     message = fields["message"] ?: "",
                     thread = fields["thread"] ?: ""
                 )
             } catch (e: Exception) {
-                log.debug("Failed to parse CloudWatch log row: {}", e.message)
+                log.warn("Failed to parse CloudWatch log row: {}", e.message)
                 null
             }
         }
+    }
+
+    /**
+     * Logs Insights returns `@timestamp` as `yyyy-MM-dd HH:mm:ss.SSS` in UTC with no zone
+     * designator (e.g. `2026-11-13 03:41:47.451`), which [Instant.parse] rejects. Accept
+     * that form, and ISO-8601 instants as a fallback.
+     */
+    private fun parseTimestamp(value: String): Instant =
+        try {
+            LocalDateTime.parse(value, INSIGHTS_TIMESTAMP).toInstant(ZoneOffset.UTC)
+        } catch (e: DateTimeParseException) {
+            Instant.parse(value)
+        }
+
+    private companion object {
+        val INSIGHTS_TIMESTAMP: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
     }
 }

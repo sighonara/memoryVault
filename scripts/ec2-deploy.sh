@@ -30,6 +30,11 @@ echo "Stopping old container..."
 docker stop memoryvault 2>/dev/null || true
 docker rm memoryvault 2>/dev/null || true
 
+# The container runs as UID/GID 10001 (pinned in the Dockerfile) and writes its JSON
+# log to the bind-mounted /app/logs, which the CloudWatch agent tails on the host.
+mkdir -p /var/log/memoryvault
+chown 10001:10001 /var/log/memoryvault
+
 # Start new container with env file
 echo "Starting new container..."
 docker run -d \

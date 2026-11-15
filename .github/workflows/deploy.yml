@@ -53,6 +53,9 @@ jobs:
           REGION: ${{ secrets.AWS_REGION }}
           ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
         run: |
+          # The mkdir/chown before docker run: the container runs as UID/GID 10001 (pinned in
+          # the Dockerfile) and must be able to write its JSON log to the bind-mounted
+          # /var/log/memoryvault, which the CloudWatch agent tails. SSM runs these as root.
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
@@ -62,6 +65,8 @@ jobs:
               \"docker pull $ECR_REPO:latest\",
               \"docker stop memoryvault || true\",
               \"docker rm memoryvault || true\",
+              \"mkdir -p /var/log/memoryvault\",
+              \"chown 10001:10001 /var/log/memoryvault\",
               \"docker run -d --name memoryvault --restart unless-stopped -p 8085:8085 -v /var/log/memoryvault:/app/logs --env-file /etc/memoryvault/env $ECR_REPO:latest\"
             ]" \
             --query "Command.CommandId" --output text)
