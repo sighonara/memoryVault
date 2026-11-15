@@ -21,8 +21,12 @@ RUN ./gradlew bootJar --no-daemon
 FROM eclipse-temurin:22-jre-alpine
 WORKDIR /app
 
-# Create a non-root user
-RUN addgroup -S memoryvault && adduser -S memoryvault -G memoryvault
+# Create a non-root user with a FIXED UID/GID. The host's /var/log/memoryvault is
+# bind-mounted at /app/logs and must be owned by this UID so the app can write its log
+# file there for the CloudWatch agent. Keep 10001 in sync with the chown in
+# .github/workflows/deploy.yml, scripts/ec2-deploy.sh and terraform/templates/user_data.sh.
+RUN addgroup -S -g 10001 memoryvault && adduser -S -u 10001 -G memoryvault memoryvault \
+  && mkdir -p /app/logs && chown memoryvault:memoryvault /app/logs
 
 COPY --from=builder /app/build/libs/*.jar app.jar
 

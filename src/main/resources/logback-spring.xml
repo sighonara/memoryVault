@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <property name="LOG_PATH" value="${memoryvault.logging.path:-${user.home}/.memoryvault/logs}"/>
+    <!-- Resolved from the Spring Environment (application*.properties, env vars, system
+         properties), so profile-specific values such as prod's /app/logs apply. A plain
+         <property> only sees JVM system properties, which left prod logging inside the
+         container's home directory instead of the mounted /app/logs. -->
+    <springProperty scope="context" name="LOG_PATH" source="memoryvault.logging.path"
+                    defaultValue="${user.home}/.memoryvault/logs"/>
     <property name="LOG_FILE" value="${LOG_PATH}/memoryvault.log"/>
 
     <!-- Console: human-readable for dev -->
@@ -11,11 +16,13 @@
         </encoder>
     </appender>
 
-    <!-- File: JSON structured, rolling daily, max 30 days -->
+    <!-- File: JSON structured, rolling daily, max 30 days. Rolled files go to archive/ so
+         the CloudWatch agent's "/var/log/memoryvault/*.log" glob only matches the live
+         file and does not re-ship each day's rolled copy. -->
     <appender name="JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_FILE}</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_PATH}/memoryvault.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${LOG_PATH}/archive/memoryvault.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <encoder class="net.logstash.logback.encoder.LogstashEncoder">
