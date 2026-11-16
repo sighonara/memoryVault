@@ -4,8 +4,10 @@
     <!-- Resolved from the Spring Environment (application*.properties, env vars, system
          properties), so profile-specific values such as prod's /app/logs apply. A plain
          <property> only sees JVM system properties, which left prod logging inside the
-         container's home directory instead of the mounted /app/logs. -->
-    <springProperty scope="context" name="LOG_PATH" source="memoryvault.logging.path"
+         container's home directory instead of the mounted /app/logs.
+         Default (local) scope on purpose: context-scoped properties are written into every
+         JSON event by LogstashEncoder ("LOG_PATH":"/app/logs" on every line). -->
+    <springProperty name="LOG_PATH" source="memoryvault.logging.path"
                     defaultValue="${user.home}/.memoryvault/logs"/>
     <property name="LOG_FILE" value="${LOG_PATH}/memoryvault.log"/>
 
@@ -26,6 +28,12 @@
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <!-- Fixed shape, always UTC with exactly 3 fractional digits (e.g.
+                 2026-11-15T23:40:16.122Z). The CloudWatch agent's timestamp_format in
+                 terraform/templates/user_data.sh ("%Y-%m-%dT%H:%M:%S.%f", timezone UTC) must
+                 match every line; the default ISO output varied in offset and digit count. -->
+            <timestampPattern>yyyy-MM-dd'T'HH:mm:ss.SSS'Z'</timestampPattern>
+            <timeZone>UTC</timeZone>
             <fieldNames>
                 <timestamp>timestamp</timestamp>
                 <level>level</level>
