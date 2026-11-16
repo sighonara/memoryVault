@@ -33,6 +33,10 @@ systemctl start caddy
 # --- CloudWatch Agent ---
 dnf install -y amazon-cloudwatch-agent
 
+# timestamp_format must match the app's JSON "timestamp" field, which logback-spring.xml
+# pins to UTC with exactly 3 fractional digits (e.g. 2026-11-15T23:40:16.122Z). Without
+# %f the agent kept only whole seconds, so same-second lines lost their order.
+
 cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json <<'CW_CONFIG'
 {
   "logs": {
@@ -43,7 +47,8 @@ cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json <<'CW_CO
             "file_path": "/var/log/memoryvault/*.log",
             "log_group_name": "${cloudwatch_log_group}",
             "log_stream_name": "{instance_id}",
-            "timestamp_format": "%Y-%m-%dT%H:%M:%S"
+            "timestamp_format": "%Y-%m-%dT%H:%M:%S.%f",
+            "timezone": "UTC"
           }
         ]
       }

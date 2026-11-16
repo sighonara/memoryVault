@@ -15,6 +15,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer
 import java.io.File
 import java.util.UUID
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -63,8 +64,20 @@ class LogbackLogPathTest {
             systemProperty != null && systemProperty.endsWith("build/test-logs"),
             "precondition: Gradle sets the system property to .../build/test-logs, was $systemProperty"
         )
-        assertEquals(LOG_DIR, loggerContext.getProperty("LOG_PATH"))
+        // Asserted via the appender's resolved file path (not the LoggerContext property), so the
+        // test doesn't require LOG_PATH to be context-scoped — see the test below for why it isn't.
         assertEquals("$LOG_DIR/memoryvault.log", jsonFileAppender().file)
+    }
+
+    @Test
+    fun `JSON log lines do not carry logback config properties as fields`() {
+        // LogstashEncoder writes every LoggerContext-scoped property into every event, so a
+        // context-scoped LOG_PATH showed up as "LOG_PATH":"/app/logs" on every prod log line.
+        val marker = "logback-no-config-fields ${UUID.randomUUID()}"
+        LoggerFactory.getLogger(javaClass).info(marker)
+
+        val line = File(jsonFileAppender().file).readLines().last { it.contains(marker) }
+        assertFalse(line.contains("\"LOG_PATH\""), "LOG_PATH leaked into the JSON event: $line")
     }
 
     @Test
@@ -75,6 +88,24 @@ class LogbackLogPathTest {
         val file = File(jsonFileAppender().file)
         assertTrue(file.exists(), "expected ${file.absolutePath} to exist")
         assertTrue(file.readText().contains(marker), "expected the marker line in ${file.absolutePath}")
+    }
+
+    @Test
+    fun `JSON timestamps are fixed-shape UTC with milliseconds, matching the CloudWatch agent format`() {
+        // The agent (user_data.sh) parses "%Y-%m-%dT%H:%M:%S.%f" in UTC. The default ISO output
+        // varied (zone offset, 1-9 fractional digits, fraction omitted when zero), so lines
+        // could fail to match and lose their real timestamp.
+        val marker = "logback-timestamp-shape ${UUID.randomUUID()}"
+        LoggerFactory.getLogger(javaClass).info(marker)
+
+        val line = File(jsonFileAppender().file).readLines().last { it.contains(marker) }
+        val timestamp = Regex("\"timestamp\":\"([^\"]+)\"").find(line)?.groupValues?.get(1)
+        assertTrue(
+            timestamp != null && Regex("""\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z""").matches(timestamp),
+            "timestamp must look like 2026-11-15T23:40:16.122Z, was $timestamp"
+        )
+        // Must stay parseable by LocalLogService / CloudWatchLogService fallback.
+        java.time.Instant.parse(timestamp)
     }
 
     @Test
