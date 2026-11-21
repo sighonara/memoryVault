@@ -61,7 +61,7 @@ class CrossCuttingToolsTest {
 
     @Test
     fun `getStats returns formatted summary`() {
-        every { statsService.getStats(any()) } returns SystemStats(
+        every { statsService.getStats(any(), any()) } returns SystemStats(
             bookmarkCount = 42,
             feedCount = 5,
             feedItemCount = 1200,

@@ -1,6 +1,8 @@
 package org.sightech.memoryvault.graphql
 
 import org.sightech.memoryvault.auth.CurrentUser
+import org.sightech.memoryvault.auth.Roles
+import org.springframework.security.access.prepost.PreAuthorize
 import org.sightech.memoryvault.logging.LogEntry
 import org.slf4j.LoggerFactory
 import org.sightech.memoryvault.logging.LogService
@@ -37,6 +39,7 @@ class AdminResolver(
     }
 
     @QueryMapping
+    @PreAuthorize(Roles.OWNER_ONLY)
     fun logs(@Argument level: String?, @Argument service: String?, @Argument limit: Int?): List<LogEntry> {
         return logService.getLogs(level, service, limit ?: 50)
     }
@@ -44,7 +47,7 @@ class AdminResolver(
     @QueryMapping
     fun stats(): SystemStats {
         val userId = CurrentUser.userId()
-        return statsService.getStats(userId)
+        return statsService.getStats(userId, includeGlobal = Roles.isOwner())
     }
 
     @QueryMapping

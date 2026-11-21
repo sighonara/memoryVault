@@ -114,7 +114,7 @@ class CrossCuttingIntegrationTest {
 
     @Test
     fun `getStats returns correct counts`() {
-        val stats = statsService.getStats(userId)
+        val stats = statsService.getStats(userId, includeGlobal = true)
         assertTrue(stats.bookmarkCount >= 0)
         assertTrue(stats.feedCount >= 0)
         assertTrue(stats.tagCount >= 0)

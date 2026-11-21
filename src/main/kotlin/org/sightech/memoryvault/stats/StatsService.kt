@@ -23,7 +23,7 @@ data class SystemStats(
     val downloadedVideoCount: Long,
     val removedVideoCount: Long,
     val tagCount: Long,
-    val storageUsedBytes: Long,
+    val storageUsedBytes: Long?,
     val lastFeedSync: Instant?,
     val lastYoutubeSync: Instant?,
     val feedsWithFailures: Long,
@@ -46,7 +46,7 @@ class StatsService(
     //  AWS cost per billing cycle (compute, storage, transfer) via Cost Explorer API,
     //  RDS connection/query metrics.
 
-    fun getStats(userId: UUID): SystemStats {
+    fun getStats(userId: UUID, includeGlobal: Boolean): SystemStats {
         val lastFeedSync = syncJobService.findLastSuccessful(userId, JobType.RSS_FETCH)?.completedAt
         val lastYoutubeSync = syncJobService.findLastSuccessful(userId, JobType.YT_SYNC)?.completedAt
 
@@ -60,7 +60,7 @@ class StatsService(
             downloadedVideoCount = videoRepository.countByYoutubeListUserIdAndYoutubeListDeletedAtIsNullAndDownloadedAtIsNotNull(userId),
             removedVideoCount = videoRepository.countByYoutubeListUserIdAndYoutubeListDeletedAtIsNullAndRemovedFromYoutubeTrue(userId),
             tagCount = tagRepository.countByUserId(userId),
-            storageUsedBytes = storageService.usedBytes(),
+            storageUsedBytes = if (includeGlobal) storageService.usedBytes() else null,
             lastFeedSync = lastFeedSync,
             lastYoutubeSync = lastYoutubeSync,
             feedsWithFailures = feedRepository.countByUserIdAndDeletedAtIsNullAndFailureCountGreaterThan(userId, 0),

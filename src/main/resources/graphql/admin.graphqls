@@ -27,7 +27,7 @@ type SystemStats {
     downloadedVideoCount: Int!
     removedVideoCount: Int!
     tagCount: Int!
-    storageUsedBytes: Float!
+    storageUsedBytes: Float
     lastFeedSync: Instant
     lastYoutubeSync: Instant
     feedsWithFailures: Int!

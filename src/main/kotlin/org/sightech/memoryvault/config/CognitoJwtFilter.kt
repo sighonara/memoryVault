@@ -35,7 +35,7 @@ class CognitoJwtFilter(
             if (claims != null) {
                 val user = userRepository.findByEmailAndDeletedAtIsNull(claims.email)
                 if (user != null) {
-                    val authorities = listOf(SimpleGrantedAuthority("ROLE_${claims.role}"))
+                    val authorities = listOf(SimpleGrantedAuthority("ROLE_${user.role.name}"))
                     val auth = UsernamePasswordAuthenticationToken(user.id.toString(), null, authorities)
                     SecurityContextHolder.getContext().authentication = auth
                 } else {
