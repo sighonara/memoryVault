@@ -2,6 +2,7 @@ package org.sightech.memoryvault.scheduling.controller
 
 import kotlinx.coroutines.runBlocking
 import org.sightech.memoryvault.auth.CurrentUser
+import org.sightech.memoryvault.auth.repository.UserRepository
 import org.sightech.memoryvault.cost.service.CostService
 import org.sightech.memoryvault.feed.service.FeedService
 import org.sightech.memoryvault.scheduling.entity.JobType
@@ -22,7 +23,8 @@ class InternalSyncController(
     private val feedService: FeedService,
     private val youtubeListService: YoutubeListService,
     private val syncJobService: SyncJobService,
-    private val costService: CostService
+    private val costService: CostService,
+    private val userRepository: UserRepository
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -35,10 +37,19 @@ class InternalSyncController(
             TriggerSource.SCHEDULED,
             CurrentUser.SYSTEM_USER_ID
         ) {
-            val results = runBlocking { feedService.refreshFeed(null) }
-            val totalNew = results.sumOf { it.second }
-            log.info("Feed sync complete: {} feeds refreshed, {} new items", results.size, totalNew)
-            mapOf("feedsRefreshed" to results.size, "newItems" to totalNew)
+            var feedsRefreshed = 0
+            var totalNew = 0
+            for (user in userRepository.findAllByDeletedAtIsNull()) {
+                try {
+                    val results = runBlocking { feedService.refreshFeedsForUser(user.id) }
+                    feedsRefreshed += results.size
+                    totalNew += results.sumOf { it.second }
+                } catch (e: Exception) {
+                    log.warn("Feed sync failed for userId={}: {}", user.id, e.message)
+                }
+            }
+            log.info("Feed sync complete: {} feeds refreshed, {} new items", feedsRefreshed, totalNew)
+            mapOf("feedsRefreshed" to feedsRefreshed, "newItems" to totalNew)
         }
         return ResponseEntity.ok(metadata ?: emptyMap())
     }
@@ -51,7 +62,14 @@ class InternalSyncController(
             TriggerSource.SCHEDULED,
             CurrentUser.SYSTEM_USER_ID
         ) {
-            val results = youtubeListService.refreshList(null)
+            val results = userRepository.findAllByDeletedAtIsNull().flatMap { user ->
+                try {
+                    youtubeListService.refreshListsForUser(user.id)
+                } catch (e: Exception) {
+                    log.warn("YouTube sync failed for userId={}: {}", user.id, e.message)
+                    emptyList()
+                }
+            }
             val totalNew = results.sumOf { it.newVideos }
             val totalRemoved = results.sumOf { it.removedVideos }
             log.info(

@@ -72,13 +72,15 @@ class YoutubeListService(
 
     fun refreshList(listId: UUID?): List<SyncResult> {
         val userId = CurrentUser.userId()
-        val lists = if (listId != null) {
-            val list = youtubeListRepository.findActiveByIdAndUserId(listId, userId) ?: return emptyList()
-            listOf(list)
-        } else {
-            youtubeListRepository.findAllActiveByUserId(userId)
-        }
+        if (listId == null) return refreshListsForUser(userId)
+        val list = youtubeListRepository.findActiveByIdAndUserId(listId, userId) ?: return emptyList()
+        return refreshLists(listOf(list))
+    }
 
+    fun refreshListsForUser(userId: UUID): List<SyncResult> =
+        refreshLists(youtubeListRepository.findAllActiveByUserId(userId))
+
+    private fun refreshLists(lists: List<YoutubeList>): List<SyncResult> {
         return lists.map { list ->
             try {
                 val metadata = ytDlpService.fetchPlaylistMetadata(list.url)

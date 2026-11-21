@@ -1,6 +1,7 @@
 package org.sightech.memoryvault.youtube
 
 import org.junit.jupiter.api.Test
+import org.sightech.memoryvault.support.AsSystemUser
 import org.sightech.memoryvault.youtube.entity.YoutubeList
 import org.sightech.memoryvault.youtube.repository.VideoRepository
 import org.sightech.memoryvault.youtube.repository.YoutubeListRepository
@@ -21,6 +22,7 @@ import kotlin.test.assertTrue
 @Testcontainers
 @SpringBootTest
 @ActiveProfiles("test")
+@AsSystemUser
 class YoutubeIntegrationTest {
 
     companion object {

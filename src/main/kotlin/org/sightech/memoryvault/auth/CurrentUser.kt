@@ -1,22 +1,31 @@
 package org.sightech.memoryvault.auth
 
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.web.context.request.RequestContextHolder
 import java.util.UUID
 
 object CurrentUser {
 
     val SYSTEM_USER_ID: UUID = UUID.fromString("00000000-0000-0000-0000-000000000001")
 
+    /**
+     * Returns the authenticated user's id. Inside a web request without an authenticated
+     * UUID principal this fails closed. Outside any request (scheduler, MCP stdio, async
+     * work) there is no caller to authenticate, so the system user is returned.
+     */
     fun userId(): UUID {
-        val auth = SecurityContextHolder.getContext().authentication
-        return if (auth != null && auth.principal is String) {
+        val principal = SecurityContextHolder.getContext().authentication?.principal
+        if (principal is String) {
             try {
-                UUID.fromString(auth.principal as String)
+                return UUID.fromString(principal)
             } catch (e: IllegalArgumentException) {
-                SYSTEM_USER_ID
+                // fall through to the request check
             }
-        } else {
-            SYSTEM_USER_ID
         }
+        if (RequestContextHolder.getRequestAttributes() != null) {
+            throw AccessDeniedException("No authenticated user")
+        }
+        return SYSTEM_USER_ID
     }
 }

@@ -1,6 +1,7 @@
 package org.sightech.memoryvault.bookmark
 
 import org.junit.jupiter.api.Test
+import org.sightech.memoryvault.support.AsSystemUser
 import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.bookmark.service.BookmarkService
 import org.springframework.beans.factory.annotation.Autowired
@@ -18,6 +19,7 @@ import kotlin.test.assertNull
 @Testcontainers
 @SpringBootTest
 @ActiveProfiles("test")
+@AsSystemUser
 class BookmarkIntegrationTest {
 
     companion object {

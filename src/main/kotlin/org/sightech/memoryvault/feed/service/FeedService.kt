@@ -65,13 +65,15 @@ class FeedService(
 
     suspend fun refreshFeed(feedId: UUID?): List<Pair<Feed, Int>> {
         val userId = CurrentUser.userId()
-        val feeds = if (feedId != null) {
-            val feed = feedRepository.findActiveByIdAndUserId(feedId, userId) ?: return emptyList()
-            listOf(feed)
-        } else {
-            feedRepository.findAllActiveByUserId(userId)
-        }
+        if (feedId == null) return refreshFeedsForUser(userId)
+        val feed = feedRepository.findActiveByIdAndUserId(feedId, userId) ?: return emptyList()
+        return refreshFeeds(userId, listOf(feed), feedId)
+    }
 
+    suspend fun refreshFeedsForUser(userId: UUID): List<Pair<Feed, Int>> =
+        refreshFeeds(userId, feedRepository.findAllActiveByUserId(userId), null)
+
+    private suspend fun refreshFeeds(userId: UUID, feeds: List<Feed>, feedId: UUID?): List<Pair<Feed, Int>> {
         val results = feeds.map { feed ->
             val newCount = rssFetchService.fetchAndStore(feed)
             feed to newCount
