@@ -3,7 +3,9 @@ package org.sightech.memoryvault.config
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.messaging.Message
+import org.springframework.messaging.MessagingException
 import org.springframework.messaging.MessageChannel
 import org.springframework.messaging.simp.stomp.StompCommand
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor
@@ -59,14 +61,59 @@ class WebSocketAuthInterceptorTest {
         assertNull(result)
     }
 
-    @Test
-    fun `passes through non-CONNECT messages`() {
-        val accessor = StompHeaderAccessor.create(StompCommand.SUBSCRIBE)
+    private val ownId = "00000000-0000-0000-0000-000000000001"
+    private val otherId = "00000000-0000-0000-0000-000000000002"
+
+    private fun buildFrame(command: StompCommand, destination: String?, userName: String?): Message<ByteArray> {
+        val accessor = StompHeaderAccessor.create(command)
+        if (destination != null) accessor.destination = destination
+        if (userName != null) accessor.user = Principal { userName }
         accessor.setLeaveMutable(true)
-        val message = MessageBuilder.createMessage(ByteArray(0), accessor.messageHeaders)
+        return MessageBuilder.createMessage(ByteArray(0), accessor.messageHeaders)
+    }
 
-        val result = interceptor.preSend(message, channel)
+    @Test
+    fun `passes through UNSUBSCRIBE and DISCONNECT messages`() {
+        assertNotNull(interceptor.preSend(buildFrame(StompCommand.UNSUBSCRIBE, null, ownId), channel))
+        assertNotNull(interceptor.preSend(buildFrame(StompCommand.DISCONNECT, null, ownId), channel))
+    }
 
-        assertNotNull(result)
+    @Test
+    fun `subscribe to own topic passes`() {
+        for (suffix in listOf("feeds", "jobs", "videos", "ingests", "sync", "backups")) {
+            val result = interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, "/topic/user/$ownId/$suffix", ownId), channel)
+            assertNotNull(result)
+        }
+    }
+
+    @Test
+    fun `subscribe to another user's topic is rejected`() {
+        assertThrows<MessagingException> {
+            interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, "/topic/user/$otherId/sync", ownId), channel)
+        }
+    }
+
+    @Test
+    fun `wildcard subscribe is rejected`() {
+        assertThrows<MessagingException> {
+            interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, "/topic/user/*/sync", ownId), channel)
+        }
+        assertThrows<MessagingException> {
+            interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, "/topic/user/**", ownId), channel)
+        }
+    }
+
+    @Test
+    fun `subscribe without user is rejected`() {
+        assertThrows<MessagingException> {
+            interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, "/topic/user/$ownId/sync", null), channel)
+        }
+    }
+
+    @Test
+    fun `send to topic is rejected`() {
+        assertThrows<MessagingException> {
+            interceptor.preSend(buildFrame(StompCommand.SEND, "/topic/user/$otherId/sync", ownId), channel)
+        }
     }
 }

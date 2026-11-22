@@ -74,7 +74,7 @@ class WebSocketIntegrationTest {
 
     @AfterEach
     fun teardown() {
-        session?.disconnect()
+        session?.takeIf { it.isConnected }?.disconnect()
         stompClient.stop()
     }
 
@@ -231,6 +231,40 @@ class WebSocketIntegrationTest {
         val signal = received.get(5, TimeUnit.SECONDS)
         assertEquals("INGEST_READY", signal["eventType"])
         assertEquals(10, signal["itemCount"])
+    }
+
+    @Test
+    fun `does not receive another user's signals`() {
+        val stompSession = connectWithJwt()
+        val otherUserId = UUID.fromString("00000000-0000-0000-0000-000000000002")
+        val received = CompletableFuture<Map<String, Any>>()
+
+        stompSession.subscribe("/topic/user/$otherUserId/jobs", object : StompFrameHandler {
+            override fun getPayloadType(headers: StompHeaders): Type = Map::class.java
+            override fun handleFrame(headers: StompHeaders, payload: Any?) {
+                @Suppress("UNCHECKED_CAST")
+                received.complete(payload as Map<String, Any>)
+            }
+        })
+
+        Thread.sleep(500)
+
+        eventPublisher.publishEvent(JobStatusChanged(
+            userId = otherUserId,
+            timestamp = Instant.now(),
+            jobId = UUID.randomUUID(),
+            jobType = "RSS_FETCH",
+            oldStatus = "PENDING",
+            newStatus = "RUNNING"
+        ))
+
+        // The broker answers a forbidden SUBSCRIBE with an ERROR frame and closes the session.
+        try {
+            received.get(2, TimeUnit.SECONDS)
+            assertTrue(false, "Should not receive another user's signal")
+        } catch (e: java.util.concurrent.TimeoutException) {
+            assertTrue(!stompSession.isConnected, "Session should be closed after forbidden SUBSCRIBE")
+        }
     }
 
     @Test
