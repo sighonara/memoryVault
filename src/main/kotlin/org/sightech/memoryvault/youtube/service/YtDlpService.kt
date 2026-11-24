@@ -29,11 +29,14 @@ class YtDlpService(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
+    private companion object {
+        const val METADATA_TIMEOUT_SECONDS = 120L
+    }
+
     fun fetchPlaylistMetadata(playlistUrl: String): List<VideoMetadata> {
+        YoutubeUrlValidator.requireYoutubeUrl(playlistUrl)
         val process = try {
-            ProcessBuilder(
-                "yt-dlp", "--flat-playlist", "--dump-json", playlistUrl
-            )
+            ProcessBuilder(metadataCommand(playlistUrl))
                 .redirectErrorStream(false)
                 .start()
         } catch (e: java.io.IOException) {
@@ -41,17 +44,35 @@ class YtDlpService(
             throw RuntimeException("yt-dlp not found or failed to start: ${e.message}", e)
         }
 
-        val output = process.inputStream.bufferedReader().readText()
-        val exitCode = process.waitFor()
-
-        if (exitCode != 0) {
-            val error = process.errorStream.bufferedReader().readText()
-            log.error("yt-dlp metadata fetch failed (exit {}): {}", exitCode, error)
-            throw RuntimeException("yt-dlp failed with exit code $exitCode: $error")
+        // Drain both pipes concurrently so neither can fill and block the child.
+        val stdout = java.util.concurrent.CompletableFuture.supplyAsync {
+            process.inputStream.bufferedReader().readText()
+        }
+        val stderr = java.util.concurrent.CompletableFuture.supplyAsync {
+            process.errorStream.bufferedReader().readText()
         }
 
-        return parsePlaylistJson(output)
+        if (!process.waitFor(METADATA_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+            process.destroyForcibly()
+            log.warn("yt-dlp metadata fetch timed out after {}s", METADATA_TIMEOUT_SECONDS)
+            throw RuntimeException("yt-dlp metadata fetch timed out")
+        }
+
+        val exitCode = process.exitValue()
+        if (exitCode != 0) {
+            val error = try { stderr.get(5, TimeUnit.SECONDS) } catch (e: Exception) { "" }
+            log.warn("yt-dlp metadata fetch failed (exit {}): {}", exitCode, error)
+            throw RuntimeException("yt-dlp failed with exit code $exitCode")
+        }
+
+        return parsePlaylistJson(stdout.get(30, TimeUnit.SECONDS))
     }
+
+    internal fun metadataCommand(url: String): List<String> =
+        listOf("yt-dlp", "--flat-playlist", "--dump-json", "--", url)
+
+    internal fun downloadCommand(url: String, out: String): List<String> =
+        listOf("yt-dlp", "-o", out, "--", url)
 
     fun parsePlaylistJson(ndjson: String): List<VideoMetadata> {
         return ndjson.lines()
@@ -76,12 +97,11 @@ class YtDlpService(
     }
 
     fun downloadVideo(videoUrl: String, outputPath: String): DownloadResult {
+        YoutubeUrlValidator.requireYoutubeUrl(videoUrl)
         log.info("Downloading video: {} -> {}", videoUrl, outputPath)
 
         val process = try {
-            ProcessBuilder(
-                "yt-dlp", "-o", outputPath, videoUrl
-            )
+            ProcessBuilder(downloadCommand(videoUrl, outputPath))
                 .redirectErrorStream(false)
                 .start()
         } catch (e: java.io.IOException) {

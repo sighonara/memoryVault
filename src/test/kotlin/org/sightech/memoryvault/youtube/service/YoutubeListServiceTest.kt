@@ -14,6 +14,7 @@ import java.util.Optional
 import java.util.UUID
 import kotlin.test.AfterTest
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -106,6 +107,30 @@ class YoutubeListServiceTest {
         assertEquals(1, results.size)
         assertEquals(0, results[0].newVideos)
         verify { youtubeListRepository.save(match { it.failureCount == 1 }) }
+    }
+
+    @Test
+    fun `addList rejects non youtube url before saving or fetching`() {
+        assertFailsWith<IllegalArgumentException> { service.addList("--batch-file=/etc/passwd") }
+        verify(exactly = 0) { youtubeListRepository.save(any()) }
+        verify(exactly = 0) { ytDlpService.fetchPlaylistMetadata(any()) }
+    }
+
+    @Test
+    fun `refreshList skips lists with invalid stored url and still refreshes others`() {
+        val bad = YoutubeList(userId = userId, youtubeListId = "bad", url = "--batch-file=/etc/passwd")
+        val good = YoutubeList(userId = userId, youtubeListId = "PLtest", url = "https://youtube.com/playlist?list=PLtest")
+        every { youtubeListRepository.findAllActiveByUserId(userId) } returns listOf(bad, good)
+        every { ytDlpService.fetchPlaylistMetadata(good.url) } returns emptyList()
+        every { videoSyncService.syncList(good, any()) } returns SyncResult(
+            list = good, newVideos = 0, removedVideos = 0, downloadSuccesses = 0, downloadFailures = 0
+        )
+
+        val results = service.refreshList(null)
+
+        assertEquals(1, results.size)
+        verify(exactly = 0) { ytDlpService.fetchPlaylistMetadata(bad.url) }
+        verify(exactly = 0) { youtubeListRepository.save(any()) }
     }
 
     @Test
