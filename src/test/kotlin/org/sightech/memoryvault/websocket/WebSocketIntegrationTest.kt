@@ -28,6 +28,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.test.fail
 
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -261,7 +262,7 @@ class WebSocketIntegrationTest {
         // The broker answers a forbidden SUBSCRIBE with an ERROR frame and closes the session.
         try {
             received.get(2, TimeUnit.SECONDS)
-            assertTrue(false, "Should not receive another user's signal")
+            fail("Should not receive another user's signal")
         } catch (e: java.util.concurrent.TimeoutException) {
             assertTrue(!stompSession.isConnected, "Session should be closed after forbidden SUBSCRIBE")
         }

@@ -7,18 +7,13 @@ import org.springframework.messaging.MessagingException
 import org.springframework.messaging.simp.stomp.StompCommand
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor
 import org.springframework.messaging.support.ChannelInterceptor
-import org.springframework.messaging.support.MessageBuilder
+import org.springframework.messaging.support.MessageHeaderAccessor
 import org.springframework.stereotype.Component
-import java.security.Principal
 
 @Component
 class WebSocketAuthInterceptor(private val tokenValidator: StompTokenValidator) : ChannelInterceptor {
 
     private val log = LoggerFactory.getLogger(javaClass)
-
-    private companion object {
-        const val PRINCIPAL_ATTRIBUTE = "memoryvault.stomp.principal"
-    }
 
     override fun preSend(message: Message<*>, channel: MessageChannel): Message<*>? {
         val accessor = StompHeaderAccessor.wrap(message)
@@ -31,8 +26,8 @@ class WebSocketAuthInterceptor(private val tokenValidator: StompTokenValidator) 
             }
             StompCommand.SEND -> {
                 val destination = accessor.destination
-                if (destination != null && destination.startsWith("/topic")) {
-                    reject(accessor, "SEND to broker topic is not allowed")
+                if (destination == null || !destination.startsWith("/app/")) {
+                    reject(accessor, "SEND to this destination is not allowed")
                 }
                 return message
             }
@@ -53,19 +48,20 @@ class WebSocketAuthInterceptor(private val tokenValidator: StompTokenValidator) 
             return null
         }
 
-        accessor.user = principal
-        // Later frames of this session do not carry the CONNECT user header, so remember it per session.
-        accessor.sessionAttributes?.put(PRINCIPAL_ATTRIBUTE, principal)
-        accessor.setLeaveMutable(false)
+        // The protocol handler registers the session user through the original mutable accessor,
+        // so the user must be set on it (not on a copy) for later frames to carry it.
+        val original = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor::class.java)
+        if (original == null) {
+            log.warn("WebSocket CONNECT rejected: message headers are not mutable")
+            return null
+        }
+        original.user = principal
         log.info("WebSocket CONNECT accepted userId={}", principal.name)
-
-        @Suppress("UNCHECKED_CAST")
-        return MessageBuilder.createMessage(message.payload, accessor.messageHeaders)
+        return message
     }
 
     private fun authorizeSubscribe(accessor: StompHeaderAccessor) {
-        val sessionPrincipal = accessor.sessionAttributes?.get(PRINCIPAL_ATTRIBUTE) as? Principal
-        val userName = (accessor.user ?: sessionPrincipal)?.name
+        val userName = accessor.user?.name
         if (userName == null) {
             reject(accessor, "SUBSCRIBE without authenticated user")
         }

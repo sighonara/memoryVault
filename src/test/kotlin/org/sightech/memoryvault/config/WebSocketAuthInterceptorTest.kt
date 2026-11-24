@@ -10,7 +10,12 @@ import org.springframework.messaging.MessageChannel
 import org.springframework.messaging.simp.stomp.StompCommand
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor
 import org.springframework.messaging.support.MessageBuilder
+import org.springframework.messaging.support.MessageHeaderAccessor
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.security.Principal
+import kotlin.test.assertEquals
+import kotlin.test.assertSame
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -113,7 +118,74 @@ class WebSocketAuthInterceptorTest {
     @Test
     fun `send to topic is rejected`() {
         assertThrows<MessagingException> {
+            interceptor.preSend(buildFrame(StompCommand.SEND, "/topic/x", ownId), channel)
+        }
+        assertThrows<MessagingException> {
             interceptor.preSend(buildFrame(StompCommand.SEND, "/topic/user/$otherId/sync", ownId), channel)
         }
+    }
+
+    @Test
+    fun `send to app destination passes`() {
+        assertNotNull(interceptor.preSend(buildFrame(StompCommand.SEND, "/app/x", ownId), channel))
+    }
+
+    @Test
+    fun `send to user destination is rejected`() {
+        assertThrows<MessagingException> {
+            interceptor.preSend(buildFrame(StompCommand.SEND, "/user/x", ownId), channel)
+        }
+    }
+
+    @Test
+    fun `send to other or missing destination is rejected`() {
+        assertThrows<MessagingException> {
+            interceptor.preSend(buildFrame(StompCommand.SEND, "/queue/x", ownId), channel)
+        }
+        assertThrows<MessagingException> {
+            interceptor.preSend(buildFrame(StompCommand.SEND, "/app", ownId), channel)
+        }
+        assertThrows<MessagingException> {
+            interceptor.preSend(buildFrame(StompCommand.SEND, null, ownId), channel)
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "/topic/user/00000000-0000-0000-0000-000000000001/sync/x",
+            "/topic/user/00000000-0000-0000-0000-000000000001/SYNC",
+            "/topic/user/00000000-0000-0000-0000-000000000001/sy%6Ec",
+            "/topic/user/00000000-0000-0000-0000-000000000001/sync?x=1",
+            "/topic/user/{var}/sync",
+            "/topic/user/00000000-0000-0000-0000-0000000000011/sync",
+            "/topic/user/00000000-0000-0000-0000-000000000001x/sync",
+            "/topic/user/00000000-0000-0000-0000-000000000001/",
+            "/topic/user/00000000-0000-0000-0000-000000000001",
+        ]
+    )
+    fun `malformed subscribe destinations are rejected`(destination: String) {
+        assertThrows<MessagingException> {
+            interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, destination, ownId), channel)
+        }
+    }
+
+    @Test
+    fun `subscribe with null destination is rejected`() {
+        assertThrows<MessagingException> {
+            interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, null, ownId), channel)
+        }
+    }
+
+    @Test
+    fun `connect sets the user on the original mutable accessor and returns the same message`() {
+        every { tokenValidator.validate("valid-token") } returns Principal { ownId }
+        val message = buildConnectMessage("valid-token")
+        val original = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor::class.java)!!
+
+        val result = interceptor.preSend(message, channel)
+
+        assertSame(message, result)
+        assertEquals(ownId, original.user?.name)
     }
 }
