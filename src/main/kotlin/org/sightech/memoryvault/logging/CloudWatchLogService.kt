@@ -23,8 +23,12 @@ class CloudWatchLogService(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun getLogs(level: String?, logger: String?, limit: Int?): List<LogEntry> {
-        val effectiveLimit = limit ?: 50
-        val query = buildQuery(level, logger, effectiveLimit)
+        val normalizedLevel = level?.uppercase()?.also {
+            require(it in ALLOWED_LEVELS) { "Invalid log level" }
+        }
+        logger?.also { require(LOGGER_PATTERN.matches(it)) { "Invalid logger filter" } }
+        val effectiveLimit = (limit ?: DEFAULT_LIMIT).coerceIn(1, MAX_LIMIT)
+        val query = buildQuery(normalizedLevel, logger, effectiveLimit)
 
         val now = Instant.now()
         val startQueryResponse = cwClient.startQuery(
@@ -101,6 +105,10 @@ class CloudWatchLogService(
         }
 
     private companion object {
+        val ALLOWED_LEVELS = setOf("TRACE", "DEBUG", "INFO", "WARN", "ERROR")
+        val LOGGER_PATTERN = Regex("^[A-Za-z0-9_.$]{1,200}$")
+        const val DEFAULT_LIMIT = 50
+        const val MAX_LIMIT = 500
         val INSIGHTS_TIMESTAMP: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
     }
 }

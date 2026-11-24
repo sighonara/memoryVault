@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test
 import software.amazon.awssdk.services.cloudwatchlogs.CloudWatchLogsClient
 import software.amazon.awssdk.services.cloudwatchlogs.model.*
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class CloudWatchLogServiceTest {
@@ -104,6 +105,61 @@ class CloudWatchLogServiceTest {
             cwClient.startQuery(match<StartQueryRequest> {
                 it.queryString().contains("FeedService")
             })
+        }
+    }
+
+    @Test
+    fun `rejects level with query syntax`() {
+        assertFailsWith<IllegalArgumentException> {
+            service.getLogs("x' or 1=1 | fields @message #", null, 10)
+        }
+        verify(exactly = 0) { cwClient.startQuery(any<StartQueryRequest>()) }
+    }
+
+    @Test
+    fun `rejects logger with regex metacharacters`() {
+        assertFailsWith<IllegalArgumentException> {
+            service.getLogs(null, "a/ | stats count(*)", 10)
+        }
+        verify(exactly = 0) { cwClient.startQuery(any<StartQueryRequest>()) }
+    }
+
+    @Test
+    fun `normalizes level case`() {
+        every { cwClient.startQuery(any<StartQueryRequest>()) } returns
+            StartQueryResponse.builder().queryId("q1").build() as StartQueryResponse
+        every { cwClient.getQueryResults(any<GetQueryResultsRequest>()) } returns completeResponse()
+
+        service.getLogs("warn", null, 10)
+
+        verify {
+            cwClient.startQuery(match<StartQueryRequest> { it.queryString().contains("level = 'WARN'") })
+        }
+    }
+
+    @Test
+    fun `clamps limit to 500`() {
+        every { cwClient.startQuery(any<StartQueryRequest>()) } returns
+            StartQueryResponse.builder().queryId("q1").build() as StartQueryResponse
+        every { cwClient.getQueryResults(any<GetQueryResultsRequest>()) } returns completeResponse()
+
+        service.getLogs(null, null, 10000)
+
+        verify {
+            cwClient.startQuery(match<StartQueryRequest> { it.queryString().endsWith("limit 500") })
+        }
+    }
+
+    @Test
+    fun `clamps limit to at least 1`() {
+        every { cwClient.startQuery(any<StartQueryRequest>()) } returns
+            StartQueryResponse.builder().queryId("q1").build() as StartQueryResponse
+        every { cwClient.getQueryResults(any<GetQueryResultsRequest>()) } returns completeResponse()
+
+        service.getLogs(null, null, -5)
+
+        verify {
+            cwClient.startQuery(match<StartQueryRequest> { it.queryString().endsWith("limit 1") })
         }
     }
 
