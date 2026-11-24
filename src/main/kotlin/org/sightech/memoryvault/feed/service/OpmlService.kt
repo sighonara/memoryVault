@@ -21,6 +21,8 @@ data class ImportResult(
     val categoriesCreated: Int
 )
 
+class OpmlTooLargeException(message: String) : RuntimeException(message)
+
 @Service
 class OpmlService(
     private val feedRepository: FeedRepository,
@@ -98,7 +100,7 @@ class OpmlService(
         val userId = CurrentUser.userId()
         if (opmlContent.toByteArray().size > MAX_OPML_BYTES) {
             log.warn("Rejected OPML import for user {}: content exceeds {} bytes", userId, MAX_OPML_BYTES)
-            throw IllegalArgumentException("OPML file is too large (max 2 MiB)")
+            throw OpmlTooLargeException("OPML file is too large (max 2 MiB)")
         }
         val existingFeeds = feedRepository.findAllActiveByUserId(userId).map { it.url.lowercase() }.toMutableSet()
         var entriesSeen = 0

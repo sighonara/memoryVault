@@ -30,7 +30,7 @@ class FeedService(
         try {
             urlValidator.validate(url)
         } catch (e: UnsafeUrlException) {
-            log.warn("Rejected feed url={}: {}", url, e.message)
+            log.warn("Rejected feed host={}: {}", runCatching { java.net.URI(url.trim()).host }.getOrNull(), e.message)
             throw e
         }
         val category = if (categoryId != null) {
@@ -41,7 +41,7 @@ class FeedService(
         }
         val feed = feedRepository.save(Feed(userId = userId, url = url, category = category))
         rssFetchService.fetchAndStore(feed)
-        log.info("Added feed url={} categoryId={} feedId={}", url, category.id, feed.id)
+        log.info("Added feed categoryId={} feedId={}", category.id, feed.id)
         return feed
     }
 

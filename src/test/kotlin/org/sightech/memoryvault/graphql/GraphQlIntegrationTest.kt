@@ -129,6 +129,20 @@ class GraphQlIntegrationTest {
         org.junit.jupiter.api.Assertions.assertEquals(listOf(category.id.toString()), categoryIds)
     }
 
+    @Test
+    fun `addFeed with a non-public url returns a BAD_REQUEST error carrying the message`() {
+        graphQlTester
+            .mutate()
+            .header("Authorization", "Bearer ${generateTestToken()}")
+            .build()
+            .document("""mutation { addFeed(url: "http://169.254.169.254/latest/meta-data/") { id } }""")
+            .execute()
+            .errors()
+            .expect { it.errorType == org.springframework.graphql.execution.ErrorType.BAD_REQUEST }
+            .expect { it.message == "URL points to a non-public address" }
+            .verify()
+    }
+
     private fun generateTestToken(): String {
         return jwtService.generateToken(
             UUID.fromString("00000000-0000-0000-0000-000000000001"),

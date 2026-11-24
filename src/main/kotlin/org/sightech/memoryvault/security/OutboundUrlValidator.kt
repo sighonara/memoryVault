@@ -14,6 +14,8 @@ class FeedTooLargeException(message: String) : RuntimeException(message)
 /**
  * Validates URLs the server is about to fetch on a user's behalf. Only http(s) URLs whose
  * every resolved address is publicly routable are accepted.
+ *
+ * Redirect hops are each re-validated before they are followed.
  */
 @Component
 class OutboundUrlValidator(

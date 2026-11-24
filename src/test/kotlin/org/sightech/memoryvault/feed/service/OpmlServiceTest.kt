@@ -91,7 +91,7 @@ class OpmlServiceTest {
         every { feedRepository.findAllActiveByUserId(userId) } returns emptyList()
         val huge = "<opml><body>" + "x".repeat(2 * 1024 * 1024) + "</body></opml>"
 
-        assertFailsWith<IllegalArgumentException> { runBlocking { service.importOpml(huge) } }
+        assertFailsWith<OpmlTooLargeException> { runBlocking { service.importOpml(huge) } }
     }
 
     @Test
