@@ -37,7 +37,7 @@ class CognitoJwtFilterTest {
         }
 
         every { tokenValidator.validate("valid-token") } returns CognitoClaims("test@example.com", "OWNER")
-        every { userRepository.findByEmailAndDeletedAtIsNull("test@example.com") } returns user
+        every { userRepository.findByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com") } returns user
 
         val request = MockHttpServletRequest()
         request.addHeader("Authorization", "Bearer valid-token")
@@ -69,7 +69,7 @@ class CognitoJwtFilterTest {
     @Test
     fun `skips auth when user not found or soft-deleted`() {
         every { tokenValidator.validate("valid-token") } returns CognitoClaims("ghost@example.com", "OWNER")
-        every { userRepository.findByEmailAndDeletedAtIsNull("ghost@example.com") } returns null
+        every { userRepository.findByEmailIgnoreCaseAndDeletedAtIsNull("ghost@example.com") } returns null
 
         val request = MockHttpServletRequest()
         request.addHeader("Authorization", "Bearer valid-token")

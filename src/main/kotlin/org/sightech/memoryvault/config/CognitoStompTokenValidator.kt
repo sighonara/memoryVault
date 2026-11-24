@@ -13,7 +13,7 @@ class CognitoStompTokenValidator(
 ) : StompTokenValidator {
     override fun validate(token: String): Principal? {
         val claims = cognitoTokenValidator.validate(token) ?: return null
-        val user = userRepository.findByEmailAndDeletedAtIsNull(claims.email) ?: return null
+        val user = userRepository.findByEmailIgnoreCaseAndDeletedAtIsNull(claims.email) ?: return null
         return Principal { user.id.toString() }
     }
 }
