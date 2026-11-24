@@ -50,6 +50,26 @@ class BackupServiceTest {
     }
 
     @Test
+    fun `getBackupRecords returns empty for another user's video`() {
+        val otherUser = UUID.randomUUID()
+        every { videoRepo.findByIdAndUserId(videoId, otherUser) } returns null
+        every { recordRepo.findByVideoId(videoId) } returns
+            listOf(BackupRecord(videoId = videoId, providerId = providerId, status = BackupStatus.BACKED_UP))
+
+        assertEquals(emptyList(), service.getBackupRecords(videoId, otherUser))
+    }
+
+    @Test
+    fun `getBackupRecords returns records for the owner's video`() {
+        val video = mockk<org.sightech.memoryvault.youtube.entity.Video>()
+        val record = BackupRecord(videoId = videoId, providerId = providerId, status = BackupStatus.BACKED_UP)
+        every { videoRepo.findByIdAndUserId(videoId, userId) } returns video
+        every { recordRepo.findByVideoId(videoId) } returns listOf(record)
+
+        assertEquals(listOf(record), service.getBackupRecords(videoId, userId))
+    }
+
+    @Test
     fun `createPendingRecord creates a PENDING backup record`() {
         every { recordRepo.findByVideoIdAndProviderId(videoId, providerId) } returns null
 
