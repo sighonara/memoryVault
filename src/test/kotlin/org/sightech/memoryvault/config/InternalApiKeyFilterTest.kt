@@ -7,16 +7,46 @@ import org.junit.jupiter.api.Test
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class InternalApiKeyFilterTest {
 
     private val filterChain = mockk<FilterChain>(relaxed = true)
-    private val filter = InternalApiKeyFilter("test-key-123")
+    private val validKey = "k".repeat(48)
+    private val filter = InternalApiKeyFilter(validKey)
+
+    @Test
+    fun `blank key fails construction`() {
+        assertFailsWith<IllegalStateException> { InternalApiKeyFilter("") }
+        assertFailsWith<IllegalStateException> { InternalApiKeyFilter("   ") }
+    }
+
+    @Test
+    fun `31-char key fails construction`() {
+        assertFailsWith<IllegalStateException> { InternalApiKeyFilter("k".repeat(31)) }
+    }
+
+    @Test
+    fun `32-char and 48-char keys are accepted`() {
+        InternalApiKeyFilter("k".repeat(32))
+        InternalApiKeyFilter("k".repeat(48))
+    }
+
+    @Test
+    fun `blank header is rejected`() {
+        val request = MockHttpServletRequest("POST", "/api/internal/sync/feeds")
+        request.addHeader("X-Internal-Key", "")
+        val response = MockHttpServletResponse()
+
+        filter.doFilter(request, response, filterChain)
+
+        assertEquals(401, response.status)
+    }
 
     @Test
     fun `allows internal request with valid API key`() {
         val request = MockHttpServletRequest("POST", "/api/internal/sync/feeds")
-        request.addHeader("X-Internal-Key", "test-key-123")
+        request.addHeader("X-Internal-Key", validKey)
         val response = MockHttpServletResponse()
 
         filter.doFilter(request, response, filterChain)
