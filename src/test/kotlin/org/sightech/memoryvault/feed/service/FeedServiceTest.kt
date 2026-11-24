@@ -14,7 +14,10 @@ import org.springframework.security.core.context.SecurityContext
 import org.springframework.security.core.context.SecurityContextHolder
 import java.util.UUID
 import kotlin.test.AfterTest
+import org.sightech.memoryvault.security.OutboundUrlValidator
+import org.sightech.memoryvault.security.UnsafeUrlException
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -25,13 +28,15 @@ class FeedServiceTest {
     private val rssFetchService = mockk<RssFetchService>()
     private val feedCategoryService = mockk<FeedCategoryService>()
     private val eventPublisher = mockk<ApplicationEventPublisher>(relaxed = true)
-    private val service = FeedService(feedRepository, feedItemRepository, rssFetchService, feedCategoryService, eventPublisher)
+    private val urlValidator = mockk<OutboundUrlValidator>()
+    private val service = FeedService(feedRepository, feedItemRepository, rssFetchService, feedCategoryService, eventPublisher, urlValidator)
     private val userId = UUID.fromString("00000000-0000-0000-0000-000000000001")
     private val defaultCategory = FeedCategory(userId = userId, name = "Subscribed")
 
     @BeforeEach
     fun setUp() {
         MockKAnnotations.init(this)
+        every { urlValidator.validate(any()) } answers { java.net.URI(firstArg<String>()) }
 
         // Mock SecurityContext to return our test userId
         val securityContext = mockk<SecurityContext>()
@@ -59,6 +64,16 @@ class FeedServiceTest {
         assertEquals(defaultCategory, result.category)
         verify { feedRepository.save(any()) }
         coVerify { rssFetchService.fetchAndStore(any()) }
+    }
+
+    @Test
+    fun `addFeed rejects unsafe url before saving`() {
+        every { urlValidator.validate("http://169.254.169.254/") } throws UnsafeUrlException("URL points to a non-public address")
+
+        assertFailsWith<UnsafeUrlException> { runBlocking { service.addFeed("http://169.254.169.254/") } }
+
+        verify(exactly = 0) { feedRepository.save(any()) }
+        coVerify(exactly = 0) { rssFetchService.fetchAndStore(any()) }
     }
 
     @Test

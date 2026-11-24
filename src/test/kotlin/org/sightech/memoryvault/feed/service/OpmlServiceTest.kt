@@ -12,7 +12,9 @@ import org.springframework.security.core.context.SecurityContext
 import org.springframework.security.core.context.SecurityContextHolder
 import java.util.UUID
 import kotlin.test.AfterTest
+import org.sightech.memoryvault.security.UnsafeUrlException
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class OpmlServiceTest {
@@ -82,6 +84,42 @@ class OpmlServiceTest {
 
         assertEquals(1, result.feedsAdded)
         assertEquals(1, result.feedsSkipped)
+    }
+
+    @Test
+    fun `importOpml rejects content over 2 MiB`() {
+        every { feedRepository.findAllActiveByUserId(userId) } returns emptyList()
+        val huge = "<opml><body>" + "x".repeat(2 * 1024 * 1024) + "</body></opml>"
+
+        assertFailsWith<IllegalArgumentException> { runBlocking { service.importOpml(huge) } }
+    }
+
+    @Test
+    fun `importOpml stops after 1000 entries and dedupes urls within the file`() {
+        every { feedRepository.findAllActiveByUserId(userId) } returns emptyList()
+        coEvery { feedService.addFeed(any(), any()) } answers { Feed(userId = userId, url = firstArg()) }
+        val entries = (1..1200).joinToString("") { """<outline type="rss" xmlUrl="https://example.com/f$it" />""" }
+        val opml = """<opml version="2.0"><body>$entries<outline type="rss" xmlUrl="https://example.com/f1" /></body></opml>"""
+
+        val result = runBlocking { service.importOpml(opml) }
+
+        assertEquals(1000, result.feedsAdded)
+        coVerify(exactly = 1000) { feedService.addFeed(any(), any()) }
+    }
+
+    @Test
+    fun `importOpml dedupes repeated urls and skips unsafe ones`() {
+        every { feedRepository.findAllActiveByUserId(userId) } returns emptyList()
+        coEvery { feedService.addFeed("https://a.com/rss", any()) } returns Feed(userId = userId, url = "https://a.com/rss")
+        coEvery { feedService.addFeed("http://169.254.169.254/", any()) } throws UnsafeUrlException("blocked")
+        val opml = """<opml version="2.0"><body>
+            <outline xmlUrl="https://a.com/rss" /><outline xmlUrl="https://A.com/rss" /><outline xmlUrl="http://169.254.169.254/" />
+            </body></opml>"""
+
+        val result = runBlocking { service.importOpml(opml) }
+
+        assertEquals(1, result.feedsAdded)
+        assertEquals(2, result.feedsSkipped)
     }
 
     @Test

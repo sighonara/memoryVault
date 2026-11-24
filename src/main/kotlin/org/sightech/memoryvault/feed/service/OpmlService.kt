@@ -4,6 +4,7 @@ import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.feed.entity.Feed
 import org.sightech.memoryvault.feed.entity.FeedCategory
 import org.sightech.memoryvault.feed.repository.FeedRepository
+import org.sightech.memoryvault.security.UnsafeUrlException
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.w3c.dom.Element
@@ -27,6 +28,11 @@ class OpmlService(
     private val feedCategoryService: FeedCategoryService
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
+
+    companion object {
+        const val MAX_OPML_BYTES = 2 * 1024 * 1024
+        const val MAX_OPML_ENTRIES = 1000
+    }
 
     fun exportOpml(): String {
         val userId = CurrentUser.userId()
@@ -79,9 +85,23 @@ class OpmlService(
         return writer.toString()
     }
 
+    private suspend fun tryAddFeed(url: String, categoryId: java.util.UUID?): Boolean =
+        try {
+            if (categoryId == null) feedService.addFeed(url) else feedService.addFeed(url, categoryId)
+            true
+        } catch (e: UnsafeUrlException) {
+            log.warn("Skipped OPML entry with unsafe URL: {}", e.message)
+            false
+        }
+
     suspend fun importOpml(opmlContent: String): ImportResult {
         val userId = CurrentUser.userId()
-        val existingFeeds = feedRepository.findAllActiveByUserId(userId).map { it.url.lowercase() }.toSet()
+        if (opmlContent.toByteArray().size > MAX_OPML_BYTES) {
+            log.warn("Rejected OPML import for user {}: content exceeds {} bytes", userId, MAX_OPML_BYTES)
+            throw IllegalArgumentException("OPML file is too large (max 2 MiB)")
+        }
+        val existingFeeds = feedRepository.findAllActiveByUserId(userId).map { it.url.lowercase() }.toMutableSet()
+        var entriesSeen = 0
 
         val dbf = DocumentBuilderFactory.newInstance().apply {
             setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
@@ -113,11 +133,14 @@ class OpmlService(
             val xmlUrl = node.getAttribute("xmlUrl")
             if (xmlUrl.isNotBlank()) {
                 // Top-level feed (no category wrapper)
+                if (++entriesSeen > MAX_OPML_ENTRIES) break
                 if (xmlUrl.lowercase() in existingFeeds) {
                     feedsSkipped++
-                } else {
-                    feedService.addFeed(xmlUrl)
+                } else if (tryAddFeed(xmlUrl, null)) {
+                    existingFeeds.add(xmlUrl.lowercase())
                     feedsAdded++
+                } else {
+                    feedsSkipped++
                 }
             } else {
                 // Category folder — child outlines are feeds
@@ -131,6 +154,7 @@ class OpmlService(
                     if (child !is Element || child.tagName != "outline") continue
                     val childXmlUrl = child.getAttribute("xmlUrl")
                     if (childXmlUrl.isBlank()) continue
+                    if (++entriesSeen > MAX_OPML_ENTRIES) break
 
                     if (childXmlUrl.lowercase() in existingFeeds) {
                         feedsSkipped++
@@ -144,9 +168,17 @@ class OpmlService(
                         categoryObj = category
                     }
 
-                    feedService.addFeed(childXmlUrl, categoryObj.id)
-                    feedsAdded++
+                    if (tryAddFeed(childXmlUrl, categoryObj.id)) {
+                        existingFeeds.add(childXmlUrl.lowercase())
+                        feedsAdded++
+                    } else {
+                        feedsSkipped++
+                    }
                 }
+            }
+            if (entriesSeen > MAX_OPML_ENTRIES) {
+                log.warn("OPML import for user {} truncated at {} entries", userId, MAX_OPML_ENTRIES)
+                break
             }
         }
 
