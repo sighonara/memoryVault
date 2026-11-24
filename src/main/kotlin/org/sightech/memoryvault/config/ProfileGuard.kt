@@ -1,28 +1,45 @@
 package org.sightech.memoryvault.config
 
-import org.slf4j.LoggerFactory
+import org.springframework.boot.EnvironmentPostProcessor
+import org.springframework.boot.SpringApplication
+import org.springframework.core.Ordered
+import org.springframework.core.env.ConfigurableEnvironment
 import org.springframework.core.env.Environment
-import org.springframework.stereotype.Component
 
 /**
- * Fails startup when the active profiles are missing or inconsistent, so a misconfigured
- * deployment cannot silently fall back to local-development settings.
+ * Validates the active profiles. Runs as an EnvironmentPostProcessor so a bad configuration
+ * fails before the web server or any bean is created, instead of surfacing as an unrelated
+ * missing-bean error (or silently starting in the wrong mode).
  */
-@Component
-class ProfileGuard(env: Environment) {
+object ProfileGuard {
 
-    private val log = LoggerFactory.getLogger(javaClass)
+    private val deployedProfiles = setOf("aws", "prod")
+    private val devProfiles = setOf("local", "test")
 
-    init {
+    fun check(env: Environment) {
         val active = env.activeProfiles.toSet()
         check(active.isNotEmpty()) {
             "No Spring profile is active. Set SPRING_PROFILES_ACTIVE (e.g. 'local' for development or 'aws,prod' for production)."
         }
-        if ("aws" in active || "prod" in active) {
-            check("aws" in active && "prod" in active) {
+        val deployed = active.intersect(deployedProfiles)
+        if (deployed.isNotEmpty()) {
+            check(deployed == deployedProfiles) {
                 "Profiles 'aws' and 'prod' must be activated together; active profiles: $active"
             }
+            check(active.intersect(devProfiles).isEmpty()) {
+                "Profiles 'local' and 'test' must not be combined with 'aws' or 'prod'; active profiles: $active"
+            }
         }
-        log.info("Active profiles validated: {}", active)
     }
+}
+
+class ProfileGuardEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered {
+
+    override fun postProcessEnvironment(environment: ConfigurableEnvironment, application: SpringApplication) {
+        ProfileGuard.check(environment)
+    }
+
+    // Run after config data (application*.properties) has been loaded so that profiles
+    // declared there are included in the check.
+    override fun getOrder(): Int = Ordered.LOWEST_PRECEDENCE
 }

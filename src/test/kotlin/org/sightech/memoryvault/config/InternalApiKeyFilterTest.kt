@@ -44,6 +44,17 @@ class InternalApiKeyFilterTest {
     }
 
     @Test
+    fun `whitespace header is rejected`() {
+        val request = MockHttpServletRequest("POST", "/api/internal/sync/feeds")
+        request.addHeader("X-Internal-Key", "   ")
+        val response = MockHttpServletResponse()
+
+        filter.doFilter(request, response, filterChain)
+
+        assertEquals(401, response.status)
+    }
+
+    @Test
     fun `allows internal request with valid API key`() {
         val request = MockHttpServletRequest("POST", "/api/internal/sync/feeds")
         request.addHeader("X-Internal-Key", validKey)
