@@ -57,15 +57,14 @@ class InternalSyncControllerTest {
     }
 
     @Test
-    fun `syncFeeds isolates a failing user and still returns metadata`() {
+    fun `syncFeeds fails the run when every user fails`() {
         coEvery { feedService.refreshFeedsForUser(activeUser.id) } throws RuntimeException("rss down")
         val taskSlot = slot<() -> Map<String, Any>?>()
         every {
             syncJobService.runTracked(JobType.RSS_FETCH, TriggerSource.SCHEDULED, any(), capture(taskSlot))
         } answers { taskSlot.captured.invoke() }
 
-        val response = controller.syncFeeds()
-        assertEquals(0, response.body?.get("feedsRefreshed"))
+        assertFailsWith<IllegalStateException> { controller.syncFeeds() }
     }
 
     @Test
@@ -97,6 +96,24 @@ class InternalSyncControllerTest {
         assertEquals(2, response.body?.get("removedVideos"))
         assertEquals(6, response.body?.get("downloadSuccesses"))
         assertEquals(2, response.body?.get("downloadFailures"))
+    }
+
+    @Test
+    fun `syncFeeds records a FAILED job when every user fails`() {
+        val repo = mockk<org.sightech.memoryvault.scheduling.repository.SyncJobRepository>()
+        val publisher = mockk<org.springframework.context.ApplicationEventPublisher>(relaxed = true)
+        val realService = SyncJobService(repo, publisher)
+        val realController = InternalSyncController(feedService, youtubeListService, realService, costService, userRepository)
+        val startedJob = SyncJob(userId = UUID.randomUUID(), type = JobType.RSS_FETCH, triggeredBy = TriggerSource.SCHEDULED).apply {
+            status = JobStatus.RUNNING
+        }
+        every { repo.save(any()) } returns startedJob
+        every { repo.findById(startedJob.id) } returns java.util.Optional.of(startedJob)
+        coEvery { feedService.refreshFeedsForUser(activeUser.id) } throws RuntimeException("rss down")
+
+        assertFailsWith<IllegalStateException> { realController.syncFeeds() }
+
+        assertEquals(JobStatus.FAILED, startedJob.status)
     }
 
     @Test

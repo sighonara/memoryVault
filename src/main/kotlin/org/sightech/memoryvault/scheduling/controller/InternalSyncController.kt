@@ -39,17 +39,26 @@ class InternalSyncController(
         ) {
             var feedsRefreshed = 0
             var totalNew = 0
-            for (user in userRepository.findAllByDeletedAtIsNull()) {
+            var failedUsers = 0
+            val users = userRepository.findAllByDeletedAtIsNull()
+            for (user in users) {
                 try {
                     val results = runBlocking { feedService.refreshFeedsForUser(user.id) }
                     feedsRefreshed += results.size
                     totalNew += results.sumOf { it.second }
                 } catch (e: Exception) {
-                    log.warn("Feed sync failed for userId={}: {}", user.id, e.message)
+                    failedUsers++
+                    log.warn("Feed sync failed for userId={}", user.id, e)
                 }
             }
-            log.info("Feed sync complete: {} feeds refreshed, {} new items", feedsRefreshed, totalNew)
-            mapOf("feedsRefreshed" to feedsRefreshed, "newItems" to totalNew)
+            if (users.isNotEmpty() && failedUsers == users.size) {
+                throw IllegalStateException("Feed sync failed for all $failedUsers users")
+            }
+            log.info(
+                "Feed sync complete: {} feeds refreshed, {} new items, {} failed users",
+                feedsRefreshed, totalNew, failedUsers
+            )
+            mapOf("feedsRefreshed" to feedsRefreshed, "newItems" to totalNew, "failedUsers" to failedUsers)
         }
         return ResponseEntity.ok(metadata ?: emptyMap())
     }
@@ -62,22 +71,29 @@ class InternalSyncController(
             TriggerSource.SCHEDULED,
             CurrentUser.SYSTEM_USER_ID
         ) {
-            val results = userRepository.findAllByDeletedAtIsNull().flatMap { user ->
+            var failedUsers = 0
+            val users = userRepository.findAllByDeletedAtIsNull()
+            val results = users.flatMap { user ->
                 try {
                     youtubeListService.refreshListsForUser(user.id)
                 } catch (e: Exception) {
-                    log.warn("YouTube sync failed for userId={}: {}", user.id, e.message)
+                    failedUsers++
+                    log.warn("YouTube sync failed for userId={}", user.id, e)
                     emptyList()
                 }
+            }
+            if (users.isNotEmpty() && failedUsers == users.size) {
+                throw IllegalStateException("YouTube sync failed for all $failedUsers users")
             }
             val totalNew = results.sumOf { it.newVideos }
             val totalRemoved = results.sumOf { it.removedVideos }
             log.info(
-                "YouTube sync complete: {} lists synced, {} new videos, {} removals",
-                results.size, totalNew, totalRemoved
+                "YouTube sync complete: {} lists synced, {} new videos, {} removals, {} failed users",
+                results.size, totalNew, totalRemoved, failedUsers
             )
             mapOf(
                 "listsSynced" to results.size,
+                "failedUsers" to failedUsers,
                 "newVideos" to totalNew,
                 "removedVideos" to totalRemoved,
                 "downloadSuccesses" to results.sumOf { it.downloadSuccesses },

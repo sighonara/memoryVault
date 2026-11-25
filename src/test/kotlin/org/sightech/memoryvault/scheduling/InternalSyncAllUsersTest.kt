@@ -20,6 +20,7 @@ import org.sightech.memoryvault.youtube.entity.YoutubeList
 import org.sightech.memoryvault.youtube.service.SyncResult
 import org.sightech.memoryvault.youtube.service.YoutubeListService
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class InternalSyncAllUsersTest {
 
@@ -76,6 +77,47 @@ class InternalSyncAllUsersTest {
         coVerify(exactly = 1) { feedService.refreshFeedsForUser(user2.id) }
         assertEquals(1, response.body?.get("feedsRefreshed"))
         assertEquals(4, response.body?.get("newItems"))
+        assertEquals(1, response.body?.get("failedUsers"))
+    }
+
+    @Test
+    fun `syncFeeds fails the run when every user fails`() {
+        every { userRepository.findAllByDeletedAtIsNull() } returns listOf(user1, user2)
+        coEvery { feedService.refreshFeedsForUser(any()) } throws RuntimeException("boom")
+        stubTracked(JobType.RSS_FETCH)
+
+        assertFailsWith<IllegalStateException> { controller.syncFeeds() }
+    }
+
+    @Test
+    fun `syncFeeds succeeds with zero users`() {
+        every { userRepository.findAllByDeletedAtIsNull() } returns emptyList()
+        stubTracked(JobType.RSS_FETCH)
+
+        val response = controller.syncFeeds()
+
+        assertEquals(0, response.body?.get("feedsRefreshed"))
+        assertEquals(0, response.body?.get("failedUsers"))
+    }
+
+    @Test
+    fun `syncYoutube fails the run when every user fails`() {
+        every { userRepository.findAllByDeletedAtIsNull() } returns listOf(user1, user2)
+        every { youtubeListService.refreshListsForUser(any()) } throws RuntimeException("boom")
+        stubTracked(JobType.YT_SYNC)
+
+        assertFailsWith<IllegalStateException> { controller.syncYoutube() }
+    }
+
+    @Test
+    fun `syncYoutube succeeds with zero users`() {
+        every { userRepository.findAllByDeletedAtIsNull() } returns emptyList()
+        stubTracked(JobType.YT_SYNC)
+
+        val response = controller.syncYoutube()
+
+        assertEquals(0, response.body?.get("listsSynced"))
+        assertEquals(0, response.body?.get("failedUsers"))
     }
 
     @Test
@@ -105,5 +147,6 @@ class InternalSyncAllUsersTest {
         verify(exactly = 1) { youtubeListService.refreshListsForUser(user2.id) }
         assertEquals(1, response.body?.get("listsSynced"))
         assertEquals(5, response.body?.get("newVideos"))
+        assertEquals(1, response.body?.get("failedUsers"))
     }
 }
