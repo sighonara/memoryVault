@@ -19,7 +19,7 @@ class CognitoStompTokenValidatorTest {
     fun `returns principal with user ID when token valid`() {
         val userId = UUID.randomUUID()
         every { cognitoTokenValidator.validate("token") } returns CognitoClaims("test@example.com", "OWNER")
-        every { userRepository.findByEmailAndDeletedAtIsNull("test@example.com") } returns mockk<User> {
+        every { userRepository.findByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com") } returns mockk<User> {
             every { id } returns userId
         }
         assertEquals(userId.toString(), validator.validate("token")?.name)
@@ -34,7 +34,7 @@ class CognitoStompTokenValidatorTest {
     @Test
     fun `returns null when user not in database or soft-deleted`() {
         every { cognitoTokenValidator.validate("token") } returns CognitoClaims("unknown@example.com", "VIEWER")
-        every { userRepository.findByEmailAndDeletedAtIsNull("unknown@example.com") } returns null
+        every { userRepository.findByEmailIgnoreCaseAndDeletedAtIsNull("unknown@example.com") } returns null
         assertNull(validator.validate("token"))
     }
 }

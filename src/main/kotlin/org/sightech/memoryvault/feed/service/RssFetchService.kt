@@ -2,6 +2,8 @@ package org.sightech.memoryvault.feed.service
 
 import com.prof18.rssparser.RssParser
 import com.prof18.rssparser.model.RssItem
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.sightech.memoryvault.feed.entity.Feed
 import org.sightech.memoryvault.feed.entity.FeedItem
 import org.sightech.memoryvault.feed.repository.FeedItemRepository
@@ -9,6 +11,7 @@ import org.sightech.memoryvault.feed.repository.FeedRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.security.MessageDigest
+import kotlin.coroutines.cancellation.CancellationException
 import java.time.Instant
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -17,19 +20,22 @@ import java.time.format.DateTimeFormatter
 class RssFetchService(
     private val feedRepository: FeedRepository,
     private val feedItemRepository: FeedItemRepository,
-    private val rssParser: RssParser
+    private val rssParser: RssParser,
+    private val feedHttpFetcher: FeedHttpFetcher
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     suspend fun fetchAndStore(feed: Feed): Int {
-        val channel = try {
-            rssParser.getRssChannel(feed.url)
+        val xml = try {
+            withContext(Dispatchers.IO) { feedHttpFetcher.fetch(feed.url) }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            log.warn("Failed to fetch RSS feed url={}: {}", feed.url, e.message)
+            log.warn("Failed to fetch RSS feed feedId={}: {}", feed.id, e.message)
             return 0
         }
-        return processChannel(feed, channel)
+        return fetchAndStoreFromXml(feed, xml)
     }
 
     suspend fun fetchAndStoreFromXml(feed: Feed, xml: String): Int {
@@ -53,7 +59,7 @@ class RssFetchService(
         feedRepository.save(currentFeed)
 
         var newCount = 0
-        for (item in channel.items) {
+        for (item in channel.items.take(MAX_ITEMS_PER_FETCH)) {
             val guid = resolveGuid(item)
             if (feedItemRepository.existsByFeedIdAndGuid(feed.id, guid)) continue
 
@@ -73,6 +79,10 @@ class RssFetchService(
 
         log.info("Processed feed feedId={}, newItems={}", feed.id, newCount)
         return newCount
+    }
+
+    companion object {
+        const val MAX_ITEMS_PER_FETCH = 500
     }
 
     private fun resolveGuid(item: RssItem): String {

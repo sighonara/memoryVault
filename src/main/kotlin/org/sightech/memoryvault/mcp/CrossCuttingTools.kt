@@ -37,9 +37,9 @@ class CrossCuttingTools(
 
     @Tool(description = "Get system statistics — content counts, storage usage, sync health, and failure counts. Use when the user wants an overview of their MemoryVault.")
     fun getStats(): String {
-        val stats = statsService.getStats(CurrentUser.userId())
+        val stats = statsService.getStats(CurrentUser.userId(), includeGlobal = true)
 
-        val storageStr = formatBytes(stats.storageUsedBytes)
+        val storageStr = formatBytes(stats.storageUsedBytes ?: 0L)
 
         val lines = mutableListOf<String>()
         lines.add("Content:")

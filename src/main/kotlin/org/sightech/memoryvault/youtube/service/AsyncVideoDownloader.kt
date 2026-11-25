@@ -37,10 +37,18 @@ class AsyncVideoDownloader(
 
         val tempDir = Files.createTempDirectory("memoryvault-dl-")
         try {
-            val dlResult = ytDlpService.downloadVideo(youtubeUrl, tempDir.resolve("%(id)s.%(ext)s").toString())
+            val dlResult = try {
+                ytDlpService.downloadVideo(youtubeUrl, tempDir.resolve("%(id)s.%(ext)s").toString())
+            } catch (e: IllegalArgumentException) {
+                log.warn("Rejected download for video {}: invalid video URL", videoId)
+                video.downloadError = "Invalid video URL"
+                video.updatedAt = Instant.now()
+                videoRepository.save(video)
+                return
+            }
             if (!dlResult.success) {
                 log.warn("yt-dlp failed for video {}: {}", videoId, dlResult.error)
-                video.downloadError = dlResult.error ?: "yt-dlp download failed"
+                video.downloadError = "Download failed"
                 video.updatedAt = Instant.now()
                 videoRepository.save(video)
                 return

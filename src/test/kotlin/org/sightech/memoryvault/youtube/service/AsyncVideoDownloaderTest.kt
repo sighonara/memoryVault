@@ -68,12 +68,33 @@ class AsyncVideoDownloaderTest {
 
         assertNull(video.filePath)
         assertNull(video.downloadedAt)
-        assertEquals("no network", video.downloadError)
+        assertEquals("Download failed", video.downloadError)
         verify(exactly = 1) { videoRepository.save(video) }
         assertNotNull(eventSlot.captured)
         assertEquals(false, eventSlot.captured.success)
         assertEquals(video.id, eventSlot.captured.videoId)
         assertEquals(list.id, eventSlot.captured.listId)
         assertEquals(list.userId, eventSlot.captured.userId)
+    }
+
+    @Test
+    fun `download records generic error and emits failure event for invalid url`() {
+        val video = Video(
+            youtubeList = list,
+            youtubeVideoId = "vid2",
+            youtubeUrl = "https://evil.example/x"
+        )
+        every { videoRepository.findById(video.id) } returns Optional.of(video)
+        every { videoRepository.save(any<Video>()) } returnsArgument 0
+        every { ytDlpService.downloadVideo(any(), any()) } throws IllegalArgumentException("Not a YouTube URL")
+
+        val eventSlot = slot<VideoDownloadCompleted>()
+        every { eventPublisher.publishEvent(capture(eventSlot)) } just Runs
+
+        downloader.download(video.youtubeUrl, video.id)
+
+        assertEquals("Invalid video URL", video.downloadError)
+        verify(exactly = 1) { videoRepository.save(video) }
+        assertEquals(false, eventSlot.captured.success)
     }
 }

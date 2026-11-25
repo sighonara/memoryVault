@@ -56,7 +56,7 @@ class StatsServiceTest {
         every { feedRepository.countByUserIdAndDeletedAtIsNullAndFailureCountGreaterThan(userId, 0) } returns 1
         every { youtubeListRepository.countByUserIdAndDeletedAtIsNullAndFailureCountGreaterThan(userId, 0) } returns 0
 
-        val stats = service.getStats(userId)
+        val stats = service.getStats(userId, includeGlobal = true)
 
         assertEquals(10, stats.bookmarkCount)
         assertEquals(3, stats.feedCount)

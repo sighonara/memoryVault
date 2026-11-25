@@ -2,6 +2,7 @@ package org.sightech.memoryvault.crosscutting
 
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.sightech.memoryvault.support.AsSystemUser
 import org.sightech.memoryvault.bookmark.service.BookmarkService
 import org.sightech.memoryvault.feed.entity.Feed
 import org.sightech.memoryvault.feed.entity.FeedCategory
@@ -22,6 +23,7 @@ import org.sightech.memoryvault.youtube.repository.VideoRepository
 import org.sightech.memoryvault.youtube.repository.YoutubeListRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
@@ -37,6 +39,7 @@ import kotlin.test.assertTrue
 @Testcontainers
 @SpringBootTest
 @ActiveProfiles("test")
+@AsSystemUser
 class CrossCuttingIntegrationTest {
 
     companion object {
@@ -61,6 +64,8 @@ class CrossCuttingIntegrationTest {
     @BeforeEach
     fun setUp() {
         SecurityContextHolder.clearContext()
+        SecurityContextHolder.getContext().authentication =
+            UsernamePasswordAuthenticationToken(userId.toString(), null, emptyList())
     }
 
     @Autowired lateinit var searchService: SearchService
@@ -114,7 +119,7 @@ class CrossCuttingIntegrationTest {
 
     @Test
     fun `getStats returns correct counts`() {
-        val stats = statsService.getStats(userId)
+        val stats = statsService.getStats(userId, includeGlobal = true)
         assertTrue(stats.bookmarkCount >= 0)
         assertTrue(stats.feedCount >= 0)
         assertTrue(stats.tagCount >= 0)

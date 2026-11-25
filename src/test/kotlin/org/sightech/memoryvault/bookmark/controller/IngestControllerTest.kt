@@ -1,6 +1,7 @@
 package org.sightech.memoryvault.bookmark.controller
 
 import org.junit.jupiter.api.Test
+import org.sightech.memoryvault.support.AsSystemUser
 import org.junit.jupiter.api.Assertions.*
 import org.sightech.memoryvault.bookmark.entity.*
 import org.sightech.memoryvault.bookmark.service.BookmarkService
@@ -19,6 +20,7 @@ import java.util.UUID
 @Testcontainers
 @SpringBootTest
 @ActiveProfiles("test")
+@AsSystemUser
 class IngestControllerTest {
 
     companion object {

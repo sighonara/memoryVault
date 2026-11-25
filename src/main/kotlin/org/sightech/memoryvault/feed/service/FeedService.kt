@@ -4,6 +4,8 @@ import org.sightech.memoryvault.auth.CurrentUser
 import org.sightech.memoryvault.feed.entity.Feed
 import org.sightech.memoryvault.feed.repository.FeedItemRepository
 import org.sightech.memoryvault.feed.repository.FeedRepository
+import org.sightech.memoryvault.security.OutboundUrlValidator
+import org.sightech.memoryvault.security.UnsafeUrlException
 import org.sightech.memoryvault.websocket.FeedSyncCompleted
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
@@ -17,13 +19,20 @@ class FeedService(
     private val feedItemRepository: FeedItemRepository,
     private val rssFetchService: RssFetchService,
     private val feedCategoryService: FeedCategoryService,
-    private val eventPublisher: ApplicationEventPublisher
+    private val eventPublisher: ApplicationEventPublisher,
+    private val urlValidator: OutboundUrlValidator
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     suspend fun addFeed(url: String, categoryId: UUID? = null): Feed {
         val userId = CurrentUser.userId()
+        try {
+            urlValidator.validate(url)
+        } catch (e: UnsafeUrlException) {
+            log.warn("Rejected feed host={}: {}", runCatching { java.net.URI(url.trim()).host }.getOrNull(), e.message)
+            throw e
+        }
         val category = if (categoryId != null) {
             feedCategoryService.getCategoryById(categoryId)
                 ?: feedCategoryService.getSubscribedCategory()
@@ -32,7 +41,7 @@ class FeedService(
         }
         val feed = feedRepository.save(Feed(userId = userId, url = url, category = category))
         rssFetchService.fetchAndStore(feed)
-        log.info("Added feed url={} categoryId={} feedId={}", url, category.id, feed.id)
+        log.info("Added feed categoryId={} feedId={}", category.id, feed.id)
         return feed
     }
 
@@ -65,13 +74,15 @@ class FeedService(
 
     suspend fun refreshFeed(feedId: UUID?): List<Pair<Feed, Int>> {
         val userId = CurrentUser.userId()
-        val feeds = if (feedId != null) {
-            val feed = feedRepository.findActiveByIdAndUserId(feedId, userId) ?: return emptyList()
-            listOf(feed)
-        } else {
-            feedRepository.findAllActiveByUserId(userId)
-        }
+        if (feedId == null) return refreshFeedsForUser(userId)
+        val feed = feedRepository.findActiveByIdAndUserId(feedId, userId) ?: return emptyList()
+        return refreshFeeds(userId, listOf(feed), feedId)
+    }
 
+    suspend fun refreshFeedsForUser(userId: UUID): List<Pair<Feed, Int>> =
+        refreshFeeds(userId, feedRepository.findAllActiveByUserId(userId), null)
+
+    private suspend fun refreshFeeds(userId: UUID, feeds: List<Feed>, feedId: UUID?): List<Pair<Feed, Int>> {
         val results = feeds.map { feed ->
             val newCount = rssFetchService.fetchAndStore(feed)
             feed to newCount

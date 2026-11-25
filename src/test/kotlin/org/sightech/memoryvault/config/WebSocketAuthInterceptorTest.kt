@@ -3,12 +3,19 @@ package org.sightech.memoryvault.config
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.messaging.Message
+import org.springframework.messaging.MessagingException
 import org.springframework.messaging.MessageChannel
 import org.springframework.messaging.simp.stomp.StompCommand
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor
 import org.springframework.messaging.support.MessageBuilder
+import org.springframework.messaging.support.MessageHeaderAccessor
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.security.Principal
+import kotlin.test.assertEquals
+import kotlin.test.assertSame
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -59,14 +66,119 @@ class WebSocketAuthInterceptorTest {
         assertNull(result)
     }
 
-    @Test
-    fun `passes through non-CONNECT messages`() {
-        val accessor = StompHeaderAccessor.create(StompCommand.SUBSCRIBE)
+    private val ownId = "00000000-0000-0000-0000-000000000001"
+    private val otherId = "00000000-0000-0000-0000-000000000002"
+
+    private fun buildFrame(command: StompCommand, destination: String?, userName: String?): Message<ByteArray> {
+        val accessor = StompHeaderAccessor.create(command)
+        if (destination != null) accessor.destination = destination
+        if (userName != null) accessor.user = Principal { userName }
         accessor.setLeaveMutable(true)
-        val message = MessageBuilder.createMessage(ByteArray(0), accessor.messageHeaders)
+        return MessageBuilder.createMessage(ByteArray(0), accessor.messageHeaders)
+    }
+
+    @Test
+    fun `passes through UNSUBSCRIBE and DISCONNECT messages`() {
+        assertNotNull(interceptor.preSend(buildFrame(StompCommand.UNSUBSCRIBE, null, ownId), channel))
+        assertNotNull(interceptor.preSend(buildFrame(StompCommand.DISCONNECT, null, ownId), channel))
+    }
+
+    @Test
+    fun `subscribe to own topic passes`() {
+        for (suffix in listOf("feeds", "jobs", "videos", "ingests", "sync", "backups")) {
+            val result = interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, "/topic/user/$ownId/$suffix", ownId), channel)
+            assertNotNull(result)
+        }
+    }
+
+    @Test
+    fun `subscribe to another user's topic is dropped`() {
+        assertNull(interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, "/topic/user/$otherId/sync", ownId), channel))
+    }
+
+    @Test
+    fun `wildcard subscribe is dropped`() {
+        assertNull(interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, "/topic/user/*/sync", ownId), channel))
+        assertNull(interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, "/topic/user/**", ownId), channel))
+    }
+
+    @Test
+    fun `subscribe to a null user segment is dropped`() {
+        assertNull(interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, "/topic/user/null/sync", ownId), channel))
+    }
+
+    @Test
+    fun `subscribe without user is dropped`() {
+        assertNull(interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, "/topic/user/$ownId/sync", null), channel))
+    }
+
+    @Test
+    fun `send to topic is rejected`() {
+        assertThrows<MessagingException> {
+            interceptor.preSend(buildFrame(StompCommand.SEND, "/topic/x", ownId), channel)
+        }
+        assertThrows<MessagingException> {
+            interceptor.preSend(buildFrame(StompCommand.SEND, "/topic/user/$otherId/sync", ownId), channel)
+        }
+    }
+
+    @Test
+    fun `send to app destination passes`() {
+        assertNotNull(interceptor.preSend(buildFrame(StompCommand.SEND, "/app/x", ownId), channel))
+    }
+
+    @Test
+    fun `send to user destination is rejected`() {
+        assertThrows<MessagingException> {
+            interceptor.preSend(buildFrame(StompCommand.SEND, "/user/x", ownId), channel)
+        }
+    }
+
+    @Test
+    fun `send to other or missing destination is rejected`() {
+        assertThrows<MessagingException> {
+            interceptor.preSend(buildFrame(StompCommand.SEND, "/queue/x", ownId), channel)
+        }
+        assertThrows<MessagingException> {
+            interceptor.preSend(buildFrame(StompCommand.SEND, "/app", ownId), channel)
+        }
+        assertThrows<MessagingException> {
+            interceptor.preSend(buildFrame(StompCommand.SEND, null, ownId), channel)
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "/topic/user/00000000-0000-0000-0000-000000000001/sync/x",
+            "/topic/user/00000000-0000-0000-0000-000000000001/SYNC",
+            "/topic/user/00000000-0000-0000-0000-000000000001/sy%6Ec",
+            "/topic/user/00000000-0000-0000-0000-000000000001/sync?x=1",
+            "/topic/user/{var}/sync",
+            "/topic/user/00000000-0000-0000-0000-0000000000011/sync",
+            "/topic/user/00000000-0000-0000-0000-000000000001x/sync",
+            "/topic/user/00000000-0000-0000-0000-000000000001/",
+            "/topic/user/00000000-0000-0000-0000-000000000001",
+        ]
+    )
+    fun `malformed subscribe destinations are dropped`(destination: String) {
+        assertNull(interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, destination, ownId), channel))
+    }
+
+    @Test
+    fun `subscribe with null destination is dropped`() {
+        assertNull(interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, null, ownId), channel))
+    }
+
+    @Test
+    fun `connect sets the user on the original mutable accessor and returns the same message`() {
+        every { tokenValidator.validate("valid-token") } returns Principal { ownId }
+        val message = buildConnectMessage("valid-token")
+        val original = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor::class.java)!!
 
         val result = interceptor.preSend(message, channel)
 
-        assertNotNull(result)
+        assertSame(message, result)
+        assertEquals(ownId, original.user?.name)
     }
 }

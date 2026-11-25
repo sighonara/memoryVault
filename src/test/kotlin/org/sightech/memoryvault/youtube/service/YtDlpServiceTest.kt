@@ -3,6 +3,7 @@ package org.sightech.memoryvault.youtube.service
 import org.junit.jupiter.api.Test
 import tools.jackson.databind.ObjectMapper
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class YtDlpServiceTest {
 
@@ -33,6 +34,25 @@ class YtDlpServiceTest {
         val result = service.parsePlaylistJson(json)
 
         assertEquals("https://www.youtube.com/watch?v=abc123", result[0].url)
+    }
+
+    @Test
+    fun `metadata command ends with double dash then url`() {
+        val cmd = service.metadataCommand("https://youtu.be/x")
+        assertEquals(listOf("--", "https://youtu.be/x"), cmd.takeLast(2))
+    }
+
+    @Test
+    fun `download command ends with double dash then url`() {
+        val cmd = service.downloadCommand("https://youtu.be/x", "/tmp/out")
+        assertEquals(listOf("--", "https://youtu.be/x"), cmd.takeLast(2))
+        assertEquals(listOf("-o", "/tmp/out"), cmd.subList(cmd.indexOf("-o"), cmd.indexOf("-o") + 2))
+    }
+
+    @Test
+    fun `fetch and download reject non youtube urls before starting a process`() {
+        assertFailsWith<IllegalArgumentException> { service.fetchPlaylistMetadata("--batch-file=/etc/passwd") }
+        assertFailsWith<IllegalArgumentException> { service.downloadVideo("https://evil.com/x", "/tmp/out") }
     }
 
     @Test

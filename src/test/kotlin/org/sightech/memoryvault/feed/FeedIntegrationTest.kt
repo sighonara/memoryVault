@@ -2,6 +2,7 @@ package org.sightech.memoryvault.feed
 
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
+import org.sightech.memoryvault.support.AsSystemUser
 import org.sightech.memoryvault.feed.entity.FeedCategory
 import org.sightech.memoryvault.feed.repository.FeedCategoryRepository
 import org.sightech.memoryvault.feed.repository.FeedRepository
@@ -25,6 +26,7 @@ import kotlin.test.assertTrue
 @Testcontainers
 @SpringBootTest
 @ActiveProfiles("test")
+@AsSystemUser
 class FeedIntegrationTest {
 
     companion object {

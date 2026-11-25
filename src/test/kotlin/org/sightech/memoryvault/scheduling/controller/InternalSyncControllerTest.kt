@@ -6,6 +6,8 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import org.junit.jupiter.api.Test
+import org.sightech.memoryvault.auth.entity.User
+import org.sightech.memoryvault.auth.repository.UserRepository
 import org.sightech.memoryvault.cost.service.CostService
 import org.sightech.memoryvault.feed.entity.Feed
 import org.sightech.memoryvault.feed.service.FeedService
@@ -28,14 +30,20 @@ class InternalSyncControllerTest {
     private val youtubeListService = mockk<YoutubeListService>()
     private val syncJobService = mockk<SyncJobService>()
     private val costService = mockk<CostService>()
-    private val controller = InternalSyncController(feedService, youtubeListService, syncJobService, costService)
+    private val userRepository = mockk<UserRepository>()
+    private val controller = InternalSyncController(feedService, youtubeListService, syncJobService, costService, userRepository)
+    private val activeUser = User(email = "u@example.com", displayName = "U")
+
+    init {
+        every { userRepository.findAllByDeletedAtIsNull() } returns listOf(activeUser)
+    }
 
     @Test
     fun `syncFeeds invokes feedService and returns 200 with metadata`() {
-        val userId = UUID.randomUUID()
+        val userId = activeUser.id
         val feed = Feed(id = UUID.randomUUID(), userId = userId, url = "https://example.com/feed")
 
-        coEvery { feedService.refreshFeed(null) } returns listOf(feed to 3, feed to 2)
+        coEvery { feedService.refreshFeedsForUser(userId) } returns listOf(feed to 3, feed to 2)
         val taskSlot = slot<() -> Map<String, Any>?>()
         every {
             syncJobService.runTracked(JobType.RSS_FETCH, TriggerSource.SCHEDULED, any(), capture(taskSlot))
@@ -49,15 +57,14 @@ class InternalSyncControllerTest {
     }
 
     @Test
-    fun `syncFeeds propagates exception when feedService fails`() {
-        coEvery { feedService.refreshFeed(null) } throws RuntimeException("rss down")
+    fun `syncFeeds fails the run when every user fails`() {
+        coEvery { feedService.refreshFeedsForUser(activeUser.id) } throws RuntimeException("rss down")
         val taskSlot = slot<() -> Map<String, Any>?>()
         every {
             syncJobService.runTracked(JobType.RSS_FETCH, TriggerSource.SCHEDULED, any(), capture(taskSlot))
         } answers { taskSlot.captured.invoke() }
 
-        val ex = assertFailsWith<RuntimeException> { controller.syncFeeds() }
-        assertEquals("rss down", ex.message)
+        assertFailsWith<IllegalStateException> { controller.syncFeeds() }
     }
 
     @Test
@@ -75,7 +82,7 @@ class InternalSyncControllerTest {
             downloadSuccesses = 3,
             downloadFailures = 1
         )
-        every { youtubeListService.refreshList(null) } returns listOf(result, result)
+        every { youtubeListService.refreshListsForUser(activeUser.id) } returns listOf(result, result)
         val taskSlot = slot<() -> Map<String, Any>?>()
         every {
             syncJobService.runTracked(JobType.YT_SYNC, TriggerSource.SCHEDULED, any(), capture(taskSlot))
@@ -89,6 +96,24 @@ class InternalSyncControllerTest {
         assertEquals(2, response.body?.get("removedVideos"))
         assertEquals(6, response.body?.get("downloadSuccesses"))
         assertEquals(2, response.body?.get("downloadFailures"))
+    }
+
+    @Test
+    fun `syncFeeds records a FAILED job when every user fails`() {
+        val repo = mockk<org.sightech.memoryvault.scheduling.repository.SyncJobRepository>()
+        val publisher = mockk<org.springframework.context.ApplicationEventPublisher>(relaxed = true)
+        val realService = SyncJobService(repo, publisher)
+        val realController = InternalSyncController(feedService, youtubeListService, realService, costService, userRepository)
+        val startedJob = SyncJob(userId = UUID.randomUUID(), type = JobType.RSS_FETCH, triggeredBy = TriggerSource.SCHEDULED).apply {
+            status = JobStatus.RUNNING
+        }
+        every { repo.save(any()) } returns startedJob
+        every { repo.findById(startedJob.id) } returns java.util.Optional.of(startedJob)
+        coEvery { feedService.refreshFeedsForUser(activeUser.id) } throws RuntimeException("rss down")
+
+        assertFailsWith<IllegalStateException> { realController.syncFeeds() }
+
+        assertEquals(JobStatus.FAILED, startedJob.status)
     }
 
     @Test

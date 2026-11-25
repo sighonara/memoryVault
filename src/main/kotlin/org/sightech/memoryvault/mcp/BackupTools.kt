@@ -14,7 +14,7 @@ class BackupTools(private val backupService: BackupService) {
 
     @Tool(description = "Get backup status for a specific video across all configured providers. Shows whether the video is backed up, pending, lost, or failed on each provider. Use when checking if a video has been backed up.")
     fun getBackupStatus(videoId: String): String {
-        val records = backupService.getBackupRecords(UUID.fromString(videoId))
+        val records = backupService.getBackupRecords(UUID.fromString(videoId), CurrentUser.userId())
         if (records.isEmpty()) return "No backup records for this video."
 
         val lines = records.map { r ->

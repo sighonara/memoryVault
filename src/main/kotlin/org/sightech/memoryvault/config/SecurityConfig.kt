@@ -5,12 +5,14 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import jakarta.servlet.DispatcherType
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter
 import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
 import org.springframework.web.cors.CorsConfiguration
@@ -19,6 +21,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 class SecurityConfig(
     private val jwtAuthenticationFilter: AppAuthenticationFilter,
     private val internalApiKeyFilterProvider: ObjectProvider<InternalApiKeyFilter>,
@@ -27,12 +30,33 @@ class SecurityConfig(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
+    companion object {
+        // Google Fonts hosts are used by client/src/index.html (Roboto + Material Icons).
+        private const val CONTENT_SECURITY_POLICY =
+            "default-src 'self'; script-src 'self'; " +
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+                "img-src 'self' data: https:; " +
+                "font-src 'self' data: https://fonts.gstatic.com; " +
+                "connect-src 'self' https://cognito-idp.us-east-1.amazonaws.com; " +
+                "frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+    }
+
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .cors { it.configurationSource(corsConfigurationSource()) }
             .csrf { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
+            .headers { headers ->
+                headers
+                    .contentTypeOptions { }
+                    .frameOptions { it.deny() }
+                    .referrerPolicy { it.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN) }
+                    // Emitted for secure requests only (behind the proxy this needs X-Forwarded-Proto to be honoured).
+                    .httpStrictTransportSecurity { it.maxAgeInSeconds(31536000).includeSubDomains(false).preload(false) }
+                    // Report-only until the policy has been observed in the browser console.
+                    .contentSecurityPolicy { it.policyDirectives(CONTENT_SECURITY_POLICY).reportOnly() }
+            }
             .authorizeHttpRequests { auth ->
                 auth
                     .dispatcherTypeMatchers(DispatcherType.ASYNC, DispatcherType.ERROR).permitAll()

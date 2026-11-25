@@ -6,5 +6,7 @@ import java.util.UUID
 
 interface UserRepository : JpaRepository<User, UUID> {
     fun findByEmailAndDeletedAtIsNull(email: String): User?
+    fun findByEmailIgnoreCaseAndDeletedAtIsNull(email: String): User?
     fun findByIdAndDeletedAtIsNull(id: UUID): User?
+    fun findAllByDeletedAtIsNull(): List<User>
 }

@@ -1,6 +1,8 @@
 package org.sightech.memoryvault.graphql
 
+import org.sightech.memoryvault.auth.Roles
 import org.sightech.memoryvault.cost.entity.CostRecord
+import org.springframework.security.access.prepost.PreAuthorize
 import org.sightech.memoryvault.cost.service.CostService
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.MutationMapping
@@ -39,6 +41,7 @@ class CostResolver(
     private val NOISE_THRESHOLD = BigDecimal("0.005")
 
     @QueryMapping
+    @PreAuthorize(Roles.OWNER_ONLY)
     fun costs(@Argument months: Int?): CostSummary {
         val effectiveMonths = months ?: 6
         val history = costService.getCostHistory(effectiveMonths)
@@ -62,6 +65,7 @@ class CostResolver(
     }
 
     @MutationMapping
+    @PreAuthorize(Roles.OWNER_ONLY)
     fun refreshCosts(): CostRecordDto? {
         val record = costService.refreshCosts()
         log.info("Cost refresh complete: record={}", record != null)

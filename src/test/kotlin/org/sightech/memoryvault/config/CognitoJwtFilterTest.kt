@@ -37,7 +37,7 @@ class CognitoJwtFilterTest {
         }
 
         every { tokenValidator.validate("valid-token") } returns CognitoClaims("test@example.com", "OWNER")
-        every { userRepository.findByEmailAndDeletedAtIsNull("test@example.com") } returns user
+        every { userRepository.findByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com") } returns user
 
         val request = MockHttpServletRequest()
         request.addHeader("Authorization", "Bearer valid-token")
@@ -46,6 +46,31 @@ class CognitoJwtFilterTest {
 
         val auth = SecurityContextHolder.getContext().authentication!!
         assertEquals(userId.toString(), auth.principal)
+    }
+
+    private fun authoritiesFor(tokenRole: String, dbRole: UserRole): List<String> {
+        val user = mockk<User> {
+            every { id } returns UUID.randomUUID()
+            every { role } returns dbRole
+        }
+        every { tokenValidator.validate("valid-token") } returns CognitoClaims("test@example.com", tokenRole)
+        every { userRepository.findByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com") } returns user
+
+        val request = MockHttpServletRequest()
+        request.addHeader("Authorization", "Bearer valid-token")
+        filter.doFilter(request, MockHttpServletResponse(), filterChain)
+
+        return SecurityContextHolder.getContext().authentication!!.authorities.map { it.authority.orEmpty() }
+    }
+
+    @Test
+    fun `role comes from the database row when the token claims OWNER but the row is VIEWER`() {
+        assertEquals(listOf("ROLE_VIEWER"), authoritiesFor("OWNER", UserRole.VIEWER))
+    }
+
+    @Test
+    fun `role comes from the database row when the token claims VIEWER but the row is OWNER`() {
+        assertEquals(listOf("ROLE_OWNER"), authoritiesFor("VIEWER", UserRole.OWNER))
     }
 
     @Test
@@ -69,7 +94,7 @@ class CognitoJwtFilterTest {
     @Test
     fun `skips auth when user not found or soft-deleted`() {
         every { tokenValidator.validate("valid-token") } returns CognitoClaims("ghost@example.com", "OWNER")
-        every { userRepository.findByEmailAndDeletedAtIsNull("ghost@example.com") } returns null
+        every { userRepository.findByEmailIgnoreCaseAndDeletedAtIsNull("ghost@example.com") } returns null
 
         val request = MockHttpServletRequest()
         request.addHeader("Authorization", "Bearer valid-token")

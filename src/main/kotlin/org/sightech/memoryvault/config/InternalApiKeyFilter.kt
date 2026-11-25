@@ -17,6 +17,12 @@ class InternalApiKeyFilter(
     private val apiKey: String
 ) : OncePerRequestFilter() {
 
+    init {
+        check(apiKey.isNotBlank() && apiKey.length >= MIN_KEY_LENGTH) {
+            "memoryvault.internal.api-key must be at least $MIN_KEY_LENGTH characters"
+        }
+    }
+
     private val log = LoggerFactory.getLogger(javaClass)
     private val apiKeyBytes: ByteArray = apiKey.toByteArray(Charsets.UTF_8)
 
@@ -27,7 +33,7 @@ class InternalApiKeyFilter(
     ) {
         if (request.requestURI.startsWith("/api/internal/")) {
             val providedKey = request.getHeader("X-Internal-Key")
-            if (providedKey == null || !constantTimeEquals(providedKey.toByteArray(Charsets.UTF_8), apiKeyBytes)) {
+            if (providedKey.isNullOrBlank() || !constantTimeEquals(providedKey.toByteArray(Charsets.UTF_8), apiKeyBytes)) {
                 // Never log the attempted key (would leak guesses into logs); do log URI + remote
                 // so repeated probes show up in log analysis.
                 log.warn(
@@ -41,6 +47,10 @@ class InternalApiKeyFilter(
             }
         }
         filterChain.doFilter(request, response)
+    }
+
+    companion object {
+        const val MIN_KEY_LENGTH = 32
     }
 
     // Length-hiding constant-time comparison. MessageDigest.isEqual short-circuits on length

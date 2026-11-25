@@ -117,8 +117,10 @@ class BackupService(
     fun getProviders(userId: UUID): List<BackupProviderEntity> =
         providerRepo.findAllActiveByUserId(userId)
 
-    fun getBackupRecords(videoId: UUID): List<BackupRecord> =
-        recordRepo.findByVideoId(videoId)
+    fun getBackupRecords(videoId: UUID, userId: UUID): List<BackupRecord> {
+        videoRepo.findByIdAndUserId(videoId, userId) ?: return emptyList()
+        return recordRepo.findByVideoId(videoId)
+    }
 
     fun getBackupStatusForVideo(videoId: UUID): String? {
         val records = recordRepo.findByVideoId(videoId)
