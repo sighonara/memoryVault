@@ -26,6 +26,7 @@ import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.fail
@@ -93,30 +94,57 @@ class WebSocketIntegrationTest {
         return future.get(5, TimeUnit.SECONDS).also { session = it }
     }
 
-    @Test
-    fun `receives FeedSyncCompleted signal on feeds topic`() {
-        val stompSession = connectWithJwt()
-        val received = CompletableFuture<Map<String, Any>>()
-
-        stompSession.subscribe("/topic/user/$userId/feeds", object : StompFrameHandler {
+    private fun subscribeTo(
+        stompSession: StompSession,
+        destination: String,
+        received: CompletableFuture<Map<String, Any>>
+    ) {
+        stompSession.subscribe(destination, object : StompFrameHandler {
             override fun getPayloadType(headers: StompHeaders): Type = Map::class.java
             override fun handleFrame(headers: StompHeaders, payload: Any?) {
                 @Suppress("UNCHECKED_CAST")
                 received.complete(payload as Map<String, Any>)
             }
         })
+    }
 
-        Thread.sleep(500)
+    /**
+     * The broker does not acknowledge subscriptions, so readiness is detected by publishing until
+     * the first delivery arrives. The wait ends as soon as the subscription is live and fails
+     * after a fixed deadline.
+     */
+    private fun publishUntilReceived(
+        received: CompletableFuture<Map<String, Any>>,
+        event: () -> Any
+    ): Map<String, Any> {
+        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10)
+        while (System.nanoTime() < deadline) {
+            eventPublisher.publishEvent(event())
+            try {
+                return received.get(100, TimeUnit.MILLISECONDS)
+            } catch (e: TimeoutException) {
+                // subscription not live yet; publish again
+            }
+        }
+        fail("No signal received before the deadline")
+    }
 
-        eventPublisher.publishEvent(FeedSyncCompleted(
-            userId = userId,
-            timestamp = Instant.now(),
-            feedId = UUID.randomUUID(),
-            newItemCount = 3,
-            feedsRefreshed = 1
-        ))
+    @Test
+    fun `receives FeedSyncCompleted signal on feeds topic`() {
+        val stompSession = connectWithJwt()
+        val received = CompletableFuture<Map<String, Any>>()
 
-        val signal = received.get(5, TimeUnit.SECONDS)
+        subscribeTo(stompSession, "/topic/user/$userId/feeds", received)
+
+        val signal = publishUntilReceived(received) {
+            FeedSyncCompleted(
+                userId = userId,
+                timestamp = Instant.now(),
+                feedId = UUID.randomUUID(),
+                newItemCount = 3,
+                feedsRefreshed = 1
+            )
+        }
         assertEquals("FEED_SYNC_COMPLETED", signal["eventType"])
         assertEquals(3, signal["newItemCount"])
     }
@@ -126,26 +154,18 @@ class WebSocketIntegrationTest {
         val stompSession = connectWithJwt()
         val received = CompletableFuture<Map<String, Any>>()
 
-        stompSession.subscribe("/topic/user/$userId/jobs", object : StompFrameHandler {
-            override fun getPayloadType(headers: StompHeaders): Type = Map::class.java
-            override fun handleFrame(headers: StompHeaders, payload: Any?) {
-                @Suppress("UNCHECKED_CAST")
-                received.complete(payload as Map<String, Any>)
-            }
-        })
+        subscribeTo(stompSession, "/topic/user/$userId/jobs", received)
 
-        Thread.sleep(500)
-
-        eventPublisher.publishEvent(JobStatusChanged(
-            userId = userId,
-            timestamp = Instant.now(),
-            jobId = UUID.randomUUID(),
-            jobType = "RSS_FETCH",
-            oldStatus = "PENDING",
-            newStatus = "RUNNING"
-        ))
-
-        val signal = received.get(5, TimeUnit.SECONDS)
+        val signal = publishUntilReceived(received) {
+            JobStatusChanged(
+                userId = userId,
+                timestamp = Instant.now(),
+                jobId = UUID.randomUUID(),
+                jobType = "RSS_FETCH",
+                oldStatus = "PENDING",
+                newStatus = "RUNNING"
+            )
+        }
         assertEquals("JOB_STATUS_CHANGED", signal["eventType"])
         assertEquals("RUNNING", signal["newStatus"])
     }
@@ -155,25 +175,17 @@ class WebSocketIntegrationTest {
         val stompSession = connectWithJwt()
         val received = CompletableFuture<Map<String, Any>>()
 
-        stompSession.subscribe("/topic/user/$userId/sync", object : StompFrameHandler {
-            override fun getPayloadType(headers: StompHeaders): Type = Map::class.java
-            override fun handleFrame(headers: StompHeaders, payload: Any?) {
-                @Suppress("UNCHECKED_CAST")
-                received.complete(payload as Map<String, Any>)
-            }
-        })
+        subscribeTo(stompSession, "/topic/user/$userId/sync", received)
 
-        Thread.sleep(500)
-
-        eventPublisher.publishEvent(ContentMutated(
-            userId = userId,
-            timestamp = Instant.now(),
-            contentType = ContentType.BOOKMARK,
-            mutationType = MutationType.CREATED,
-            entityId = UUID.randomUUID()
-        ))
-
-        val signal = received.get(5, TimeUnit.SECONDS)
+        val signal = publishUntilReceived(received) {
+            ContentMutated(
+                userId = userId,
+                timestamp = Instant.now(),
+                contentType = ContentType.BOOKMARK,
+                mutationType = MutationType.CREATED,
+                entityId = UUID.randomUUID()
+            )
+        }
         assertEquals("CONTENT_MUTATED", signal["eventType"])
         assertEquals("BOOKMARK", signal["contentType"])
         assertEquals("CREATED", signal["mutationType"])
@@ -184,25 +196,17 @@ class WebSocketIntegrationTest {
         val stompSession = connectWithJwt()
         val received = CompletableFuture<Map<String, Any>>()
 
-        stompSession.subscribe("/topic/user/$userId/videos", object : StompFrameHandler {
-            override fun getPayloadType(headers: StompHeaders): Type = Map::class.java
-            override fun handleFrame(headers: StompHeaders, payload: Any?) {
-                @Suppress("UNCHECKED_CAST")
-                received.complete(payload as Map<String, Any>)
-            }
-        })
+        subscribeTo(stompSession, "/topic/user/$userId/videos", received)
 
-        Thread.sleep(500)
-
-        eventPublisher.publishEvent(VideoDownloadCompleted(
-            userId = userId,
-            timestamp = Instant.now(),
-            videoId = UUID.randomUUID(),
-            listId = UUID.randomUUID(),
-            success = true
-        ))
-
-        val signal = received.get(5, TimeUnit.SECONDS)
+        val signal = publishUntilReceived(received) {
+            VideoDownloadCompleted(
+                userId = userId,
+                timestamp = Instant.now(),
+                videoId = UUID.randomUUID(),
+                listId = UUID.randomUUID(),
+                success = true
+            )
+        }
         assertEquals("VIDEO_DOWNLOAD_COMPLETED", signal["eventType"])
         assertEquals(true, signal["success"])
     }
@@ -212,43 +216,42 @@ class WebSocketIntegrationTest {
         val stompSession = connectWithJwt()
         val received = CompletableFuture<Map<String, Any>>()
 
-        stompSession.subscribe("/topic/user/$userId/ingests", object : StompFrameHandler {
-            override fun getPayloadType(headers: StompHeaders): Type = Map::class.java
-            override fun handleFrame(headers: StompHeaders, payload: Any?) {
-                @Suppress("UNCHECKED_CAST")
-                received.complete(payload as Map<String, Any>)
-            }
-        })
+        subscribeTo(stompSession, "/topic/user/$userId/ingests", received)
 
-        Thread.sleep(500)
-
-        eventPublisher.publishEvent(IngestReady(
-            userId = userId,
-            timestamp = Instant.now(),
-            previewId = UUID.randomUUID(),
-            itemCount = 10
-        ))
-
-        val signal = received.get(5, TimeUnit.SECONDS)
+        val signal = publishUntilReceived(received) {
+            IngestReady(
+                userId = userId,
+                timestamp = Instant.now(),
+                previewId = UUID.randomUUID(),
+                itemCount = 10
+            )
+        }
         assertEquals("INGEST_READY", signal["eventType"])
         assertEquals(10, signal["itemCount"])
     }
 
     @Test
-    fun `does not receive another user's signals`() {
+    fun `does not receive another user's signals and the session stays connected`() {
         val stompSession = connectWithJwt()
         val otherUserId = UUID.fromString("00000000-0000-0000-0000-000000000002")
-        val received = CompletableFuture<Map<String, Any>>()
+        val receivedOther = CompletableFuture<Map<String, Any>>()
+        val receivedOwn = CompletableFuture<Map<String, Any>>()
 
-        stompSession.subscribe("/topic/user/$otherUserId/jobs", object : StompFrameHandler {
-            override fun getPayloadType(headers: StompHeaders): Type = Map::class.java
-            override fun handleFrame(headers: StompHeaders, payload: Any?) {
-                @Suppress("UNCHECKED_CAST")
-                received.complete(payload as Map<String, Any>)
-            }
-        })
+        // Frames on one session are processed in order, so once the own-topic subscription is
+        // live the earlier frame for the other user's topic has already been handled.
+        subscribeTo(stompSession, "/topic/user/$otherUserId/jobs", receivedOther)
+        subscribeTo(stompSession, "/topic/user/$userId/jobs", receivedOwn)
 
-        Thread.sleep(500)
+        publishUntilReceived(receivedOwn) {
+            JobStatusChanged(
+                userId = userId,
+                timestamp = Instant.now(),
+                jobId = UUID.randomUUID(),
+                jobType = "RSS_FETCH",
+                oldStatus = "PENDING",
+                newStatus = "RUNNING"
+            )
+        }
 
         eventPublisher.publishEvent(JobStatusChanged(
             userId = otherUserId,
@@ -259,13 +262,21 @@ class WebSocketIntegrationTest {
             newStatus = "RUNNING"
         ))
 
-        // The broker answers a forbidden SUBSCRIBE with an ERROR frame and closes the session.
-        try {
-            received.get(2, TimeUnit.SECONDS)
-            fail("Should not receive another user's signal")
-        } catch (e: java.util.concurrent.TimeoutException) {
-            assertTrue(!stompSession.isConnected, "Session should be closed after forbidden SUBSCRIBE")
+        // The session is still usable: a new subscription on it still receives its own signals.
+        val receivedAfter = CompletableFuture<Map<String, Any>>()
+        subscribeTo(stompSession, "/topic/user/$userId/sync", receivedAfter)
+        publishUntilReceived(receivedAfter) {
+            ContentMutated(
+                userId = userId,
+                timestamp = Instant.now(),
+                contentType = ContentType.BOOKMARK,
+                mutationType = MutationType.CREATED,
+                entityId = UUID.randomUUID()
+            )
         }
+
+        assertTrue(stompSession.isConnected, "Session should stay connected after a dropped SUBSCRIBE")
+        assertTrue(!receivedOther.isDone, "Should not receive another user's signal")
     }
 
     @Test

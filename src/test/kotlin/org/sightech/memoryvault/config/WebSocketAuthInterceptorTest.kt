@@ -92,27 +92,24 @@ class WebSocketAuthInterceptorTest {
     }
 
     @Test
-    fun `subscribe to another user's topic is rejected`() {
-        assertThrows<MessagingException> {
-            interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, "/topic/user/$otherId/sync", ownId), channel)
-        }
+    fun `subscribe to another user's topic is dropped`() {
+        assertNull(interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, "/topic/user/$otherId/sync", ownId), channel))
     }
 
     @Test
-    fun `wildcard subscribe is rejected`() {
-        assertThrows<MessagingException> {
-            interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, "/topic/user/*/sync", ownId), channel)
-        }
-        assertThrows<MessagingException> {
-            interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, "/topic/user/**", ownId), channel)
-        }
+    fun `wildcard subscribe is dropped`() {
+        assertNull(interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, "/topic/user/*/sync", ownId), channel))
+        assertNull(interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, "/topic/user/**", ownId), channel))
     }
 
     @Test
-    fun `subscribe without user is rejected`() {
-        assertThrows<MessagingException> {
-            interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, "/topic/user/$ownId/sync", null), channel)
-        }
+    fun `subscribe to a null user segment is dropped`() {
+        assertNull(interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, "/topic/user/null/sync", ownId), channel))
+    }
+
+    @Test
+    fun `subscribe without user is dropped`() {
+        assertNull(interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, "/topic/user/$ownId/sync", null), channel))
     }
 
     @Test
@@ -164,17 +161,13 @@ class WebSocketAuthInterceptorTest {
             "/topic/user/00000000-0000-0000-0000-000000000001",
         ]
     )
-    fun `malformed subscribe destinations are rejected`(destination: String) {
-        assertThrows<MessagingException> {
-            interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, destination, ownId), channel)
-        }
+    fun `malformed subscribe destinations are dropped`(destination: String) {
+        assertNull(interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, destination, ownId), channel))
     }
 
     @Test
-    fun `subscribe with null destination is rejected`() {
-        assertThrows<MessagingException> {
-            interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, null, ownId), channel)
-        }
+    fun `subscribe with null destination is dropped`() {
+        assertNull(interceptor.preSend(buildFrame(StompCommand.SUBSCRIBE, null, ownId), channel))
     }
 
     @Test

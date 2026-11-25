@@ -21,8 +21,7 @@ class WebSocketAuthInterceptor(private val tokenValidator: StompTokenValidator) 
         when (accessor.command) {
             StompCommand.CONNECT -> Unit
             StompCommand.SUBSCRIBE -> {
-                authorizeSubscribe(accessor)
-                return message
+                return if (isOwnSubscription(accessor)) message else null
             }
             StompCommand.SEND -> {
                 val destination = accessor.destination
@@ -60,15 +59,34 @@ class WebSocketAuthInterceptor(private val tokenValidator: StompTokenValidator) 
         return message
     }
 
-    private fun authorizeSubscribe(accessor: StompHeaderAccessor) {
+    /** Returns true when the subscription targets the caller's own user topic; otherwise the frame is dropped. */
+    private fun isOwnSubscription(accessor: StompHeaderAccessor): Boolean {
+        val destination = accessor.destination
         val userName = accessor.user?.name
         if (userName == null) {
-            reject(accessor, "SUBSCRIBE without authenticated user")
+            logDropped(accessor, "SUBSCRIBE without authenticated user")
+            return false
         }
-        val destination = accessor.destination
         val allowed = Regex("^/topic/user/" + Regex.escape(userName) + "/[a-z]+$")
         if (destination == null || !allowed.matches(destination)) {
-            reject(accessor, "SUBSCRIBE to a destination the user does not own")
+            logDropped(accessor, "SUBSCRIBE to a destination the user does not own")
+            return false
+        }
+        return true
+    }
+
+    private fun logDropped(accessor: StompHeaderAccessor, reason: String) {
+        val destination = accessor.destination
+        if (destination != null && destination.startsWith("/topic/user/null/")) {
+            log.debug(
+                "WebSocket frame dropped: {} sessionId={} destination={}",
+                reason, accessor.sessionId, destination
+            )
+        } else {
+            log.warn(
+                "WebSocket frame dropped: {} sessionId={} destination={}",
+                reason, accessor.sessionId, destination
+            )
         }
     }
 
