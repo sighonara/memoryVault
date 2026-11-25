@@ -143,6 +143,20 @@ class GraphQlIntegrationTest {
             .verify()
     }
 
+    @Test
+    fun `addYoutubeList with a non-YouTube url returns a BAD_REQUEST error carrying the message`() {
+        graphQlTester
+            .mutate()
+            .header("Authorization", "Bearer ${generateTestToken()}")
+            .build()
+            .document("""mutation { addYoutubeList(url: "https://example.com/playlist?list=X") { newVideos } }""")
+            .execute()
+            .errors()
+            .expect { it.errorType == org.springframework.graphql.execution.ErrorType.BAD_REQUEST }
+            .expect { it.message == "Not a YouTube URL" }
+            .verify()
+    }
+
     private fun generateTestToken(): String {
         return jwtService.generateToken(
             UUID.fromString("00000000-0000-0000-0000-000000000001"),

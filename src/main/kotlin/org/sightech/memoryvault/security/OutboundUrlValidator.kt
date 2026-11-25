@@ -9,6 +9,8 @@ import java.net.URI
 
 class UnsafeUrlException(message: String) : RuntimeException(message)
 
+class InvalidYoutubeUrlException(message: String) : IllegalArgumentException(message)
+
 class FeedTooLargeException(message: String) : RuntimeException(message)
 
 /**

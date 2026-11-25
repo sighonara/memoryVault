@@ -35,9 +35,9 @@ class YtDlpService(
     }
 
     fun fetchPlaylistMetadata(playlistUrl: String): List<VideoMetadata> {
-        YoutubeUrlValidator.requireYoutubeUrl(playlistUrl)
+        val safeUrl = YoutubeUrlValidator.requireYoutubeUrl(playlistUrl)
         val process = try {
-            ProcessBuilder(metadataCommand(playlistUrl))
+            ProcessBuilder(metadataCommand(safeUrl))
                 .redirectErrorStream(false)
                 .start()
         } catch (e: java.io.IOException) {
@@ -147,11 +147,11 @@ class YtDlpService(
     }
 
     fun downloadVideo(videoUrl: String, outputPath: String): DownloadResult {
-        YoutubeUrlValidator.requireYoutubeUrl(videoUrl)
-        log.info("Downloading video: {} -> {}", videoUrl, outputPath)
+        val safeUrl = YoutubeUrlValidator.requireYoutubeUrl(videoUrl)
+        log.info("Downloading video: {} -> {}", safeUrl, outputPath)
 
         val process = try {
-            ProcessBuilder(downloadCommand(videoUrl, outputPath))
+            ProcessBuilder(downloadCommand(safeUrl, outputPath))
                 .redirectErrorStream(false)
                 .start()
         } catch (e: java.io.IOException) {

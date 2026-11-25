@@ -25,8 +25,8 @@ class YoutubeListService(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    fun addList(url: String): Pair<YoutubeList, SyncResult> {
-        YoutubeUrlValidator.requireYoutubeUrl(url)
+    fun addList(rawUrl: String): Pair<YoutubeList, SyncResult> {
+        val url = YoutubeUrlValidator.requireYoutubeUrl(rawUrl)
         val userId = CurrentUser.userId()
         val playlistId = extractPlaylistId(url)
         val list = youtubeListRepository.save(
@@ -83,14 +83,14 @@ class YoutubeListService(
 
     private fun refreshLists(lists: List<YoutubeList>): List<SyncResult> {
         return lists.mapNotNull { list ->
-            try {
+            val fetchUrl = try {
                 YoutubeUrlValidator.requireYoutubeUrl(list.url)
             } catch (e: IllegalArgumentException) {
                 log.warn("Skipping refresh for list={}: stored url is not a valid YouTube URL", list.id)
                 return@mapNotNull null
             }
             try {
-                val metadata = ytDlpService.fetchPlaylistMetadata(list.url)
+                val metadata = ytDlpService.fetchPlaylistMetadata(fetchUrl)
                 videoSyncService.syncList(list, metadata)
             } catch (e: Exception) {
                 log.warn("Refresh failed for list={}: {}", list.id, e.message)
